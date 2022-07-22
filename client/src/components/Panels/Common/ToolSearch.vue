@@ -7,6 +7,8 @@ import axios from "axios";
 import { getAppRoot } from "onload/loadConfig";
 import { getGalaxyInstance } from "app";
 import DelayedInput from "components/Common/DelayedInput";
+import MockAdapter from "axios-mock-adapter";
+import testToolsSearchResponse from "./../../ToolsView/testData/toolsSearch";
 
 export default {
     name: "ToolSearch",
@@ -48,12 +50,26 @@ export default {
                     this.$emit("onResults", this.favoritesResults);
                 } else {
                     this.loading = true;
+
+                    let axiosMock;
+                    axiosMock = new MockAdapter(axios);
+                    axiosMock.onGet(`${getAppRoot()}api/tools`).reply(200, testToolsSearchResponse);
+
                     axios
                         .get(`${getAppRoot()}api/tools`, {
                             params: { q, view: this.currentPanelView },
                         })
                         .then((response) => {
                             this.loading = false;
+
+                            if (axiosMock) {
+                                let toolID = [];
+                                (response.data).forEach(function(tool) {
+                                    toolID.push(tool.id);
+                                });
+                                response.data = toolID;
+                            }
+
                             this.$emit("onResults", response.data);
                         })
                         .catch((err) => {
