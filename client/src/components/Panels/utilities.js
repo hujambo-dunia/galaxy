@@ -6,17 +6,15 @@ export function filterToolSections(layout, results) {
             if (section.elems) {
                 section.elems.forEach((el) => {
                     if (
-                        (!el.text && results.includes(el.id)) ||
-                        (el.tool_shed_repository && results.includes(el.tool_shed_repository.name))
+                        (!el.text && toolNameExistsInResults(el.id, results)) ||
+                        (el.tool_shed_repository && toolNameExistsInResults(el.tool_shed_repository.name, results))
                     ) {
                         toolRes.push(el);
                     }
                 });
             }
-            // sort tools in section by rank in results
-            toolRes.sort((tool1, tool2) => {
-                return results.indexOf(tool1.id) - results.indexOf(tool2.id);
-            });
+
+            toolRes = sortToolsByResultsScore(toolRes, results);
 
             return {
                 ...section,
@@ -34,7 +32,7 @@ export function filterToolSections(layout, results) {
                 if (sect1.elems.length == 0 || sect2.elems.length == 0) {
                     return 0;
                 }
-                return results.indexOf(sect1.elems[0].id) - results.indexOf(sect2.elems[0].id);
+                return results.indexOf(sect1.elems[0].id) - results.indexOf(sect2.elems[0].id); //TODO may need updates to Object
             });
     } else {
         return layout;
@@ -56,8 +54,8 @@ export function filterTools(layout, results) {
             if (section.elems) {
                 section.elems.forEach((el) => {
                     if (
-                        (!el.text && results.includes(el.id)) ||
-                        (el.tool_shed_repository && results.includes(el.tool_shed_repository.name))
+                        (!el.text && toolNameExistsInResults(el.id, results)) ||
+                        (el.tool_shed_repository && toolNameExistsInResults(el.tool_shed_repository.name, results))
                     ) {
                         toolsResults.push(el);
                     }
@@ -66,9 +64,10 @@ export function filterTools(layout, results) {
                 toolsResults.push(section);
             }
         });
-        return toolsResults.sort((tool1, tool2) => {
-            return results.indexOf(tool1.id) - results.indexOf(tool2.id);
-        });
+
+        toolsResults = sortToolsByResultsScore(toolsResults, results);
+
+        return toolsResults;
     } else {
         return layout;
     }
@@ -83,4 +82,24 @@ function normalize_results(results) {
         }
     });
     return norm_results;
+}
+
+/** 
+ * Where `results` is an Array of Objects 
+ */
+function sortToolsByResultsScore(tools, results) {
+    tools.sort((tool1, tool2) => {
+        return results.indexOf(tool1.score) - results.indexOf(tool2.score);
+    });
+
+    return tools;
+}
+
+/** 
+ * Where `results` is an Array of Objects 
+ */
+function toolNameExistsInResults(toolname, results) {
+    let matchedTools = results.filter((r) => r.id === toolname);
+
+    return matchedTools && matchedTools.length > 0;
 }
