@@ -27,7 +27,7 @@ const actions = {
         if (state.currentPanelView == null) {
             commit("setCurrentPanelView", { panelView });
         }
-        const response = await axios.get(`${getAppRoot()}api/tools?in_panel=true&view=${panelView}`).catch((error) => {
+        const response = await axios.get(`${getAppRoot()}static/images/toolsListApi.json?in_panel=true&view=${panelView}`).catch((error) => {
             if (error.response && error.response.status == 400) {
                 // Assume the stored panelView disappeared, revert to the panel default for this site.
                 dispatch("setCurrentPanelView", siteDefaultPanelView);
@@ -39,11 +39,11 @@ const actions = {
     },
     setCurrentPanelView: async ({ commit }, panelView) => {
         commit("setCurrentPanelView", { panelView });
-        const { data } = await axios.get(`${getAppRoot()}api/tools?in_panel=true&view=${panelView}`);
+        const { data } = await axios.get(`${getAppRoot()}static/images/toolsListApi.json?in_panel=true&view=${panelView}`);
         commit("savePanelView", { panelView, panel: data });
     },
     fetchPanel: async ({ commit }, panelView) => {
-        const { data } = await axios.get(`${getAppRoot()}api/tools?in_panel=true&view=${panelView}`);
+        const { data } = await axios.get(`${getAppRoot()}static/images/toolsListApi.json?in_panel=true&view=${panelView}`);
         commit("savePanelView", { panelView, panel: data });
     },
 };
