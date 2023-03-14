@@ -3,12 +3,12 @@ import { BNavbar, BNavbarBrand, BNavbarNav } from "bootstrap-vue";
 import MastheadItem from "./MastheadItem";
 import { loadWebhookMenuItems } from "./_webhooks";
 import QuotaMeter from "./QuotaMeter";
-import { withPrefix } from "utils/redirect";
 import { getActiveTab } from "./utilities";
-import { watch, ref, reactive } from "vue";
+import { watch, ref, reactive, computed } from "vue";
 import { onMounted, onBeforeMount } from "vue";
 import { useRoute } from "vue-router/composables";
 import { useEntryPointStore } from "stores/entryPointStore";
+import { getAppRoot } from "onload/loadConfig";
 
 const route = useRoute();
 const emit = defineEmits(["open-url"]);
@@ -47,6 +47,8 @@ const props = defineProps({
 const activeTab = ref(props.initialActiveTab);
 const extensionTabs = ref([]);
 const windowToggle = ref(false);
+const anvilLink = ref("https://anvil.terra.bio");
+const navGuardModal = ref(null);
 
 let entryPointStore;
 const itsMenu = reactive({
@@ -56,6 +58,9 @@ const itsMenu = reactive({
     icon: "fa-cogs",
     hidden: true,
 });
+
+const anvilLogoSrc = computed(() => `${getAppRoot()}static/images/anvilwhite.png`);
+const galaxyLogoSrc = computed(() => `${getAppRoot()}static/images/galaxy_project_logo_white_square.png`);
 
 function setActiveTab() {
     const currentRoute = route.path;
@@ -67,6 +72,19 @@ function onWindowToggle() {
 }
 function updateVisibility(isActive) {
     itsMenu.hidden = !isActive;
+}
+
+function showNavGuard(ev) {
+    const dismissNavGuard = localStorage.getItem("dismissNavGuard");
+    if (!dismissNavGuard === true) {
+        navGuardModal.value.show();
+        ev.preventDefault();
+    }
+}
+
+function confirmNav() {
+    localStorage.setItem("dismissNavGuard", true);
+    window.location = anvilLink.value;
 }
 
 watch(
@@ -93,19 +111,27 @@ onMounted(() => {
 <template>
     <b-navbar id="masthead" type="dark" role="navigation" aria-label="Main" class="justify-content-between">
         <b-navbar-nav>
-            <b-navbar-brand
-                v-b-tooltip.hover
-                class="ml-2 mr-1"
-                title="Home"
-                aria-label="homepage"
-                :href="withPrefix(logoUrl)">
-                <img alt="logo" :src="withPrefix(logoSrc)" />
-                <img v-if="logoSrcSecondary" alt="logo" :src="withPrefix(logoSrcSecondary)" />
+            <b-navbar-brand :href="anvilLink" aria-label="homepage" @click="showNavGuard">
+                <img alt="Galaxy Logo" style="padding-top: 0.4rem" class="navbar-brand-image" :src="galaxyLogoSrc" />
+                <img alt="Anvil Logo" class="navbar-brand-image" :src="anvilLogoSrc" />
             </b-navbar-brand>
             <span v-if="brand" class="navbar-text">
                 {{ brand }}
             </span>
         </b-navbar-nav>
+        <b-modal ref="navGuardModal" hide-footer title="A quick note before you go">
+            <div>
+                <p>
+                    You are navigating away from Galaxy, which will continue to run in the background. Any jobs you have
+                    running will continue, but it's important to keep in mind that this instance will also continue
+                    potentially incurring costs. Remember to shut down Galaxy when you are done.
+                </p>
+                <p>This modal will not be shown again.</p>
+            </div>
+            <b-button variant="primary" block @click="confirmNav">
+                I understand, take me back to my AnVIL Dashboard
+            </b-button>
+        </b-modal>
         <b-navbar-nav>
             <masthead-item
                 v-for="(tab, idx) in props.tabs"

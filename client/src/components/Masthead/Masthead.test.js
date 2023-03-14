@@ -6,7 +6,6 @@ import { WindowManager } from "layout/window-manager";
 import { loadWebhookMenuItems } from "./_webhooks";
 import { userStore, userFlagsStore } from "store/userStore";
 import { configStore } from "store/configStore";
-import { getActiveTab } from "./utilities";
 import { createTestingPinia } from "@pinia/testing";
 import { PiniaVuePlugin, setActivePinia } from "pinia";
 import { useEntryPointStore } from "stores/entryPointStore";
@@ -85,19 +84,6 @@ describe("Masthead.vue", () => {
             localVue,
             pinia: testPinia,
         });
-    });
-
-    it("should disable brand when displayGalaxyBrand is true", async () => {
-        expect(wrapper.find(".navbar-brand-title").text()).toBe("Galaxy");
-        await wrapper.setProps({ brand: "Foo " });
-        expect(wrapper.find(".navbar-brand-title").text()).toBe("Galaxy Foo");
-        await wrapper.setProps({ displayGalaxyBrand: false });
-        expect(wrapper.find(".navbar-brand-title").text()).toBe("Foo");
-    });
-
-    it("set quota element and renders it", () => {
-        expect(quotaEl).not.toBeNull();
-        expect(quotaRendered).toBe(true);
     });
 
     it("should render simple tab item links", () => {
