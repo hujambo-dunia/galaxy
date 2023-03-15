@@ -47,7 +47,7 @@ const props = defineProps({
 const activeTab = ref(props.initialActiveTab);
 const extensionTabs = ref([]);
 const windowToggle = ref(false);
-const anvilLink = ref("https://anvil.terra.bio");
+const anvilLink = ref("https://anvil.terra.bio/#workspaces");
 const navGuardModal = ref(null);
 
 let entryPointStore;
