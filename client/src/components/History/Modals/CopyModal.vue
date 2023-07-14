@@ -51,7 +51,6 @@ import { useHistoryStore } from "@/stores/historyStore";
 import { useUserStore } from "@/stores/userStore";
 
 import GAlert from "@/component-library/GAlert.vue";
-
 import GInput from "@/component-library/GInput.vue";
 
 export default {

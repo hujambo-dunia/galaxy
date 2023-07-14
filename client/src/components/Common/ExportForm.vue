@@ -8,7 +8,7 @@
             <files-input id="directory" v-model="directory" mode="directory" :require-writable="true" />
         </b-form-group>
         <b-form-group id="fieldset-name" label-for="name" :description="nameDescription | localize" class="mt-3">
-            <b-form-input id="name" v-model="name" :placeholder="namePlaceholder | localize" required></b-form-input>
+            <GInput id="name" v-model="name" :placeholder="namePlaceholder | localize" required />
         </b-form-group>
         <b-row align-h="end">
             <b-col
@@ -21,11 +21,14 @@
 </template>
 
 <script>
+import GInput from "component-library/GInput";
+
 import FilesInput from "components/FilesDialog/FilesInput.vue";
 
 export default {
     components: {
         FilesInput,
+        GInput,
     },
     props: {
         what: {

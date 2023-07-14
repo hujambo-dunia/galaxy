@@ -1,14 +1,13 @@
 <template>
-    <b-form-input v-model="localValue" class="directory-form-input" :placeholder="placeholder" @click="selectFile">
-    </b-form-input>
+    <GInput v-model="localValue" class="directory-form-input" :placeholder="placeholder" @click="selectFile" />
 </template>
 
 <script>
-import { BFormInput } from "bootstrap-vue";
+import GInput from "component-library/GInput";
 import { filesDialog } from "utils/data";
 
 export default {
-    components: { BFormInput },
+    components: { GInput },
     props: {
         value: {
             type: String,
