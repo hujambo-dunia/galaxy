@@ -1,6 +1,6 @@
 <template>
     <div>
-        <b-link
+        <GLink
             aria-expanded="false"
             class="workflow-dropdown font-weight-bold"
             data-toggle="dropdown"
@@ -10,7 +10,7 @@
             @dragend="onDragEnd">
             <Icon icon="caret-down" class="fa-lg" />
             <span class="workflow-dropdown-name">{{ workflow.name }}</span>
-        </b-link>
+        </GLink>
         <span
             v-if="sourceType.includes('trs')"
             v-b-tooltip.hover
@@ -103,6 +103,8 @@ import { clearDrag, setDrag } from "@/utils/setDrag.js";
 
 import { Services } from "./services";
 
+import GLink from "@/component-library/GLink.vue";
+
 library.add(faCaretDown);
 library.add(faSignature);
 library.add(faTimes);
@@ -110,6 +112,7 @@ library.add(faEdit);
 
 export default {
     components: {
+        GLink,
         TextSummary,
     },
     props: {

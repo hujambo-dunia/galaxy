@@ -23,14 +23,14 @@
             <b>Be sure to specify at least one column as a list identifier</b> - specify more to created nested list
             structures. Specify a column to serve as "collection name" to group datasets into multiple collections.
         </rule-modal-header>
-        <b-alert v-if="validityErrorMessages.length != 0" class="alert-area" show variant="warning" dismissible>
+        <GAlert v-if="validityErrorMessages.length != 0" class="alert-area" show variant="warning" dismissible>
             {{ validityErrorHeader }}
             <ul>
                 <li v-for="error in validityErrorMessages" :key="error">
                     {{ error }}
                 </li>
             </ul>
-        </b-alert>
+        </GAlert>
         <rule-modal-middle v-if="ruleView == 'source'">
             <p v-if="ruleSourceError" class="errormessagelarge">{{ ruleSourceError }}</p>
             <textarea v-model="ruleSource" class="rule-source"></textarea>
@@ -603,6 +603,7 @@ import JobStatesModel from "utils/job-states-model";
 import _l from "utils/localization";
 import Vue from "vue";
 
+import GAlert from "@/component-library/GAlert.vue";
 import GInput from "@/component-library/GInput.vue";
 import TooltipOnHover from "components/TooltipOnHover.vue";
 
@@ -621,6 +622,8 @@ const deferredToPromise = (d) => {
 
 export default {
     components: {
+        GAlert,
+      GInput,
         TooltipOnHover,
         HotTable,
         RuleComponent,

@@ -1,8 +1,8 @@
 <template>
     <div>
-        <b-alert v-if="error" variant="danger" show>
+        <GAlert v-if="error" variant="danger" show>
             {{ error }}
-        </b-alert>
+        </GAlert>
         <b-card v-if="showItems" no-body class="my-2">
             <h2 class="m-3 h-text">Currently installing...</h2>
             <b-table
@@ -12,7 +12,7 @@
                 :items="items"
                 :fields="fields">
                 <template v-slot:cell(name)="row">
-                    <b-link @click="onQuery(row.item.name)"> {{ row.item.name }} ({{ row.item.owner }}) </b-link>
+                    <GLink @click="onQuery(row.item.name)"> {{ row.item.name }} ({{ row.item.owner }}) </GLink>
                 </template>
                 <template v-slot:cell(status)="row">
                     <b>Status: </b><span>{{ row.item.status }}</span>
@@ -25,7 +25,7 @@
                 </template>
             </b-table>
         </b-card>
-        <b-alert v-if="showEmpty" variant="info" show> Currently there are no installing repositories. </b-alert>
+        <GAlert v-if="showEmpty" variant="info" show> Currently there are no installing repositories. </GAlert>
     </div>
 </template>
 <script>
@@ -35,10 +35,15 @@ import Vue from "vue";
 import InstallationActions from "../RepositoryDetails/InstallationActions";
 import { Services } from "../services";
 
+import GAlert from "@/component-library/GAlert.vue";
+import GLink from "@/component-library/GLink.vue";
+
 Vue.use(BootstrapVue);
 
 export default {
     components: {
+        GLink,
+        GAlert,
         InstallationActions,
     },
     data() {

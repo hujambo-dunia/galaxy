@@ -1,5 +1,5 @@
 <template>
-    <b-alert
+    <GAlert
         class="m-2"
         variant="info"
         :show="dismissCountDown"
@@ -10,21 +10,24 @@
         <b>Please notice your selection has changed.</b> Manually unselecting items or adding new ones will disable the
         `select all` status.
         <b-progress variant="info" :max="dismissSecs" :value="dismissCountDown" height="4px" />
-        <b-link @click="onDoNotShowAgain">Do not show again</b-link>
-    </b-alert>
+        <GLink @click="onDoNotShowAgain">Do not show again</GLink>
+    </GAlert>
 </template>
 
 <script>
-import { BAlert, BLink, BProgress } from "bootstrap-vue";
+import { BProgress } from "bootstrap-vue";
 import { mapActions, mapState } from "pinia";
 
 import { useUserFlagsStore } from "@/stores/userFlagsStore";
 
+import GAlert from "@/component-library/GAlert.vue";
+import GLink from "@/component-library/GLink.vue";
+
 export default {
     components: {
-        "b-alert": BAlert,
-        "b-link": BLink,
-        "b-progress": BProgress,
+        GAlert,
+        GLink,
+        BProgress,
     },
     props: {
         querySelectionBreak: { type: Boolean, required: true },

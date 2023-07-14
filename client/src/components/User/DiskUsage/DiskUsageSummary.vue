@@ -1,10 +1,10 @@
 <template>
     <ConfigProvider v-slot="{ config }">
         <div>
-            <b-alert v-if="errorMessage" variant="danger" show>
+            <GAlert v-if="errorMessage" variant="danger" show>
                 <h2 class="alert-heading h-sm">{{ errorMessageTitle }}</h2>
                 {{ errorMessage }}
-            </b-alert>
+            </GAlert>
             <b-container v-if="currentUser">
                 <b-row v-if="config.enable_quotas" class="justify-content-md-center">
                     <QuotaUsageSummary v-if="quotaUsages" :quota-usages="quotaUsages" />
@@ -24,7 +24,7 @@
                     <b-spinner v-if="isRecalculating" small />
                     <span v-else>Refresh</span>
                 </button>
-                <b-alert
+                <GAlert
                     v-if="isRecalculating"
                     class="mt-2"
                     variant="info"
@@ -33,7 +33,7 @@
                     :show="dismissCountDown"
                     @dismiss-count-down="countDownChanged">
                     Recalculating disk usage... this may take some time, please check back later.
-                </b-alert>
+                </GAlert>
             </b-container>
         </div>
     </ConfigProvider>
@@ -53,8 +53,11 @@ import { useUserStore } from "@/stores/userStore";
 
 import { QuotaUsage } from "./Quota/model";
 
+import GAlert from "@/component-library/GAlert.vue";
+
 export default {
     components: {
+        GAlert,
         ConfigProvider,
         QuotaUsageSummary,
     },

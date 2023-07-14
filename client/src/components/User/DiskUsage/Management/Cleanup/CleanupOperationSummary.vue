@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BAlert, BCard, BCardText, BLink } from "bootstrap-vue";
+import { BCard, BCardText } from "bootstrap-vue";
 import { computed, onMounted, ref, watchEffect } from "vue";
 
 import localize from "@/utils/localization";
@@ -7,6 +7,8 @@ import { wait } from "@/utils/utils";
 
 import type { CleanableSummary, CleanupOperation } from "./model";
 
+import GAlert from "@/component-library/GAlert.vue";
+import GLink from "@/component-library/GLink.vue";
 import LoadingSpan from "@/components/LoadingSpan.vue";
 
 interface CleanupOperationSummaryProps {
@@ -77,18 +79,18 @@ function onReviewItems() {
         </b-card-text>
         <template v-slot:footer>
             <div v-if="!loading">
-                <b-alert v-if="errorMessage" variant="danger" show data-test-id="error-alert">
+                <GAlert v-if="errorMessage" variant="danger" show data-test-id="error-alert">
                     <h2 class="alert-heading h-sm">Failed to retrieve details.</h2>
                     {{ errorMessage }}
-                </b-alert>
-                <b-link
+                </GAlert>
+                <GLink
                     v-else-if="summary && canClearItems"
                     href="#"
                     class="card-link"
                     data-test-id="review-link"
                     @click="onReviewItems">
                     <b>{{ localize("Review and clear") }} {{ summary.niceTotalSize }}</b>
-                </b-link>
+                </GLink>
                 <b v-else class="text-secondary" data-test-id="no-items-indicator">
                     {{ localize("No items to clear") }}
                 </b>

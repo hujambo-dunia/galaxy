@@ -11,6 +11,8 @@ import type { CleanableItem, CleanupOperation, CleanupResult } from "./Cleanup/m
 import CleanupOperationSummary from "./Cleanup/CleanupOperationSummary.vue";
 import CleanupResultDialog from "./Cleanup/CleanupResultDialog.vue";
 import ReviewCleanupDialog from "./Cleanup/ReviewCleanupDialog.vue";
+import GAlert from "@/component-library/GAlert.vue";
+import GLink from "@/component-library/GLink.vue";
 
 interface ModalDialog {
     openModal: () => void;
@@ -51,22 +53,22 @@ async function onConfirmCleanupSelected(selectedItems: CleanableItem[]) {
 
 <template>
     <b-container fluid>
-        <b-link to="StorageDashboard">{{ localize("Back to Dashboard") }}</b-link>
+        <GLink to="StorageDashboard">{{ localize("Back to Dashboard") }}</GLink>
         <h2 class="text-center my-3">
             <b>{{ localize("Manage your account storage") }}</b> <sup class="text-beta">(Beta)</sup>
         </h2>
 
         <b-row class="justify-content-md-center">
-            <b-alert show dismissible variant="warning">
+            <GAlert show dismissible variant="warning">
                 {{ localize("This feature is currently in Beta, if you find any issues please report them") }}
-                <b-link :href="issuesUrl" target="_blank">here</b-link>.
-            </b-alert>
+                <GLink :href="issuesUrl" target="_blank">here</GLink>.
+            </GAlert>
         </b-row>
         <b-row class="justify-content-md-center mb-5">
-            <b-alert v-if="config.enable_quotas" show>
+            <GAlert v-if="config.enable_quotas" show>
                 {{ localize("The storage manager only shows elements that count towards your disk quota.") }}
-                <b-link :href="config.quota_url" target="_blank">{{ localize("Learn more") }}</b-link>
-            </b-alert>
+                <GLink :href="config.quota_url" target="_blank">{{ localize("Learn more") }}</GLink>
+            </GAlert>
         </b-row>
 
         <div id="categories-panel">

@@ -1,9 +1,11 @@
 <script setup>
-import { BCard, BCollapse, BFormCheckbox, BFormGroup, BFormSelect, BLink } from "bootstrap-vue";
+import { BCard, BCollapse, BFormCheckbox, BFormGroup, BFormSelect } from "bootstrap-vue";
 import { ExportParamsModel } from "components/Common/models/exportRecordModel";
 import { computed, reactive, ref } from "vue";
 
 import { AVAILABLE_EXPORT_FORMATS } from "./services";
+
+import GLink from "@/component-library/GLink.vue";
 
 const props = defineProps({
     exportParams: {
@@ -30,14 +32,14 @@ function onValueChanged() {
 
 <template>
     <div>
-        <b-link
+        <GLink
             id="toggle-options-link"
             :class="isExpanded ? null : 'collapsed'"
             :aria-expanded="isExpanded ? 'true' : 'false'"
             aria-controls="collapse-options"
             @click="isExpanded = !isExpanded">
             {{ title }}
-        </b-link>
+        </GLink>
         <b-collapse id="collapse-options" v-model="isExpanded">
             <b-card>
                 <b-form-group label="Export Format:" label-for="format">

@@ -10,6 +10,8 @@ import _l from "@/utils/localization";
 
 import { deletePage } from "./services";
 
+import GLink from "@/component-library/GLink.vue";
+
 library.add(faCaretDown);
 
 interface Page {
@@ -48,7 +50,7 @@ function onDelete(page_id: string) {
 </script>
 <template>
     <div>
-        <b-link
+        <GLink
             class="page-dropdown"
             data-toggle="dropdown"
             aria-haspopup="true"
@@ -56,7 +58,7 @@ function onDelete(page_id: string) {
             aria-expanded="false">
             <font-awesome-icon icon="caret-down" class="fa-lg" />
             <span class="page-title">{{ props.page.title }}</span>
-        </b-link>
+        </GLink>
         <p v-if="props.page.description">{{ props.page.description }}</p>
         <div class="dropdown-menu" aria-labelledby="page-dropdown">
             <a class="dropdown-item dropdown-item-view" :href="urlView">

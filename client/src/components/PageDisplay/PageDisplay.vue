@@ -12,7 +12,7 @@
                         @onEdit="onEdit" />
                     <PageHtml v-else :page="page" />
                 </div>
-                <b-alert v-else variant="info" show>Unsupported page format.</b-alert>
+                <GAlert v-else variant="info" show>Unsupported page format.</GAlert>
             </template>
         </Published>
     </config-provider>
@@ -27,8 +27,11 @@ import { urlData } from "utils/url";
 
 import PageHtml from "./PageHtml";
 
+import GAlert from "@/component-library/GAlert.vue";
+
 export default {
     components: {
+        GAlert,
         ConfigProvider,
         Markdown,
         PageHtml,

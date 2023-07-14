@@ -2,7 +2,7 @@
     <b-card>
         <div class="mb-1">{{ repo.long_description }}</div>
         <div class="mb-3">
-            <b-link :href="repo.repository_url" target="_blank">Show additional details and dependencies.</b-link>
+            <GLink :href="repo.repository_url" target="_blank">Show additional details and dependencies.</GLink>
         </div>
         <div>
             <span v-if="loading">
@@ -10,9 +10,9 @@
                 <span class="loading-message">Loading repository details...</span>
             </span>
             <div v-else>
-                <b-alert v-if="error" variant="danger" show>
+                <GAlert v-if="error" variant="danger" show>
                     {{ error }}
-                </b-alert>
+                </GAlert>
                 <div v-else class="border rounded">
                     <b-table borderless :items="repoTable" :fields="repoFields" class="text-center m-0">
                         <template v-slot:cell(numeric_revision)="data">
@@ -74,11 +74,15 @@ import { Services } from "../services";
 import InstallationActions from "./InstallationActions.vue";
 import InstallationSettings from "./InstallationSettings.vue";
 import RepositoryTools from "./RepositoryTools.vue";
+import GAlert from "@/component-library/GAlert.vue";
+import GLink from "@/component-library/GLink.vue";
 
 Vue.use(BootstrapVue);
 
 export default {
     components: {
+        GLink,
+        GAlert,
         ConfigProvider,
         ToolPanelViewProvider,
         InstallationSettings,
