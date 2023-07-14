@@ -7,9 +7,9 @@
         </div>
         <div class="unified-panel-body">
             <div class="toolMenuContainer">
-                <b-alert v-if="error" variant="danger" class="my-2 mx-3 px-2 py-1" show>
+                <GAlert v-if="error" variant="danger" class="my-2 mx-3 px-2 py-1" show>
                     {{ error }}
-                </b-alert>
+                </GAlert>
                 <tool-section
                     v-if="isWorkflow"
                     :category="historyInEditorSection"
@@ -51,6 +51,8 @@ import { getAppRoot } from "onload/loadConfig";
 import Vue from "vue";
 
 import MarkdownDialog from "./MarkdownDialog";
+
+import GAlert from "@/component-library/GAlert.vue";
 
 Vue.use(BootstrapVue);
 
@@ -109,6 +111,7 @@ const historySharedElements = [
 
 export default {
     components: {
+        GAlert,
         MarkdownDialog,
         ToolSection,
     },

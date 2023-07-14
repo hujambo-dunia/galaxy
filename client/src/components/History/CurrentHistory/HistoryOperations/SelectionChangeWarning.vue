@@ -1,5 +1,5 @@
 <template>
-    <b-alert
+    <GAlert
         class="m-2"
         variant="info"
         :show="dismissCountDown"
@@ -11,20 +11,22 @@
         `select all` status.
         <b-progress variant="info" :max="dismissSecs" :value="dismissCountDown" height="4px" />
         <b-link @click="onDoNotShowAgain">Do not show again</b-link>
-    </b-alert>
+    </GAlert>
 </template>
 
 <script>
-import { BAlert, BLink, BProgress } from "bootstrap-vue";
+import { BLink, BProgress } from "bootstrap-vue";
 import { mapActions, mapState } from "pinia";
 
 import { useUserFlagsStore } from "@/stores/userFlagsStore";
 
+import GAlert from "@/component-library/GAlert.vue";
+
 export default {
     components: {
-        "b-alert": BAlert,
-        "b-link": BLink,
-        "b-progress": BProgress,
+        GAlert,
+        BLink,
+        BProgress,
     },
     props: {
         querySelectionBreak: { type: Boolean, required: true },

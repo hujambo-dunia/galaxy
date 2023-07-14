@@ -1,9 +1,9 @@
 <template>
     <div>
-        <b-alert v-if="errorMessage" variant="danger" show>
+        <GAlert v-if="errorMessage" variant="danger" show>
             <h2 class="alert-heading h-sm">Failed to access Dataset details.</h2>
             {{ errorMessage }}
-        </b-alert>
+        </GAlert>
         <DatasetProvider :id="datasetId" v-slot="{ result: dataset, loading: datasetLoading }">
             <JobDetailsProvider
                 v-if="!datasetLoading"
@@ -17,8 +17,7 @@
                     <h3 class="h-lg">Dataset Error Report</h3>
                     <p>
                         An error occurred while running the tool
-                        <b id="dataset-error-tool-id" class="text-break">{{ jobDetails.tool_id }}</b
-                        >.
+                        <b id="dataset-error-tool-id" class="text-break"> {{ jobDetails.tool_id }} </b>.
                     </p>
                     <DatasetErrorDetails
                         :tool-stderr="jobDetails.tool_stderr"
@@ -54,13 +53,13 @@
                         </b>
                     </p>
                     <h4 class="mb-3 h-md">Issue Report</h4>
-                    <b-alert
+                    <GAlert
                         v-for="(resultMessage, index) in resultMessages"
                         :key="index"
                         :variant="resultMessage[1]"
-                        show
-                        >{{ resultMessage[0] }}</b-alert
-                    >
+                        show>
+                        {{ resultMessage[0] }}
+                    </GAlert>
                     <div v-if="showForm" id="fieldsAndButton">
                         <span class="mr-2 font-weight-bold">{{ emailTitle }}</span>
                         <span v-if="!!currentUser?.email">{{ currentUser?.email }}</span>
@@ -98,10 +97,13 @@ import { useUserStore } from "@/stores/userStore";
 import DatasetErrorDetails from "./DatasetErrorDetails";
 import { sendErrorReport } from "./services";
 
+import GAlert from "@/component-library/GAlert.vue";
+
 library.add(faBug);
 
 export default {
     components: {
+        GAlert,
         DatasetProvider,
         DatasetErrorDetails,
         FontAwesomeIcon,
