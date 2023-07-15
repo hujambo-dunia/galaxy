@@ -94,7 +94,7 @@
                 </b-form>
             </div>
             <div v-if="termsUrl" class="col">
-                <b-embed type="iframe" :src="termsUrl" aspect="1by1" />
+                <GEmbed type="iframe" :src="termsUrl" aspect="1by1" />
             </div>
         </div>
     </div>
@@ -114,11 +114,13 @@ import GCardBody from "@/component-library/GCardBody.vue";
 import GCardFooter from "@/component-library/GCardFooter.vue";
 import GCardHeader from "@/component-library/GCardHeader.vue";
 import GCollapse from "@/component-library/GCollapse.vue";
+import GEmbed from "@/component-library/GEmbed.vue";
 
 Vue.use(BootstrapVue);
 
 export default {
     components: {
+        GEmbed,
         GCollapse,
         GCard,
         GCardHeader,
