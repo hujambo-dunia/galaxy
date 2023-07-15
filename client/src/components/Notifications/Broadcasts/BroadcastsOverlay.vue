@@ -9,6 +9,7 @@ import { useRouter } from "vue-router/composables";
 import { useMarkdown } from "@/composables/markdown";
 import { type BroadcastNotification, useBroadcastsStore } from "@/stores/broadcastsStore";
 
+import GCol from "@/component-library/GCol.vue";
 import Heading from "@/components/Common/Heading.vue";
 
 library.add(faInfoCircle, faTimes);
@@ -45,15 +46,15 @@ function onActionClick(item: BroadcastNotification, link: string) {
                 align-v="center"
                 class="broadcast-banner m-0"
                 :class="{ 'non-urgent': broadcast.variant !== 'urgent' }">
-                <BCol cols="auto">
+                <GCol cols="auto">
                     <FontAwesomeIcon
                         class="mx-2"
                         fade
                         size="2xl"
                         :class="`text-${getBroadcastVariant(broadcast)}`"
                         :icon="faInfoCircle" />
-                </BCol>
-                <BCol>
+                </GCol>
+                <GCol>
                     <BRow align-v="center">
                         <Heading size="md" bold>
                             {{ broadcast.content.subject }}
@@ -74,8 +75,8 @@ function onActionClick(item: BroadcastNotification, link: string) {
                             </BButton>
                         </div>
                     </BRow>
-                </BCol>
-                <BCol cols="auto" align-self="center" class="p-0">
+                </GCol>
+                <GCol cols="auto" align-self="center" class="p-0">
                     <BButton
                         variant="light"
                         class="align-items-center d-flex"
@@ -83,7 +84,7 @@ function onActionClick(item: BroadcastNotification, link: string) {
                         <FontAwesomeIcon class="mx-1" icon="times" />
                         Dismiss
                     </BButton>
-                </BCol>
+                </GCol>
             </BRow>
         </div>
     </div>

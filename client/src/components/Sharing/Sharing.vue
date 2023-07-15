@@ -167,7 +167,7 @@
                         </div>
                     </GAlert>
                     <b-row v-if="permissionsChangeRequired(item)">
-                        <b-col v-if="item.extra.can_change.length > 0">
+                        <GCol v-if="item.extra.can_change.length > 0">
                             <b-card>
                                 <b-card-header header-tag="header" class="p-1" role="tab">
                                     <b-button v-b-toggle.can-share block variant="warning">
@@ -182,8 +182,8 @@
                                     </b-list-group>
                                 </b-collapse>
                             </b-card>
-                        </b-col>
-                        <b-col v-if="item.extra.cannot_change.length > 0">
+                        </GCol>
+                        <GCol v-if="item.extra.cannot_change.length > 0">
                             <b-card>
                                 <b-card-header header-tag="header" class="p-1" role="tab">
                                     <b-button v-b-toggle.cannot-share block variant="danger"
@@ -201,8 +201,8 @@
                                     </b-list-group>
                                 </b-collapse>
                             </b-card>
-                        </b-col>
-                        <b-col>
+                        </GCol>
+                        <GCol>
                             <b-card
                                 border-variant="primary"
                                 header="How would you like to proceed?"
@@ -250,7 +250,7 @@
                                 </b-button>
                                 <b-button block variant="outline-danger" @click="getSharing()">Cancel </b-button>
                             </b-card>
-                        </b-col>
+                        </GCol>
                     </b-row>
                 </b-collapse>
             </b-card>
@@ -279,6 +279,7 @@ import { useUserStore } from "@/stores/userStore";
 import ErrorMessage from "./ErrorMessage";
 
 import GAlert from "@/component-library/GAlert.vue";
+import GCol from "@/component-library/GCol.vue";
 
 Vue.use(BootstrapVue);
 library.add(faCopy, faEdit, faUserPlus, faUserSlash, faCaretDown, faCaretUp);
@@ -291,6 +292,7 @@ const defaultExtra = () => {
 };
 export default {
     components: {
+        GCol,
         GAlert,
         ConfigProvider,
         ErrorMessage,

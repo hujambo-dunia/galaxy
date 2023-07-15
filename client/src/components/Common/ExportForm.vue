@@ -11,11 +11,11 @@
             <GInput id="name" v-model="name" :placeholder="namePlaceholder | localize" required />
         </b-form-group>
         <b-row align-h="end">
-            <b-col
-                ><b-button class="export-button" variant="primary" :disabled="!canExport" @click.prevent="doExport">{{
-                    exportButtonText | localize
-                }}</b-button></b-col
-            >
+            <GCol>
+                <b-button class="export-button" variant="primary" :disabled="!canExport" @click.prevent="doExport">
+                    {{ exportButtonText | localize }}
+                </b-button>
+            </GCol>
         </b-row>
     </div>
 </template>
@@ -23,10 +23,12 @@
 <script>
 import GInput from "component-library/GInput";
 
+import GCol from "@/component-library/GCol.vue";
 import FilesInput from "components/FilesDialog/FilesInput.vue";
 
 export default {
     components: {
+        GCol,
         FilesInput,
         GInput,
     },

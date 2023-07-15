@@ -8,7 +8,7 @@
         <div v-else-if="jobs">
             <b-container fluid class="mb-3">
                 <b-row>
-                    <b-col md="6">
+                    <GCol md="6">
                         <b-form-group description="Search for strings or regular expressions">
                             <GInputGroup>
                                 <GInput v-model="filter" placeholder="Type to Search" @keyup.esc.native="filter = ''" />
@@ -17,14 +17,14 @@
                                 </GInputGroupAppend>
                             </GInputGroup>
                         </b-form-group>
-                    </b-col>
+                    </GCol>
                 </b-row>
                 <b-row>
-                    <b-col>
+                    <GCol>
                         <b-button :pressed.sync="showCommandLine" variant="outline-secondary">
                             {{ showCommandLine ? "Hide" : "Show" }} Command Line
                         </b-button>
-                    </b-col>
+                    </GCol>
                 </b-row>
             </b-container>
             <b-table
@@ -75,11 +75,13 @@ import GInput from "component-library/GInput";
 import { getAppRoot } from "onload/loadConfig";
 
 import GAlert from "@/component-library/GAlert.vue";
+import GCol from "@/component-library/GCol.vue";
 import GInputGroup from "@/component-library/GInputGroup.vue";
 import GInputGroupAppend from "@/component-library/GInputGroupAppend.vue";
 
 export default {
     components: {
+        GCol,
         GInputGroup,
         GInputGroupAppend,
         GAlert,

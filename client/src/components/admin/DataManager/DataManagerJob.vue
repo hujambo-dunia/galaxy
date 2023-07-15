@@ -7,7 +7,7 @@
         <GAlert v-else-if="loading" message="Waiting for data" variant="info" />
         <b-container v-else-if="dataManager">
             <b-row>
-                <b-col>
+                <GCol>
                     <b-card
                         id="data-manager-card"
                         header-bg-variant="primary"
@@ -17,14 +17,14 @@
                         <template v-slot:header>
                             <b-container>
                                 <b-row align-v="center">
-                                    <b-col cols="auto">
+                                    <GCol cols="auto">
                                         <b-button v-b-tooltip.hover title="Rerun" :href="runUrl">
                                             <span class="fa fa-redo" />
                                         </b-button>
-                                    </b-col>
-                                    <b-col>
+                                    </GCol>
+                                    <GCol>
                                         <b>{{ dataManager["name"] }}</b> <i>{{ dataManager["description"] }}</i>
-                                    </b-col>
+                                    </GCol>
                                 </b-row>
                             </b-container>
                         </template>
@@ -34,7 +34,7 @@
                                     <template v-slot:table-caption>
                                         <b-container>
                                             <b-row align-v="center">
-                                                <b-col cols="auto">
+                                                <GCol cols="auto">
                                                     <b-button
                                                         v-b-tooltip.hover
                                                         title="View complete info"
@@ -42,10 +42,10 @@
                                                         target="galaxy_main">
                                                         <span class="fa fa-info-circle" />
                                                     </b-button>
-                                                </b-col>
-                                                <b-col>
+                                                </GCol>
+                                                <GCol>
                                                     <b>{{ hda["name"] }}</b>
-                                                </b-col>
+                                                </GCol>
                                             </b-row>
                                         </b-container>
                                     </template>
@@ -66,7 +66,7 @@
                             </b-table>
                         </b-card>
                     </b-card>
-                </b-col>
+                </GCol>
             </b-row>
         </b-container>
     </div>
@@ -77,9 +77,11 @@ import axios from "axios";
 import { getAppRoot } from "onload/loadConfig";
 
 import GAlert from "@/component-library/GAlert.vue";
+import GCol from "@/component-library/GCol.vue";
 
 export default {
     components: {
+        GCol,
         GAlert,
     },
     props: {
