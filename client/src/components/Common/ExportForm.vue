@@ -10,13 +10,13 @@
         <b-form-group id="fieldset-name" label-for="name" :description="nameDescription | localize" class="mt-3">
             <GInput id="name" v-model="name" :placeholder="namePlaceholder | localize" required />
         </b-form-group>
-        <b-row align-h="end">
+        <GRow align-h="end">
             <GCol>
                 <b-button class="export-button" variant="primary" :disabled="!canExport" @click.prevent="doExport">
                     {{ exportButtonText | localize }}
                 </b-button>
             </GCol>
-        </b-row>
+        </GRow>
     </div>
 </template>
 
@@ -24,10 +24,12 @@
 import GInput from "component-library/GInput";
 
 import GCol from "@/component-library/GCol.vue";
+import GRow from "@/component-library/GRow.vue";
 import FilesInput from "components/FilesDialog/FilesInput.vue";
 
 export default {
     components: {
+        GRow,
         GCol,
         FilesInput,
         GInput,

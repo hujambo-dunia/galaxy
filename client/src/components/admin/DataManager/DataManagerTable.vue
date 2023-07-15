@@ -9,12 +9,12 @@
             message="There are currently no entries in this tool data table."
             variant="primary" />
         <b-container v-else-if="dataTable">
-            <b-row>
+            <GRow>
                 <GCol>
                     <b-card id="data-table-card" flush>
                         <template v-slot:header>
                             <b-container>
-                                <b-row align-v="center">
+                                <GRow align-v="center">
                                     <GCol cols="auto">
                                         <b-button v-b-tooltip.hover :title="buttonLabel" @click="reload()">
                                             <span class="fa fa-sync" />
@@ -23,7 +23,7 @@
                                     <GCol>
                                         <b>{{ dataTableName }}</b>
                                     </GCol>
-                                </b-row>
+                                </GRow>
                             </b-container>
                         </template>
                         <b-table
@@ -34,7 +34,7 @@
                             striped />
                     </b-card>
                 </GCol>
-            </b-row>
+            </GRow>
         </b-container>
     </div>
 </template>
@@ -45,9 +45,11 @@ import { getAppRoot } from "onload/loadConfig";
 
 import GAlert from "@/component-library/GAlert.vue";
 import GCol from "@/component-library/GCol.vue";
+import GRow from "@/component-library/GRow.vue";
 
 export default {
     components: {
+        GRow,
         GCol,
         GAlert,
     },

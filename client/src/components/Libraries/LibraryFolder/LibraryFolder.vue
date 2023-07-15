@@ -220,7 +220,7 @@
         </b-table>
         <!-- hide pagination if the table is loading-->
         <b-container>
-            <b-row align-v="center" class="justify-content-md-center">
+            <GRow align-v="center" class="justify-content-md-center">
                 <GCol md="auto">
                     <div v-if="isBusy">
                         <b-spinner small type="grow"></b-spinner>
@@ -254,7 +254,7 @@
                         </tr>
                     </table>
                 </GCol>
-            </b-row>
+            </GRow>
         </b-container>
     </div>
 </template>
@@ -282,6 +282,7 @@ import FolderTopBar from "./TopToolbar/FolderTopBar";
 
 import GCol from "@/component-library/GCol.vue";
 import GLink from "@/component-library/GLink.vue";
+import GRow from "@/component-library/GRow.vue";
 
 initFolderTableIcons();
 
@@ -299,6 +300,7 @@ function initialFolderState() {
 }
 export default {
     components: {
+        GRow,
         GCol,
         GLink,
         FolderTopBar,

@@ -10,6 +10,7 @@ import { useMarkdown } from "@/composables/markdown";
 import { type BroadcastNotification, useBroadcastsStore } from "@/stores/broadcastsStore";
 
 import GCol from "@/component-library/GCol.vue";
+import GRow from "@/component-library/GRow.vue";
 import Heading from "@/components/Common/Heading.vue";
 
 library.add(faInfoCircle, faTimes);
@@ -42,7 +43,7 @@ function onActionClick(item: BroadcastNotification, link: string) {
 <template>
     <div v-if="activeBroadcasts.length > 0">
         <div v-for="broadcast in activeBroadcasts" :key="broadcast.id">
-            <BRow
+            <GRow
                 align-v="center"
                 class="broadcast-banner m-0"
                 :class="{ 'non-urgent': broadcast.variant !== 'urgent' }">
@@ -55,15 +56,15 @@ function onActionClick(item: BroadcastNotification, link: string) {
                         :icon="faInfoCircle" />
                 </GCol>
                 <GCol>
-                    <BRow align-v="center">
+                    <GRow align-v="center">
                         <Heading size="md" bold>
                             {{ broadcast.content.subject }}
                         </Heading>
-                    </BRow>
-                    <BRow align-v="center">
+                    </GRow>
+                    <GRow align-v="center">
                         <span class="broadcast-message" v-html="renderMarkdown(broadcast.content.message)" />
-                    </BRow>
-                    <BRow>
+                    </GRow>
+                    <GRow>
                         <div v-if="broadcast.content.action_links">
                             <BButton
                                 v-for="actionLink in broadcast.content.action_links"
@@ -74,7 +75,7 @@ function onActionClick(item: BroadcastNotification, link: string) {
                                 {{ actionLink.action_name }}
                             </BButton>
                         </div>
-                    </BRow>
+                    </GRow>
                 </GCol>
                 <GCol cols="auto" align-self="center" class="p-0">
                     <BButton
@@ -85,7 +86,7 @@ function onActionClick(item: BroadcastNotification, link: string) {
                         Dismiss
                     </BButton>
                 </GCol>
-            </BRow>
+            </GRow>
         </div>
     </div>
 </template>

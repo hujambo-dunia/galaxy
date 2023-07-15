@@ -1,5 +1,5 @@
 <template>
-    <b-row class="ml-3 mb-1">
+    <GRow class="ml-3 mb-1">
         <i class="pref-icon pt-1 fa fa-lg fa-broadcast-tower" />
         <div class="pref-content pr-1">
             <a id="beacon-settings" href="javascript:void(0)"><b v-b-modal.modal-beacon v-localize>Manage Beacon</b></a>
@@ -113,25 +113,26 @@
                 </div>
             </b-modal>
         </div>
-    </b-row>
+    </GRow>
 </template>
 
 <script>
 import axios from "axios";
-import { BButton, BModal, BRow } from "bootstrap-vue";
+import { BButton, BModal } from "bootstrap-vue";
 import { mapActions } from "pinia";
 import { withPrefix } from "utils/redirect";
 
 import { useHistoryStore } from "@/stores/historyStore";
 
 import GAlert from "@/component-library/GAlert.vue";
+import GRow from "@/component-library/GRow.vue";
 
 export default {
     components: {
         GAlert,
         BButton,
         BModal,
-        BRow,
+        GRow,
     },
     props: {
         userId: {

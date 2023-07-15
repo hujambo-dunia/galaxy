@@ -1,11 +1,11 @@
 <template>
     <b-container>
-        <b-row>
+        <GRow>
             <GCol>
                 <h1 class="h-sm">Current Custom Builds</h1>
             </GCol>
-        </b-row>
-        <b-row>
+        </GRow>
+        <GRow>
             <GCol>
                 <b-table small show-empty class="grid" :items="customBuilds" :fields="fields">
                     <template v-slot:cell(action)="row">
@@ -19,14 +19,14 @@
                     </template>
                 </b-table>
             </GCol>
-        </b-row>
+        </GRow>
         <template v-if="installedBuilds.length > 0">
-            <b-row class="mt-2">
+            <GRow class="mt-2">
                 <GCol>
                     <h2 class="h-sm">System Installed Builds</h2>
                 </GCol>
-            </b-row>
-            <b-row>
+            </GRow>
+            <GRow>
                 <GCol id="installed-builds" class="mb-4">
                     <multiselect
                         v-model="selectedInstalledBuilds"
@@ -38,14 +38,14 @@
                         :options="installedBuilds">
                     </multiselect>
                 </GCol>
-            </b-row>
+            </GRow>
         </template>
-        <b-row>
+        <GRow>
             <GCol>
                 <h2 class="h-sm">Add a Custom Build</h2>
             </GCol>
-        </b-row>
-        <b-row>
+        </GRow>
+        <GRow>
             <GCol>
                 <b-card>
                     <GAlert
@@ -142,7 +142,7 @@ chr5    152537259</pre
                     </p>
                 </b-card>
             </GCol>
-        </b-row>
+        </GRow>
     </b-container>
 </template>
 
@@ -158,11 +158,13 @@ import Multiselect from "vue-multiselect";
 
 import GAlert from "@/component-library/GAlert.vue";
 import GCol from "@/component-library/GCol.vue";
+import GRow from "@/component-library/GRow.vue";
 
 Vue.use(BootstrapVue);
 
 export default {
     components: {
+        GRow,
         GCol,
         GAlert,
         Multiselect,

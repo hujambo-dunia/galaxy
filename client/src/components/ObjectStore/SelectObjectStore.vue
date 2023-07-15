@@ -7,6 +7,7 @@ import { getSelectableObjectStores } from "./services";
 
 import GAlert from "@/component-library/GAlert.vue";
 import GCol from "@/component-library/GCol.vue";
+import GRow from "@/component-library/GRow.vue";
 import LoadingSpan from "@/components/LoadingSpan.vue";
 import DescribeObjectStore from "@/components/ObjectStore/DescribeObjectStore.vue";
 import ObjectStoreBadges from "@/components/ObjectStore/ObjectStoreBadges.vue";
@@ -89,7 +90,7 @@ async function handleSubmit(preferredObjectStoreId: string) {
             <GAlert v-if="error" variant="danger" class="object-store-selection-error" show>
                 {{ error }}
             </GAlert>
-            <b-row>
+            <GRow>
                 <GCol cols="7">
                     <b-button-group vertical size="lg" style="width: 100%">
                         <b-button
@@ -120,11 +121,11 @@ async function handleSubmit(preferredObjectStoreId: string) {
                         {{ whyIsSelectionPreferredText }}
                     </p>
                 </GCol>
-            </b-row>
+            </GRow>
             <b-popover target="no-preferred-object-store-button" triggers="hover" v-bind="popoverProps">
-                <template v-slot:title
-                    ><span v-localize>{{ defaultOptionTitle }}</span></template
-                >
+                <template v-slot:title>
+                    <span v-localize>{{ defaultOptionTitle }}</span>
+                </template>
                 <span v-localize>{{ defaultOptionDescription }}</span>
             </b-popover>
             <b-popover

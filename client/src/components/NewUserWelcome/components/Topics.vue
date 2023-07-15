@@ -4,7 +4,7 @@
             <h1 class="text-center my-3">{{ title | localize }}</h1>
             <h2 class="text-center my-3 h-sm">{{ intro | localize }}</h2>
         </header>
-        <b-row class="justify-content-md-center mb-3">
+        <GRow class="justify-content-md-center mb-3">
             <b-card-group v-for="(subject, idx) in topics" :key="idx">
                 <b-card
                     class="text-center m-2 border-0 new-user-welcome-topic"
@@ -21,13 +21,18 @@
                     }}</b-button>
                 </b-card>
             </b-card-group>
-        </b-row>
+        </GRow>
     </div>
 </template>
 <script>
 import { getAppRoot } from "onload/loadConfig";
 
+import GRow from "@/component-library/GRow.vue";
+
 export default {
+    components: {
+        GRow,
+    },
     props: {
         topics: {
             type: Array,

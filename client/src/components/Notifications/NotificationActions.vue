@@ -2,7 +2,7 @@
 import { library } from "@fortawesome/fontawesome-svg-core";
 import { faHourglassHalf } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-import { BButton, BRow } from "bootstrap-vue";
+import { BButton } from "bootstrap-vue";
 import { formatDistanceToNow, parseISO } from "date-fns";
 
 import type { UserNotification } from "@/components/Notifications";
@@ -10,6 +10,7 @@ import { useNotificationsStore } from "@/stores/notificationsStore";
 
 import GCol from "@/component-library/GCol.vue";
 import GInputGroup from "@/component-library/GInputGroup.vue";
+import GRow from "@/component-library/GRow.vue";
 import AsyncButton from "@/components/Common/AsyncButton.vue";
 import UtcDate from "@/components/UtcDate.vue";
 
@@ -37,7 +38,7 @@ function getNotificationExpirationTitle(notification: UserNotification) {
 
 <template>
     <GCol v-if="notification">
-        <BRow align-h="end" align-v="center">
+        <GRow align-h="end" align-v="center">
             <UtcDate class="mx-2" :date="notification.create_time" mode="elapsed" />
             <GInputGroup>
                 <AsyncButton
@@ -60,6 +61,6 @@ function getNotificationExpirationTitle(notification: UserNotification) {
                     title="Delete"
                     :action="() => notificationsStore.updateNotification(notification, { deleted: true })" />
             </GInputGroup>
-        </BRow>
+        </GRow>
     </GCol>
 </template>
