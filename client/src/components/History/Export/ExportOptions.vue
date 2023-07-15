@@ -1,11 +1,12 @@
 <script setup>
-import { BCollapse, BFormCheckbox, BFormGroup, BFormSelect } from "bootstrap-vue";
+import { BFormCheckbox, BFormGroup, BFormSelect } from "bootstrap-vue";
 import { ExportParamsModel } from "components/Common/models/exportRecordModel";
 import { computed, reactive, ref } from "vue";
 
 import { AVAILABLE_EXPORT_FORMATS } from "./services";
 
 import GCard from "@/component-library/GCard.vue";
+import GCollapse from "@/component-library/GCollapse.vue";
 import GLink from "@/component-library/GLink.vue";
 
 const props = defineProps({
@@ -41,7 +42,7 @@ function onValueChanged() {
             @click="isExpanded = !isExpanded">
             {{ title }}
         </GLink>
-        <b-collapse id="collapse-options" v-model="isExpanded">
+        <GCollapse id="collapse-options" v-model="isExpanded">
             <GCard>
                 <b-form-group label="Export Format:" label-for="format">
                     <b-form-select
@@ -79,6 +80,6 @@ function onValueChanged() {
                     </b-form-checkbox>
                 </b-form-group>
             </GCard>
-        </b-collapse>
+        </GCollapse>
     </div>
 </template>

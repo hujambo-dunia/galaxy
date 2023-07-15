@@ -67,7 +67,7 @@
                     Share {{ modelClass }} with Individual Users
                     <font-awesome-icon :icon="isCollapseVisible ? `caret-up` : `caret-down`" />
                 </b-button>
-                <b-collapse id="accordion-1" accordion="main-accordion" role="tabpanel">
+                <GCollapse id="accordion-1" accordion="main-accordion" role="tabpanel">
                     <ConfigProvider v-slot="{ config }">
                         <div v-if="currentUser && config && !permissionsChangeRequired(item)">
                             <p v-if="item.users_shared_with.length === 0" class="share_with_title">
@@ -174,13 +174,13 @@
                                         Datasets can be shared by updating their permissions
                                     </b-button>
                                 </GCardHeader>
-                                <b-collapse id="can-share" visible accordion="can-share-accordion" role="tabpanel">
+                                <GCollapse id="can-share" visible accordion="can-share-accordion" role="tabpanel">
                                     <b-list-group>
                                         <b-list-group-item v-for="dataset in item.extra.can_change" :key="dataset.id">{{
                                             dataset.name
                                         }}</b-list-group-item>
                                     </b-list-group>
-                                </b-collapse>
+                                </GCollapse>
                             </GCard>
                         </GCol>
                         <GCol v-if="item.extra.cannot_change.length > 0">
@@ -191,7 +191,7 @@
                                         permissions</b-button
                                     >
                                 </GCardHeader>
-                                <b-collapse id="cannot-share" visible accordion="cannot-accordion2" role="tabpanel">
+                                <GCollapse id="cannot-share" visible accordion="cannot-accordion2" role="tabpanel">
                                     <b-list-group>
                                         <b-list-group-item
                                             v-for="dataset in item.extra.cannot_change"
@@ -199,7 +199,7 @@
                                             >{{ dataset.name }}</b-list-group-item
                                         >
                                     </b-list-group>
-                                </b-collapse>
+                                </GCollapse>
                             </GCard>
                         </GCol>
                         <GCol>
@@ -252,7 +252,7 @@
                             </GCard>
                         </GCol>
                     </GRow>
-                </b-collapse>
+                </GCollapse>
             </GCard>
         </div>
     </div>
@@ -282,6 +282,7 @@ import GAlert from "@/component-library/GAlert.vue";
 import GCard from "@/component-library/GCard.vue";
 import GCardHeader from "@/component-library/GCardHeader.vue";
 import GCol from "@/component-library/GCol.vue";
+import GCollapse from "@/component-library/GCollapse.vue";
 import GRow from "@/component-library/GRow.vue";
 import GTooltip from "@/component-library/GTooltip.vue";
 
@@ -296,6 +297,8 @@ const defaultExtra = () => {
 };
 export default {
     components: {
+        GTooltip,
+        GCollapse,
         GCard,
         GCardHeader,
         GRow,
