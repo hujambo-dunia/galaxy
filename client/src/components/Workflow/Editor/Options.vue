@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BButton, BDropdown, GDropdownItem } from "bootstrap-vue";
+import { BButton, BDropdown } from "bootstrap-vue";
 import { computed } from "vue";
 
 import { useConfirmDialog } from "@/composables/confirmDialog";
