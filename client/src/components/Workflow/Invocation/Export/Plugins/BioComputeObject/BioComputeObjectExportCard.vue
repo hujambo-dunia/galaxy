@@ -93,9 +93,15 @@
 import axios from "axios";
 import { getRootFromIndexLink } from "onload";
 import { getAppRoot } from "onload/loadConfig";
+import GTabs from "@/component-library/GTabs.vue";
+import GTab from "@/component-library/GTab.vue";
 
 const getUrl = (path) => getRootFromIndexLink() + path;
 export default {
+    components: {
+        GTabs,
+        GTab,
+    },
     props: {
         invocationId: {
             type: String,

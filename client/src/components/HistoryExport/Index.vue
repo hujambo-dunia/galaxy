@@ -27,19 +27,21 @@
 </template>
 
 <script>
-import { BCard, BTab, BTabs } from "bootstrap-vue";
+import { BCard } from "bootstrap-vue";
 import exportsMixin from "components/Common/exportsMixin";
 
 import ToLink from "./ToLink.vue";
 import ToRemoteFile from "./ToRemoteFile.vue";
+import GTabs from "@/component-library/GTabs.vue";
+import GTab from "@/component-library/GTab.vue";
 
 export default {
     components: {
         ToLink,
         ToRemoteFile,
         BCard,
-        BTabs,
-        BTab,
+        GTabs,
+        GTab,
     },
     mixins: [exportsMixin],
     props: {
