@@ -1,6 +1,6 @@
 <template>
     <div>
-        <b-breadcrumb v-if="dataManager && !loading" id="breadcrumb" :items="breadcrumbItems" />
+        <GBreadcrumb v-if="dataManager && !loading" id="breadcrumb" :items="breadcrumbItems" />
         <GAlert :message="message" :variant="status" />
         <GAlert v-if="viewOnly" message="Not implemented" variant="dark" />
         <GAlert v-else-if="loading" message="Waiting for data" variant="info" />
@@ -75,6 +75,7 @@ import GInput from "component-library/GInput";
 import { getAppRoot } from "onload/loadConfig";
 
 import GAlert from "@/component-library/GAlert.vue";
+import GBreadcrumb from "@/component-library/GBreadcrumb.vue";
 import GCard from "@/component-library/GCard.vue";
 import GCol from "@/component-library/GCol.vue";
 import GContainer from "@/component-library/GContainer.vue";
@@ -84,6 +85,7 @@ import GRow from "@/component-library/GRow.vue";
 
 export default {
     components: {
+        GBreadcrumb,
         GContainer,
         GCard,
         GRow,

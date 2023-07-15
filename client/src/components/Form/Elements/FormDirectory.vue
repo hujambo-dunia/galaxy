@@ -6,7 +6,7 @@
             </b-button>
             <FilesDialog :key="modalKey" mode="directory" :callback="setUrl" :require-writable="true" />
         </div>
-        <b-breadcrumb v-if="url">
+        <GBreadcrumb v-if="url">
             <GBreadcrumbItem title="Select another folder" class="align-items-center" @click="reset">
                 <b-button class="pathname" variant="primary">
                     <font-awesome-icon icon="folder-open" />
@@ -33,7 +33,7 @@
                     @keydown.191.capture.prevent.stop="addPath"
                     @keydown.8.capture="removeLastPath" />
             </GBreadcrumbItem>
-        </b-breadcrumb>
+        </GBreadcrumb>
     </div>
 </template>
 
@@ -44,6 +44,7 @@ import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { FilesDialog } from "components/FilesDialog";
 import _l from "utils/localization";
 
+import GBreadcrumb from "@/component-library/GBreadcrumb.vue";
 import GBreadcrumbItem from "@/component-library/GBreadcrumbItem.vue";
 
 library.add(faFolder, faFolderOpen);
@@ -57,6 +58,7 @@ const getDefaultValues = () => ({
 
 export default {
     components: {
+        GBreadcrumb,
         GBreadcrumbItem,
         FontAwesomeIcon,
         FilesDialog,
