@@ -8,14 +8,14 @@
             <b-card no-body>
                 <b-tabs pills card vertical>
                     <b-tab title="to a link" title-link-class="tab-export-to-link" active>
-                        <b-card-text>
+                        <GCardText>
                             <ToLink :history-id="historyId" />
-                        </b-card-text>
+                        </GCardText>
                     </b-tab>
                     <b-tab title="to a remote file" title-link-class="tab-export-to-file">
-                        <b-card-text>
+                        <GCardText>
                             <ToRemoteFile :history-id="historyId" />
-                        </b-card-text>
+                        </GCardText>
                     </b-tab>
                 </b-tabs>
             </b-card>
@@ -32,9 +32,11 @@ import exportsMixin from "components/Common/exportsMixin";
 
 import ToLink from "./ToLink.vue";
 import ToRemoteFile from "./ToRemoteFile.vue";
+import GCardText from "@/component-library/GCardText.vue";
 
 export default {
     components: {
+        GCardText,
         ToLink,
         ToRemoteFile,
         BCard,
