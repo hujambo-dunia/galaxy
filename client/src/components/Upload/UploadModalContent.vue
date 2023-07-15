@@ -36,8 +36,9 @@ import Composite from "./Composite";
 import Default from "./Default";
 import { uploadModelsToPayload } from "./helpers";
 import RulesInput from "./RulesInput";
-import GTabs from "@/component-library/GTabs.vue";
+
 import GTab from "@/component-library/GTab.vue";
+import GTabs from "@/component-library/GTabs.vue";
 
 export default {
     components: {

@@ -2,8 +2,9 @@
 import FromFileOrUrl from "./Import/FromFileOrUrl";
 import TrsImport from "./Import/TrsImport";
 import TrsSearch from "./Import/TrsSearch";
-import GTabs from "@/component-library/GTabs.vue";
+
 import GTab from "@/component-library/GTab.vue";
+import GTabs from "@/component-library/GTabs.vue";
 </script>
 
 <template>

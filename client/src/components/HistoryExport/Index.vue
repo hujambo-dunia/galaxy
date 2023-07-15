@@ -32,8 +32,8 @@ import exportsMixin from "components/Common/exportsMixin";
 
 import ToLink from "./ToLink.vue";
 import ToRemoteFile from "./ToRemoteFile.vue";
-import GTabs from "@/component-library/GTabs.vue";
 import GTab from "@/component-library/GTab.vue";
+import GTabs from "@/component-library/GTabs.vue";
 
 export default {
     components: {

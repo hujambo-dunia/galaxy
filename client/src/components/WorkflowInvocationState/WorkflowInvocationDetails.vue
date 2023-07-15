@@ -3,9 +3,9 @@ import { useWorkflowInstance } from "@/composables/useWorkflowInstance";
 
 import ParameterStep from "./ParameterStep.vue";
 import WorkflowInvocationStep from "./WorkflowInvocationStep.vue";
-import GenericHistoryItem from "components/History/Content/GenericItem.vue";
-import GTabs from "@/component-library/GTabs.vue";
 import GTab from "@/component-library/GTab.vue";
+import GTabs from "@/component-library/GTabs.vue";
+import GenericHistoryItem from "components/History/Content/GenericItem.vue";
 
 const props = defineProps({
     invocation: {
