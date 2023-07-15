@@ -1,6 +1,6 @@
 <template>
-    <b-tabs v-if="ready">
-        <b-tab v-if="showRegular" id="regular" title="Regular" button-id="tab-title-link-regular">
+    <GTabs v-if="ready">
+        <GTab v-if="showRegular" id="regular" title="Regular" button-id="tab-title-link-regular">
             <default
                 ref="regular"
                 :details="details"
@@ -9,17 +9,17 @@
                 :has-callback="hasCallback"
                 :selectable="selectable"
                 v-on="$listeners" />
-        </b-tab>
-        <b-tab v-if="showComposite" id="composite" title="Composite" button-id="tab-title-link-composite">
+        </GTab>
+        <GTab v-if="showComposite" id="composite" title="Composite" button-id="tab-title-link-composite">
             <composite :details="details" :has-callback="hasCallback" :selectable="selectable" v-on="$listeners" />
-        </b-tab>
-        <b-tab v-if="showCollection" id="collection" title="Collection" button-id="tab-title-link-collection">
+        </GTab>
+        <GTab v-if="showCollection" id="collection" title="Collection" button-id="tab-title-link-collection">
             <collection :details="details" :has-callback="hasCallback" :selectable="selectable" v-on="$listeners" />
-        </b-tab>
-        <b-tab v-if="showRules" id="rule-based" title="Rule-based" button-id="tab-title-link-rule-based">
+        </GTab>
+        <GTab v-if="showRules" id="rule-based" title="Rule-based" button-id="tab-title-link-rule-based">
             <rules-input :details="details" :has-callback="hasCallback" :selectable="selectable" v-on="$listeners" />
-        </b-tab>
-    </b-tabs>
+        </GTab>
+    </GTabs>
     <div v-else>
         <loading-span message="Loading required information from Galaxy server." />
     </div>

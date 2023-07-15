@@ -89,14 +89,14 @@ async function onArchiveHistory(exportRecordId?: string) {
             <div v-if="canFreeStorage">
                 <h2 class="h-md">How do you want to archive this history?</h2>
                 <b-card no-body class="mt-3">
-                    <b-tabs pills card vertical lazy class="archival-option-tabs">
-                        <b-tab id="keep-storage-tab" title="Keep storage space" active>
+                    <GTabs pills card vertical lazy class="archival-option-tabs">
+                        <GTab id="keep-storage-tab" title="Keep storage space" active>
                             <history-archive-simple :history="history" @onArchive="onArchiveHistory" />
-                        </b-tab>
-                        <b-tab id="free-storage-tab" title="Free storage space">
+                        </GTab>
+                        <GTab id="free-storage-tab" title="Free storage space">
                             <history-archive-export-selector :history="history" @onArchive="onArchiveHistory" />
-                        </b-tab>
-                    </b-tabs>
+                        </GTab>
+                    </GTabs>
                 </b-card>
             </div>
             <history-archive-simple v-else :history="history" @onArchive="onArchiveHistory" />

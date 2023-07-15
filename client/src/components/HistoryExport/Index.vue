@@ -6,18 +6,18 @@
         </span>
         <span v-else-if="hasWritableFileSources">
             <b-card no-body>
-                <b-tabs pills card vertical>
-                    <b-tab title="to a link" title-link-class="tab-export-to-link" active>
+                <GTabs pills card vertical>
+                    <GTab title="to a link" title-link-class="tab-export-to-link" active>
                         <GCardText>
                             <ToLink :history-id="historyId" />
                         </GCardText>
-                    </b-tab>
-                    <b-tab title="to a remote file" title-link-class="tab-export-to-file">
+                    </GTab>
+                    <GTab title="to a remote file" title-link-class="tab-export-to-file">
                         <GCardText>
                             <ToRemoteFile :history-id="historyId" />
                         </GCardText>
-                    </b-tab>
-                </b-tabs>
+                    </GTab>
+                </GTabs>
             </b-card>
         </span>
         <span v-else>

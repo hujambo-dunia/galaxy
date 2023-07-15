@@ -25,7 +25,7 @@ describe("Index.vue", () => {
             },
             localVue,
         });
-        expect(wrapper.exists("b-tabs-stub")).toBeTruthy();
+        expect(wrapper.exists("GTabs-stub")).toBeTruthy();
     });
 
     afterEach(() => {
