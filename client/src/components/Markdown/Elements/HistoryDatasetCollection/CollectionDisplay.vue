@@ -31,7 +31,7 @@
                 <span class="font-weight-light">{{ collectionName }}</span>
             </span>
         </b-card-header>
-        <b-card-body>
+        <GCardBody>
             <LoadingSpan v-if="loading" message="Loading Collection" />
             <div v-else class="content-height">
                 <GAlert v-if="!!messageText" :variant="messageVariant" show>
@@ -39,7 +39,7 @@
                 </GAlert>
                 <CollectionTree :node="itemContent" :skip-head="true" />
             </div>
-        </b-card-body>
+        </GCardBody>
     </b-card>
 </template>
 
@@ -56,9 +56,11 @@ import { useUserStore } from "@/stores/userStore";
 import CollectionTree from "./CollectionTree";
 
 import GAlert from "@/component-library/GAlert.vue";
+import GCardBody from "@/component-library/GCardBody.vue";
 
 export default {
     components: {
+        GCardBody,
         CollectionTree,
         GAlert,
         LoadingSpan,

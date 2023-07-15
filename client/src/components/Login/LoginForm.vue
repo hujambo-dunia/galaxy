@@ -16,7 +16,7 @@
                             <b-card-header v-if="!connectExternalProvider">
                                 <span>{{ headerWelcome }}</span>
                             </b-card-header>
-                            <b-card-body>
+                            <GCardBody>
                                 <div>
                                     <!-- standard internal galaxy login -->
                                     <b-form-group :label="labelNameAddress" label-for="login-form-name">
@@ -57,7 +57,7 @@
                                     <!-- OIDC login-->
                                     <external-login :login_page="true" :exclude_idps="[connectExternalProvider]" />
                                 </div>
-                            </b-card-body>
+                            </GCardBody>
                             <b-card-footer>
                                 <span v-if="!connectExternalProvider">
                                     Don't have an account?
@@ -112,11 +112,13 @@ import Vue from "vue";
 import NewUserConfirmation from "./NewUserConfirmation";
 
 import GAlert from "@/component-library/GAlert.vue";
+import GCardBody from "@/component-library/GCardBody.vue";
 
 Vue.use(BootstrapVue);
 
 export default {
     components: {
+        GCardBody,
         GAlert,
         ExternalLogin,
         GInput,

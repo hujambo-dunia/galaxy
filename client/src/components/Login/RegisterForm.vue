@@ -16,11 +16,11 @@
                                 Register using institutional account
                             </b-card-header>
                             <b-collapse id="accordion-oidc" visible role="tabpanel" accordion="registration_acc">
-                                <b-card-body>
+                                <GCardBody>
                                     Create a Galaxy account using an institutional account (e.g.:Google/JHU). This will
                                     redirect you to your institutional login through Custos.
                                     <external-login :login_page="false" />
-                                </b-card-body>
+                                </GCardBody>
                             </b-collapse>
                         </span>
                         <!-- Local Galaxy Registration -->
@@ -33,7 +33,7 @@
                             :visible="!custosPreferred"
                             role="tabpanel"
                             accordion="registration_acc">
-                            <b-card-body>
+                            <GCardBody>
                                 <b-form-group :label="labelEmailAddress" label-for="register-form-email">
                                     <GInput id="register-form-email" v-model="email" name="email" type="text" />
                                 </b-form-group>
@@ -77,7 +77,7 @@
                                 <b-button v-localize name="create" type="submit" :disabled="disableCreate"
                                     >Create</b-button
                                 >
-                            </b-card-body>
+                            </GCardBody>
                         </b-collapse>
                         <b-card-footer v-if="showLoginLink">
                             <span v-localize>Already have an account?</span>
@@ -109,11 +109,13 @@ import { withPrefix } from "utils/redirect";
 import Vue from "vue";
 
 import GAlert from "@/component-library/GAlert.vue";
+import GCardBody from "@/component-library/GCardBody.vue";
 
 Vue.use(BootstrapVue);
 
 export default {
     components: {
+        GCardBody,
         GAlert,
         ExternalLogin,
         GInput,
