@@ -3,16 +3,16 @@
         <GCard v-if="!simple" class="citation-card" header-tag="nav">
             <template v-slot:header>
                 <b-nav card-header tabs>
-                    <b-nav-item
+                    <GNavItem
                         :active="outputFormat === outputFormats.CITATION"
-                        @click="outputFormat = outputFormats.CITATION"
-                        >Citations (APA)</b-nav-item
-                    >
-                    <b-nav-item
+                        @click="outputFormat = outputFormats.CITATION">
+                        Citations (APA)
+                    </GNavItem>
+                    <GNavItem
                         :active="outputFormat === outputFormats.BIBTEX"
-                        @click="outputFormat = outputFormats.BIBTEX"
-                        >BibTeX</b-nav-item
-                    >
+                        @click="outputFormat = outputFormats.BIBTEX">
+                        BibTeX
+                    </GNavItem>
                 </b-nav>
             </template>
             <div v-if="source === 'histories'" class="infomessage">
@@ -59,6 +59,7 @@ import { getCitations } from "./services";
 
 import GCard from "@/component-library/GCard.vue";
 import GCollapse from "@/component-library/GCollapse.vue";
+import GNavItem from "@/component-library/GNavItem.vue";
 
 Vue.use(BootstrapVue);
 
@@ -70,6 +71,7 @@ const outputFormats = Object.freeze({
 
 export default {
     components: {
+        GNavItem,
         GCollapse,
         GCard,
         Citation,
