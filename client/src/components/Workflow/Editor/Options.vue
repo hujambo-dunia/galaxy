@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { BButton, BDropdown } from "bootstrap-vue";
+import { BButton } from "bootstrap-vue";
 import { computed } from "vue";
 
 import { useConfirmDialog } from "@/composables/confirmDialog";
+
+import GDropdown from "@/component-library/GDropdown.vue";
+import GDropdownItem from "@/component-library/GDropdownItem.vue";
 
 const emit = defineEmits<{
     (e: "onAttributes"): void;
@@ -88,7 +91,7 @@ async function onSave() {
             @click="$emit('onReport')">
             <span class="fa fa-edit" />
         </b-button>
-        <b-dropdown
+        <GDropdown
             id="workflow-options-button"
             v-b-tooltip.hover
             no-caret
@@ -121,7 +124,7 @@ async function onSave() {
                 <span class="fa fa-download" />
                 Download
             </GDropdownItem>
-        </b-dropdown>
+        </GDropdown>
         <b-button
             id="workflow-run-button"
             v-b-tooltip.hover
