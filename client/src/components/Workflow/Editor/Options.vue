@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BButton, BDropdown, BDropdownItem } from "bootstrap-vue";
+import { BButton, BDropdown, GDropdownItem } from "bootstrap-vue";
 import { computed } from "vue";
 
 import { useConfirmDialog } from "@/composables/confirmDialog";
@@ -101,21 +101,26 @@ async function onSave() {
             <template v-slot:button-content>
                 <span class="fa fa-cog" />
             </template>
-            <b-dropdown-item href="#" @click="$emit('onSaveAs')"
-                ><span class="fa fa-floppy-o" />Save As...</b-dropdown-item
-            >
-            <b-dropdown-item href="#" @click="$emit('onLayout')"
-                ><span class="fa fa-align-left" />Auto Layout</b-dropdown-item
-            >
-            <b-dropdown-item href="#" @click="$emit('onLint')"
-                ><span class="fa fa-magic" />Best Practices</b-dropdown-item
-            >
-            <b-dropdown-item href="#" @click="$emit('onUpgrade')"
-                ><span class="fa fa-recycle" />Upgrade Workflow</b-dropdown-item
-            >
-            <b-dropdown-item href="#" @click="$emit('onDownload')"
-                ><span class="fa fa-download" />Download</b-dropdown-item
-            >
+            <GDropdownItem href="#" @click="$emit('onSaveAs')">
+                <span class="fa fa-floppy-o" />
+                Save As...
+            </GDropdownItem>
+            <GDropdownItem href="#" @click="$emit('onLayout')">
+                <span class="fa fa-align-left" />
+                Auto Layout
+            </GDropdownItem>
+            <GDropdownItem href="#" @click="$emit('onLint')">
+                <span class="fa fa-magic" />
+                Best Practices
+            </GDropdownItem>
+            <GDropdownItem href="#" @click="$emit('onUpgrade')">
+                <span class="fa fa-recycle" />
+                Upgrade Workflow
+            </GDropdownItem>
+            <GDropdownItem href="#" @click="$emit('onDownload')">
+                <span class="fa fa-download" />
+                Download
+            </GDropdownItem>
         </b-dropdown>
         <b-button
             id="workflow-run-button"
