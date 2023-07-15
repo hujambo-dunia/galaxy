@@ -2,7 +2,7 @@
 import { library } from "@fortawesome/fontawesome-svg-core";
 import { faCopy, faEye, faUndo } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-import { BBadge, BButton, BButtonGroup, BListGroup, BListGroupItem } from "bootstrap-vue";
+import { BButton, BButtonGroup, BListGroup, BListGroupItem } from "bootstrap-vue";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router/composables";
 
@@ -17,6 +17,7 @@ import {
 import localize from "@/utils/localization";
 
 import GAlert from "@/component-library/GAlert.vue";
+import GBadge from "@/component-library/GBadge.vue";
 import GPagination from "@/component-library/GPagination.vue";
 import DelayedInput from "@/components/Common/DelayedInput.vue";
 import Heading from "@/components/Common/Heading.vue";
@@ -162,21 +163,21 @@ async function onImportCopy(history: ArchivedHistorySummary) {
                         </Heading>
 
                         <div class="d-flex align-items-center flex-gapx-1 badges">
-                            <b-badge
+                            <GBadge
                                 v-if="history.published"
                                 v-b-tooltip
                                 pill
                                 :title="localize('This history is public.')">
                                 {{ localize("Published") }}
-                            </b-badge>
-                            <b-badge
+                            </GBadge>
+                            <GBadge
                                 v-if="!history.purged"
                                 v-b-tooltip
                                 pill
                                 :title="localize('Amount of items in history')">
                                 {{ history.count }} {{ localize("items") }}
-                            </b-badge>
-                            <b-badge
+                            </GBadge>
+                            <GBadge
                                 v-if="history.export_record_data"
                                 v-b-tooltip
                                 pill
@@ -186,10 +187,10 @@ async function onImportCopy(history: ArchivedHistorySummary) {
                                     )
                                 ">
                                 {{ localize("Snapshot available") }}
-                            </b-badge>
-                            <b-badge v-b-tooltip pill :title="localize('Last edited/archived')">
+                            </GBadge>
+                            <GBadge v-b-tooltip pill :title="localize('Last edited/archived')">
                                 <UtcDate :date="history.update_time" mode="elapsed" />
-                            </b-badge>
+                            </GBadge>
                         </div>
                     </div>
 

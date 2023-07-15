@@ -4,7 +4,7 @@ import { faListAlt } from "@fortawesome/free-regular-svg-icons";
 import { faArrowDown, faColumns, faSignInAlt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { useInfiniteScroll } from "@vueuse/core";
-import { BBadge, BButton, BButtonGroup, BFormGroup, BListGroup, BListGroupItem, BModal } from "bootstrap-vue";
+import { BButton, BButtonGroup, BFormGroup, BListGroup, BListGroupItem, BModal } from "bootstrap-vue";
 import isEqual from "lodash.isequal";
 import { storeToRefs } from "pinia";
 import { computed, onMounted, onUnmounted, type PropType, type Ref, ref, watch } from "vue";
@@ -17,6 +17,7 @@ import Filtering, { contains, expandNameTag } from "@/utils/filtering";
 import localize from "@/utils/localization";
 
 import GAlert from "@/component-library/GAlert.vue";
+import GBadge from "@/component-library/GBadge.vue";
 import GInput from "@/component-library/GInput.vue";
 import Heading from "@/components/Common/Heading.vue";
 import StatelessTags from "@/components/TagsMultiselect/StatelessTags.vue";
@@ -215,7 +216,7 @@ async function loadMore(noScroll = false) {
                 <GInput v-model="filter" type="search" debounce="400" :placeholder="localize('Search Filter')" />
             </b-form-group>
 
-            <b-badge v-if="filter && !validFilter" class="alert-danger w-100">Search string too short!</b-badge>
+            <GBadge v-if="filter && !validFilter" class="alert-danger w-100">Search string too short!</GBadge>
             <GAlert v-else-if="!busy && hasNoResults" variant="danger" show>No histories found.</GAlert>
 
             <div ref="scrollableDiv" class="history-selector-modal-list">
@@ -235,12 +236,12 @@ async function loadMore(noScroll = false) {
                             </Heading>
 
                             <div class="d-flex align-items-center flex-gapx-1">
-                                <b-badge v-b-tooltip pill :title="localize('Amount of items in history')">
+                                <GBadge v-b-tooltip pill :title="localize('Amount of items in history')">
                                     {{ history.count }} {{ localize("items") }}
-                                </b-badge>
-                                <b-badge v-if="history.update_time" v-b-tooltip pill :title="localize('Last edited')">
+                                </GBadge>
+                                <GBadge v-if="history.update_time" v-b-tooltip pill :title="localize('Last edited')">
                                     <UtcDate :date="history.update_time" mode="elapsed" />
-                                </b-badge>
+                                </GBadge>
                             </div>
                         </div>
 
