@@ -6,8 +6,8 @@
         </GAlert>
         <DatasetAttributesProvider :id="datasetId" v-slot="{ result, loading }" @error="onError">
             <div v-if="!loading" class="mt-3">
-                <b-tabs>
-                    <b-tab v-if="!result['attribute_disable']">
+                <GTabs>
+                    <GTab v-if="!result['attribute_disable']">
                         <template v-slot:title>
                             <font-awesome-icon icon="bars" class="mr-1" />{{ "Attributes" | l }}
                         </template>
@@ -24,8 +24,8 @@
                                 <font-awesome-icon icon="redo" class="mr-1" />{{ "Auto-detect" | l }}
                             </b-button>
                         </div>
-                    </b-tab>
-                    <b-tab
+                    </GTab>
+                    <GTab
                         v-if="
                             (!result['conversion_disable'] || !result['datatype_disable']) &&
                             !result['metadata_disable']
@@ -77,8 +77,8 @@
                                 </div>
                             </div>
                         </div>
-                    </b-tab>
-                    <b-tab v-if="!result['permission_disable']">
+                    </GTab>
+                    <GTab v-if="!result['permission_disable']">
                         <template v-slot:title>
                             <font-awesome-icon icon="user" class="mr-1" />{{ "Permissions" | l }}
                         </template>
@@ -88,8 +88,8 @@
                                 <font-awesome-icon icon="save" class="mr-1" />{{ "Save" | l }}
                             </b-button>
                         </div>
-                    </b-tab>
-                </b-tabs>
+                    </GTab>
+                </GTabs>
             </div>
         </DatasetAttributesProvider>
     </div>

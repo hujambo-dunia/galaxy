@@ -1,6 +1,6 @@
 <template>
-    <b-tabs v-if="invocation">
-        <b-tab title="Summary" active>
+    <GTabs v-if="invocation">
+        <GTab title="Summary" active>
             <workflow-invocation-summary
                 :invocation="invocation"
                 :index="index"
@@ -8,24 +8,24 @@
                 :invocation-scheduling-terminal="invocationSchedulingTerminal"
                 :job-states-summary="jobStatesSummary"
                 @invocation-cancelled="cancelWorkflowScheduling" />
-        </b-tab>
-        <b-tab title="Details">
+        </GTab>
+        <GTab title="Details">
             <workflow-invocation-details
                 :invocation="invocation"
                 :invocation-and-job-terminal="invocationAndJobTerminal" />
-        </b-tab>
-        <!-- <b-tab title="Workflow Overview">
+        </GTab>
+        <!-- <GTab title="Workflow Overview">
             <p>TODO: Insert readonly version of workflow editor here</p>
-        </b-tab> -->
-        <b-tab title="Export">
+        </GTab> -->
+        <GTab title="Export">
             <div v-if="invocationAndJobTerminal">
                 <workflow-invocation-export-options :invocation-id="invocation.id" />
             </div>
             <GAlert v-else variant="info" show>
                 <LoadingSpan message="Waiting to complete invocation" />
             </GAlert>
-        </b-tab>
-    </b-tabs>
+        </GTab>
+    </GTabs>
     <GAlert v-else variant="info" show>
         <LoadingSpan message="Loading invocation" />
     </GAlert>
