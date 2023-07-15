@@ -15,7 +15,7 @@
                     <template v-slot:button-content>
                         <span class="fa fa-cog" />
                     </template>
-                    <b-dropdown-form>
+                    <GDropdownForm>
                         <b-form-checkbox v-model="sendToNewHistory" class="workflow-run-settings-target"
                             >Send results to a new history</b-form-checkbox
                         >
@@ -35,7 +35,7 @@
                             :invocation-intermediate-preferred-object-store-id="preferredIntermediateObjectStoreId"
                             @updated="onStorageUpdate">
                         </WorkflowStorageConfiguration>
-                    </b-dropdown-form>
+                    </GDropdownForm>
                 </b-dropdown>
             </div>
             <FormDisplay :inputs="formInputs" @onChange="onChange" />
@@ -61,8 +61,11 @@ import { useUserStore } from "@/stores/userStore";
 import { invokeWorkflow } from "./services";
 import WorkflowStorageConfiguration from "./WorkflowStorageConfiguration";
 
+import GDropdownForm from "@/component-library/GDropdownForm.vue";
+
 export default {
     components: {
+        GDropdownForm,
         ButtonSpinner,
         ConfigProvider,
         FormDisplay,
