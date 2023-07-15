@@ -1,6 +1,6 @@
 <template>
     <div>
-        <b-card v-if="!simple" class="citation-card" header-tag="nav">
+        <GCard v-if="!simple" class="citation-card" header-tag="nav">
             <template v-slot:header>
                 <b-nav card-header tabs>
                     <b-nav-item
@@ -26,7 +26,7 @@
                     :citation="citation"
                     :output-format="outputFormat" />
             </div>
-        </b-card>
+        </GCard>
         <div v-else-if="citations.length">
             <b-btn v-b-toggle="id" variant="primary">Citations</b-btn>
             <b-collapse
@@ -36,14 +36,14 @@
                 @shown="$emit('shown')"
                 @hide="$emit('hide')"
                 @hidden="$emit('hidden')">
-                <b-card>
+                <GCard>
                     <Citation
                         v-for="(citation, index) in citations"
                         :key="index"
                         class="formatted-reference"
                         :citation="citation"
                         :output-format="outputFormat" />
-                </b-card>
+                </GCard>
             </b-collapse>
         </div>
     </div>
@@ -57,6 +57,8 @@ import { useConfig } from "@/composables/config";
 import Citation from "./Citation";
 import { getCitations } from "./services";
 
+import GCard from "@/component-library/GCard.vue";
+
 Vue.use(BootstrapVue);
 
 const outputFormats = Object.freeze({
@@ -67,6 +69,7 @@ const outputFormats = Object.freeze({
 
 export default {
     components: {
+        GCard,
         Citation,
     },
     props: {

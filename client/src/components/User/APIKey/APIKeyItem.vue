@@ -6,6 +6,7 @@ import { ref } from "vue";
 
 import svc from "./model/service";
 
+import GCard from "@/component-library/GCard.vue";
 import GInputGroup from "@/component-library/GInputGroup.vue";
 import GInputGroupAppend from "@/component-library/GInputGroupAppend.vue";
 import GInputGroupPrepend from "@/component-library/GInputGroupPrepend.vue";
@@ -37,7 +38,7 @@ const deleteKey = () => {
 </script>
 
 <template>
-    <b-card title="Current API key">
+    <GCard title="Current API key">
         <div class="d-flex justify-content-between w-100">
             <div class="w-100">
                 <GInputGroup
@@ -80,5 +81,5 @@ const deleteKey = () => {
         <b-modal ref="modal" title="Delete API key" size="md" @ok="deleteKey">
             <p v-localize>Are you sure you want to delete this key?</p>
         </b-modal>
-    </b-card>
+    </GCard>
 </template>

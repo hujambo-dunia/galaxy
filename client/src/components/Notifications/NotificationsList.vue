@@ -2,7 +2,7 @@
 import { library } from "@fortawesome/fontawesome-svg-core";
 import { faCircle, faHourglassHalf, faRetweet } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-import { BButton, BButtonGroup, BCard, BCollapse, BFormCheckbox } from "bootstrap-vue";
+import { BButton, BButtonGroup, BCollapse, BFormCheckbox } from "bootstrap-vue";
 import { storeToRefs } from "pinia";
 import { computed, ref } from "vue";
 
@@ -10,6 +10,7 @@ import type { UserNotification } from "@/components/Notifications";
 import { useNotificationsStore } from "@/stores/notificationsStore";
 
 import GAlert from "@/component-library/GAlert.vue";
+import GCard from "@/component-library/GCard.vue";
 import GCol from "@/component-library/GCol.vue";
 import GRow from "@/component-library/GRow.vue";
 import LoadingSpan from "@/components/LoadingSpan.vue";
@@ -78,9 +79,9 @@ function togglePreferences() {
         </div>
 
         <BCollapse v-model="preferencesOpen">
-            <BCard class="m-2">
+            <GCard class="m-2">
                 <NotificationsPreferences v-if="preferencesOpen" header-size="h-md" />
-            </BCard>
+            </GCard>
         </BCollapse>
 
         <GAlert v-if="loadingNotifications" show>
@@ -92,7 +93,7 @@ function togglePreferences() {
         </GAlert>
 
         <div v-else class="mx-1">
-            <BCard class="mb-2">
+            <GCard class="mb-2">
                 <GRow class="align-items-center" no-gutters>
                     <GCol cols="1">
                         <BFormCheckbox
@@ -141,14 +142,14 @@ function togglePreferences() {
                         </GRow>
                     </GCol>
                 </GRow>
-            </BCard>
+            </GCard>
 
             <GAlert v-show="filteredNotifications.length === 0" show variant="info">
                 No matching notifications with current filters.
             </GAlert>
 
             <TransitionGroup name="notifications-list" tag="div">
-                <BCard
+                <GCard
                     v-for="item in filteredNotifications"
                     v-show="filteredNotifications.length > 0"
                     :key="item.id"
@@ -169,7 +170,7 @@ function togglePreferences() {
                         </GCol>
                         <NotificationItem :notification="item" />
                     </GRow>
-                </BCard>
+                </GCard>
             </TransitionGroup>
         </div>
     </div>

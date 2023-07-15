@@ -1,5 +1,5 @@
 <template>
-    <b-card body-class="p-0">
+    <GCard body-class="p-0">
         <GCardHeader>
             <span class="float-right">
                 <b-button
@@ -40,7 +40,7 @@
                 <CollectionTree :node="itemContent" :skip-head="true" />
             </div>
         </GCardBody>
-    </b-card>
+    </GCard>
 </template>
 
 <script>
@@ -56,11 +56,13 @@ import { useUserStore } from "@/stores/userStore";
 import CollectionTree from "./CollectionTree";
 
 import GAlert from "@/component-library/GAlert.vue";
+import GCard from "@/component-library/GCard.vue";
 import GCardBody from "@/component-library/GCardBody.vue";
 import GCardHeader from "@/component-library/GCardHeader.vue";
 
 export default {
     components: {
+        GCard,
         GCardHeader,
         GCardBody,
         CollectionTree,

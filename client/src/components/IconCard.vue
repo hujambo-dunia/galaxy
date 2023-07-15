@@ -1,5 +1,5 @@
 <template>
-    <b-card :title="title" class="mx-4 icon-card">
+    <GCard :title="title" class="mx-4 icon-card">
         <b-container class="p-0">
             <GRow>
                 <GCol>{{ description }}</GCol>
@@ -7,10 +7,11 @@
             </GRow>
         </b-container>
         <b-button variant="primary" @click="onButtonClick">{{ buttonText }}</b-button>
-    </b-card>
+    </GCard>
 </template>
 
 <script>
+import GCard from "@/component-library/GCard.vue";
 import GCol from "@/component-library/GCol.vue";
 import GRow from "@/component-library/GRow.vue";
 
@@ -19,6 +20,7 @@ import GRow from "@/component-library/GRow.vue";
  * Clicking the button emits an "onButtonClick" event. */
 export default {
     components: {
+        GCard,
         GRow,
         GCol,
     },

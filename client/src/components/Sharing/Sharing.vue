@@ -58,7 +58,7 @@
                 access it. Note that sharing a History will also allow access to all of its datasets.
             </div>
             <br />
-            <b-card no-body>
+            <GCard no-body>
                 <b-button
                     v-b-toggle.accordion-1
                     class="share-with-collapse"
@@ -168,7 +168,7 @@
                     </GAlert>
                     <GRow v-if="permissionsChangeRequired(item)">
                         <GCol v-if="item.extra.can_change.length > 0">
-                            <b-card>
+                            <GCard>
                                 <GCardHeader header-tag="header" class="p-1" role="tab">
                                     <b-button v-b-toggle.can-share block variant="warning">
                                         Datasets can be shared by updating their permissions
@@ -181,10 +181,10 @@
                                         }}</b-list-group-item>
                                     </b-list-group>
                                 </b-collapse>
-                            </b-card>
+                            </GCard>
                         </GCol>
                         <GCol v-if="item.extra.cannot_change.length > 0">
-                            <b-card>
+                            <GCard>
                                 <GCardHeader header-tag="header" class="p-1" role="tab">
                                     <b-button v-b-toggle.cannot-share block variant="danger"
                                         >Datasets cannot be shared, you are not authorized to change
@@ -200,10 +200,10 @@
                                         >
                                     </b-list-group>
                                 </b-collapse>
-                            </b-card>
+                            </GCard>
                         </GCol>
                         <GCol>
-                            <b-card
+                            <GCard
                                 border-variant="primary"
                                 header="How would you like to proceed?"
                                 header-bg-variant="primary"
@@ -249,11 +249,11 @@
                                     Share Anyway
                                 </b-button>
                                 <b-button block variant="outline-danger" @click="getSharing()">Cancel </b-button>
-                            </b-card>
+                            </GCard>
                         </GCol>
                     </GRow>
                 </b-collapse>
-            </b-card>
+            </GCard>
         </div>
     </div>
 </template>
@@ -279,6 +279,7 @@ import { useUserStore } from "@/stores/userStore";
 import ErrorMessage from "./ErrorMessage";
 
 import GAlert from "@/component-library/GAlert.vue";
+import GCard from "@/component-library/GCard.vue";
 import GCardHeader from "@/component-library/GCardHeader.vue";
 import GCol from "@/component-library/GCol.vue";
 import GRow from "@/component-library/GRow.vue";
@@ -295,6 +296,7 @@ const defaultExtra = () => {
 };
 export default {
     components: {
+        GCard,
         GCardHeader,
         GRow,
         GCol,

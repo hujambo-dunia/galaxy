@@ -1,5 +1,5 @@
 <template>
-    <b-card>
+    <GCard>
         <div class="mb-1">{{ repo.long_description }}</div>
         <div class="mb-3">
             <GLink :href="repo.repository_url" target="_blank">Show additional details and dependencies.</GLink>
@@ -61,7 +61,7 @@
                 </div>
             </div>
         </div>
-    </b-card>
+    </GCard>
 </template>
 <script>
 import BootstrapVue from "bootstrap-vue";
@@ -75,12 +75,14 @@ import InstallationActions from "./InstallationActions.vue";
 import InstallationSettings from "./InstallationSettings.vue";
 import RepositoryTools from "./RepositoryTools.vue";
 import GAlert from "@/component-library/GAlert.vue";
+import GCard from "@/component-library/GCard.vue";
 import GLink from "@/component-library/GLink.vue";
 
 Vue.use(BootstrapVue);
 
 export default {
     components: {
+        GCard,
         GLink,
         GAlert,
         ConfigProvider,

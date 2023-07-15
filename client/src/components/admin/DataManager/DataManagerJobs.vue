@@ -56,13 +56,13 @@
                     </b-button-group>
                 </template>
                 <template v-slot:row-details="row">
-                    <b-card>
+                    <GCard>
                         <h2 class="h-text">Command Line</h2>
                         <pre class="code"><code class="command-line">{{ row.item.commandLine }}</code></pre>
                         <template v-slot:footer>
                             <b-button class="mt-3" @click="row.toggleDetails">Hide Info</b-button>
                         </template>
-                    </b-card>
+                    </GCard>
                 </template>
             </b-table>
         </div>
@@ -75,6 +75,7 @@ import GInput from "component-library/GInput";
 import { getAppRoot } from "onload/loadConfig";
 
 import GAlert from "@/component-library/GAlert.vue";
+import GCard from "@/component-library/GCard.vue";
 import GCol from "@/component-library/GCol.vue";
 import GInputGroup from "@/component-library/GInputGroup.vue";
 import GInputGroupAppend from "@/component-library/GInputGroupAppend.vue";
@@ -82,6 +83,7 @@ import GRow from "@/component-library/GRow.vue";
 
 export default {
     components: {
+        GCard,
         GRow,
         GCol,
         GInputGroup,

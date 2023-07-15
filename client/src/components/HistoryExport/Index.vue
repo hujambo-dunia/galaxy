@@ -5,7 +5,7 @@
             <loading-span :message="initializeFileSourcesMessage" />
         </span>
         <span v-else-if="hasWritableFileSources">
-            <b-card no-body>
+            <GCard no-body>
                 <GTabs pills card vertical>
                     <GTab title="to a link" title-link-class="tab-export-to-link" active>
                         <GCardText>
@@ -18,7 +18,7 @@
                         </GCardText>
                     </GTab>
                 </GTabs>
-            </b-card>
+            </GCard>
         </span>
         <span v-else>
             <ToLink :history-id="historyId" />
@@ -27,11 +27,12 @@
 </template>
 
 <script>
-import { BCard, BTab, BTabs } from "bootstrap-vue";
+import { BTab, BTabs } from "bootstrap-vue";
 import exportsMixin from "components/Common/exportsMixin";
 
 import ToLink from "./ToLink.vue";
 import ToRemoteFile from "./ToRemoteFile.vue";
+import GCard from "@/component-library/GCard.vue";
 import GCardText from "@/component-library/GCardText.vue";
 
 export default {
@@ -39,7 +40,7 @@ export default {
         GCardText,
         ToLink,
         ToRemoteFile,
-        BCard,
+        GCard,
         BTabs,
         BTab,
     },

@@ -9,9 +9,10 @@ import {
     faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-import { BButton, BButtonGroup, BButtonToolbar, BCard, BCollapse, BTable } from "bootstrap-vue";
+import { BButton, BButtonGroup, BButtonToolbar, BCollapse, BTable } from "bootstrap-vue";
 import { computed, ref } from "vue";
 
+import GCard from "@/component-library/GCard.vue";
 import GLink from "@/component-library/GLink.vue";
 
 library.add(faExclamationCircle, faCheckCircle, faDownload, faFileImport, faSpinner, faLink);
@@ -60,7 +61,7 @@ function copyDownloadLink(record) {
             {{ title }}
         </GLink>
         <b-collapse id="collapse-previous" v-model="isExpanded">
-            <b-card>
+            <GCard>
                 <b-table :items="props.records" :fields="fields">
                     <template v-slot:cell(elapsedTime)="row">
                         <span :title="row.item.date">{{ row.value }}</span>
@@ -137,7 +138,7 @@ function copyDownloadLink(record) {
                         </b-button-toolbar>
                     </template>
                 </b-table>
-            </b-card>
+            </GCard>
         </b-collapse>
     </div>
 </template>
