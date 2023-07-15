@@ -41,12 +41,12 @@
                             </b-button>
                             <b-button name="cancel" type="submit" @click.prevent="login">No, go back to login</b-button>
                         </GCardBody>
-                        <b-card-footer>
+                        <GCardFooter>
                             Already have an account?
                             <a id="login-toggle" href="javascript:void(0)" role="button" @click.prevent="login">
                                 Log in here.
                             </a>
-                        </b-card-footer>
+                        </GCardFooter>
                     </b-card>
                 </b-form>
             </div>
@@ -64,11 +64,13 @@ import Vue from "vue";
 
 import GAlert from "@/component-library/GAlert.vue";
 import GCardBody from "@/component-library/GCardBody.vue";
+import GCardFooter from "@/component-library/GCardFooter.vue";
 
 Vue.use(BootstrapVue);
 
 export default {
     components: {
+        GCardFooter,
         GCardBody,
         GAlert,
     },

@@ -58,7 +58,7 @@
                                     <external-login :login_page="true" :exclude_idps="[connectExternalProvider]" />
                                 </div>
                             </GCardBody>
-                            <b-card-footer>
+                            <GCardFooter>
                                 <span v-if="!connectExternalProvider">
                                     Don't have an account?
                                     <span v-if="allowUserCreation">
@@ -82,7 +82,7 @@
                                         Return to login here.
                                     </a>
                                 </span>
-                            </b-card-footer>
+                            </GCardFooter>
                         </b-card>
                     </b-form>
                 </div>
@@ -113,11 +113,13 @@ import NewUserConfirmation from "./NewUserConfirmation";
 
 import GAlert from "@/component-library/GAlert.vue";
 import GCardBody from "@/component-library/GCardBody.vue";
+import GCardFooter from "@/component-library/GCardFooter.vue";
 
 Vue.use(BootstrapVue);
 
 export default {
     components: {
+        GCardFooter,
         GCardBody,
         GAlert,
         ExternalLogin,
