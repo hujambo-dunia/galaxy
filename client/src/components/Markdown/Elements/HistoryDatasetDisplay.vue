@@ -1,6 +1,6 @@
 <template>
     <b-card body-class="p-0">
-        <b-card-header v-if="!embedded">
+        <GCardHeader v-if="!embedded">
             <span class="float-right">
                 <b-button
                     v-b-tooltip.hover
@@ -52,7 +52,7 @@
                 <span>Dataset:</span>
                 <span class="font-weight-light">{{ datasetName }}</span>
             </span>
-        </b-card-header>
+        </GCardHeader>
         <GCardBody>
             <UrlDataProvider v-slot="{ result: itemContent, loading, error }" :url="itemUrl">
                 <UrlDataProvider v-slot="{ result: datatypesModel, loading: datatypesLoading }" :url="datatypesUrl">
@@ -100,10 +100,12 @@ import { UrlDataProvider } from "components/providers/UrlDataProvider";
 import { getAppRoot } from "onload/loadConfig";
 
 import GCardBody from "@/component-library/GCardBody.vue";
+import GCardHeader from "@/component-library/GCardHeader.vue";
 import GLink from "@/component-library/GLink.vue";
 
 export default {
     components: {
+        GCardHeader,
         GCardBody,
         GLink,
         LoadingSpan,
