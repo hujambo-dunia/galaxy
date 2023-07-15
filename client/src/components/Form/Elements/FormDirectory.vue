@@ -7,20 +7,21 @@
             <FilesDialog :key="modalKey" mode="directory" :callback="setUrl" :require-writable="true" />
         </div>
         <b-breadcrumb v-if="url">
-            <b-breadcrumb-item title="Select another folder" class="align-items-center" @click="reset">
+            <GBreadcrumbItem title="Select another folder" class="align-items-center" @click="reset">
                 <b-button class="pathname" variant="primary">
-                    <font-awesome-icon icon="folder-open" /> {{ url.protocol }}</b-button
-                >
-            </b-breadcrumb-item>
-            <b-breadcrumb-item
+                    <font-awesome-icon icon="folder-open" />
+                    {{ url.protocol }}
+                </b-button>
+            </GBreadcrumbItem>
+            <GBreadcrumbItem
                 v-for="({ pathChunk, editable }, index) in pathChunks"
                 :key="index"
                 class="existent-url-path align-items-center">
                 <b-button class="regular-path-chunk" :disabled="!editable" variant="dark" @click="removePath(index)">
-                    {{ pathChunk }}</b-button
-                >
-            </b-breadcrumb-item>
-            <b-breadcrumb-item class="directory-input-field align-items-center">
+                    {{ pathChunk }}
+                </b-button>
+            </GBreadcrumbItem>
+            <GBreadcrumbItem class="directory-input-field align-items-center">
                 <b-input
                     id="path-input-breadcrumb"
                     v-model="currentDirectoryName"
@@ -31,7 +32,7 @@
                     @keyup.enter="addPath"
                     @keydown.191.capture.prevent.stop="addPath"
                     @keydown.8.capture="removeLastPath" />
-            </b-breadcrumb-item>
+            </GBreadcrumbItem>
         </b-breadcrumb>
     </div>
 </template>
@@ -42,6 +43,8 @@ import { faFolder, faFolderOpen } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { FilesDialog } from "components/FilesDialog";
 import _l from "utils/localization";
+
+import GBreadcrumbItem from "@/component-library/GBreadcrumbItem.vue";
 
 library.add(faFolder, faFolderOpen);
 
@@ -54,6 +57,7 @@ const getDefaultValues = () => ({
 
 export default {
     components: {
+        GBreadcrumbItem,
         FontAwesomeIcon,
         FilesDialog,
     },
