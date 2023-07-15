@@ -10,6 +10,7 @@ import { useToast } from "@/composables/toast";
 import { useMultiselect } from "@/composables/useMultiselect";
 import { useUserTags } from "@/composables/user";
 import { useUid } from "@/composables/utils/uid";
+import GTooltip from "@/component-library/GTooltip.vue";
 
 import Tag from "./Tag.vue";
 
@@ -188,7 +189,7 @@ function onTagClicked(tag: string) {
                     {{ slicedTags.length }} more...
                 </b-button>
 
-                <b-tooltip
+                <GTooltip
                     v-if="slicedTags.length > 0 && !toggledOpen"
                     :target="toggleButtonId"
                     custom-class="stateless-tags--tag-preview-tooltip"
@@ -200,7 +201,7 @@ function onTagClicked(tag: string) {
                         :editable="false"
                         :clickable="props.clickable"
                         @click="onTagClicked"></Tag>
-                </b-tooltip>
+                </GTooltip>
             </div>
         </div>
     </div>

@@ -40,9 +40,9 @@
                     <b-button id="tooltip-clipboard" variant="link" size="sm" @click="onCopy" @mouseout="onCopyOut">
                         <font-awesome-icon :icon="['far', 'copy']" />
                     </b-button>
-                    <b-tooltip target="tooltip-clipboard" triggers="hover">
+                    <GTooltip target="tooltip-clipboard" triggers="hover">
                         {{ tooltipClipboard }}
-                    </b-tooltip>
+                    </GTooltip>
                     <a v-if="showUrl" id="item-url" :href="itemUrl" target="_top" class="ml-2">
                         url:
                         {{ itemUrl }}
@@ -169,11 +169,11 @@
                     <GRow v-if="permissionsChangeRequired(item)">
                         <GCol v-if="item.extra.can_change.length > 0">
                             <b-card>
-                                <b-card-header header-tag="header" class="p-1" role="tab">
+                                <GCardHeader header-tag="header" class="p-1" role="tab">
                                     <b-button v-b-toggle.can-share block variant="warning">
                                         Datasets can be shared by updating their permissions
                                     </b-button>
-                                </b-card-header>
+                                </GCardHeader>
                                 <b-collapse id="can-share" visible accordion="can-share-accordion" role="tabpanel">
                                     <b-list-group>
                                         <b-list-group-item v-for="dataset in item.extra.can_change" :key="dataset.id">{{
@@ -185,12 +185,12 @@
                         </GCol>
                         <GCol v-if="item.extra.cannot_change.length > 0">
                             <b-card>
-                                <b-card-header header-tag="header" class="p-1" role="tab">
+                                <GCardHeader header-tag="header" class="p-1" role="tab">
                                     <b-button v-b-toggle.cannot-share block variant="danger"
                                         >Datasets cannot be shared, you are not authorized to change
                                         permissions</b-button
                                     >
-                                </b-card-header>
+                                </GCardHeader>
                                 <b-collapse id="cannot-share" visible accordion="cannot-accordion2" role="tabpanel">
                                     <b-list-group>
                                         <b-list-group-item
@@ -279,8 +279,10 @@ import { useUserStore } from "@/stores/userStore";
 import ErrorMessage from "./ErrorMessage";
 
 import GAlert from "@/component-library/GAlert.vue";
+import GCardHeader from "@/component-library/GCardHeader.vue";
 import GCol from "@/component-library/GCol.vue";
 import GRow from "@/component-library/GRow.vue";
+import GTooltip from "@/component-library/GTooltip.vue";
 
 Vue.use(BootstrapVue);
 library.add(faCopy, faEdit, faUserPlus, faUserSlash, faCaretDown, faCaretUp);
@@ -293,6 +295,7 @@ const defaultExtra = () => {
 };
 export default {
     components: {
+        GCardHeader,
         GRow,
         GCol,
         GAlert,

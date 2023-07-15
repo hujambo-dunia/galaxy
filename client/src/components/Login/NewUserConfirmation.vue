@@ -10,7 +10,7 @@
                 </GAlert>
                 <b-form id="confirmation" @submit.prevent="submit()">
                     <b-card no-body header="Confirm new account creation">
-                        <b-card-body>
+                        <GCardBody>
                             <p>Looks like you are about to create a new account!</p>
                             <p>
                                 Do you already have a Galaxy account? If so, click
@@ -40,13 +40,13 @@
                                 Yes, create new account
                             </b-button>
                             <b-button name="cancel" type="submit" @click.prevent="login">No, go back to login</b-button>
-                        </b-card-body>
-                        <b-card-footer>
+                        </GCardBody>
+                        <GCardFooter>
                             Already have an account?
                             <a id="login-toggle" href="javascript:void(0)" role="button" @click.prevent="login">
                                 Log in here.
                             </a>
-                        </b-card-footer>
+                        </GCardFooter>
                     </b-card>
                 </b-form>
             </div>
@@ -63,11 +63,15 @@ import { withPrefix } from "utils/redirect";
 import Vue from "vue";
 
 import GAlert from "@/component-library/GAlert.vue";
+import GCardBody from "@/component-library/GCardBody.vue";
+import GCardFooter from "@/component-library/GCardFooter.vue";
 
 Vue.use(BootstrapVue);
 
 export default {
     components: {
+        GCardFooter,
+        GCardBody,
         GAlert,
     },
     props: {

@@ -12,28 +12,28 @@
                     <b-card no-body>
                         <!-- OIDC and Custos enabled and prioritized: encourage users to use it instead of local registration -->
                         <span v-if="custosPreferred">
-                            <b-card-header v-b-toggle.accordion-oidc role="button">
+                            <GCardHeader v-b-toggle.accordion-oidc role="button">
                                 Register using institutional account
-                            </b-card-header>
+                            </GCardHeader>
                             <b-collapse id="accordion-oidc" visible role="tabpanel" accordion="registration_acc">
-                                <b-card-body>
+                                <GCardBody>
                                     Create a Galaxy account using an institutional account (e.g.:Google/JHU). This will
                                     redirect you to your institutional login through Custos.
                                     <external-login :login_page="false" />
-                                </b-card-body>
+                                </GCardBody>
                             </b-collapse>
                         </span>
                         <!-- Local Galaxy Registration -->
-                        <b-card-header v-if="!custosPreferred" v-localize>Create a Galaxy account</b-card-header>
-                        <b-card-header v-else v-localize v-b-toggle.accordion-register role="button">
+                        <GCardHeader v-if="!custosPreferred" v-localize>Create a Galaxy account</GCardHeader>
+                        <GCardHeader v-else v-localize v-b-toggle.accordion-register role="button">
                             Or, register with email
-                        </b-card-header>
+                        </GCardHeader>
                         <b-collapse
                             id="accordion-register"
                             :visible="!custosPreferred"
                             role="tabpanel"
                             accordion="registration_acc">
-                            <b-card-body>
+                            <GCardBody>
                                 <b-form-group :label="labelEmailAddress" label-for="register-form-email">
                                     <GInput id="register-form-email" v-model="email" name="email" type="text" />
                                 </b-form-group>
@@ -77,9 +77,9 @@
                                 <b-button v-localize name="create" type="submit" :disabled="disableCreate"
                                     >Create</b-button
                                 >
-                            </b-card-body>
+                            </GCardBody>
                         </b-collapse>
-                        <b-card-footer v-if="showLoginLink">
+                        <GCardFooter v-if="showLoginLink">
                             <span v-localize>Already have an account?</span>
                             <a
                                 id="login-toggle"
@@ -89,7 +89,7 @@
                                 @click.prevent="toggleLogin">
                                 Log in here.
                             </a>
-                        </b-card-footer>
+                        </GCardFooter>
                     </b-card>
                 </b-form>
             </div>
@@ -109,11 +109,17 @@ import { withPrefix } from "utils/redirect";
 import Vue from "vue";
 
 import GAlert from "@/component-library/GAlert.vue";
+import GCardBody from "@/component-library/GCardBody.vue";
+import GCardFooter from "@/component-library/GCardFooter.vue";
+import GCardHeader from "@/component-library/GCardHeader.vue";
 
 Vue.use(BootstrapVue);
 
 export default {
     components: {
+        GCardHeader,
+        GCardFooter,
+        GCardBody,
         GAlert,
         ExternalLogin,
         GInput,

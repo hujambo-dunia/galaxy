@@ -13,10 +13,10 @@
                     </GAlert>
                     <b-form id="login" @submit.prevent="submitLogin()">
                         <b-card no-body>
-                            <b-card-header v-if="!connectExternalProvider">
+                            <GCardHeader v-if="!connectExternalProvider">
                                 <span>{{ headerWelcome }}</span>
-                            </b-card-header>
-                            <b-card-body>
+                            </GCardHeader>
+                            <GCardBody>
                                 <div>
                                     <!-- standard internal galaxy login -->
                                     <b-form-group :label="labelNameAddress" label-for="login-form-name">
@@ -57,8 +57,8 @@
                                     <!-- OIDC login-->
                                     <external-login :login_page="true" :exclude_idps="[connectExternalProvider]" />
                                 </div>
-                            </b-card-body>
-                            <b-card-footer>
+                            </GCardBody>
+                            <GCardFooter>
                                 <span v-if="!connectExternalProvider">
                                     Don't have an account?
                                     <span v-if="allowUserCreation">
@@ -82,7 +82,7 @@
                                         Return to login here.
                                     </a>
                                 </span>
-                            </b-card-footer>
+                            </GCardFooter>
                         </b-card>
                     </b-form>
                 </div>
@@ -112,11 +112,17 @@ import Vue from "vue";
 import NewUserConfirmation from "./NewUserConfirmation";
 
 import GAlert from "@/component-library/GAlert.vue";
+import GCardBody from "@/component-library/GCardBody.vue";
+import GCardFooter from "@/component-library/GCardFooter.vue";
+import GCardHeader from "@/component-library/GCardHeader.vue";
 
 Vue.use(BootstrapVue);
 
 export default {
     components: {
+        GCardHeader,
+        GCardFooter,
+        GCardBody,
         GAlert,
         ExternalLogin,
         GInput,

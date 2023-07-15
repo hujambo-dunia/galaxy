@@ -7,6 +7,8 @@ import { isEmpty } from "@/utils/utils";
 
 import WorkflowTree from "./WorkflowTree.vue";
 import GAlert from "@/component-library/GAlert.vue";
+import GCardBody from "@/component-library/GCardBody.vue";
+import GCardHeader from "@/component-library/GCardHeader.vue";
 import LoadingSpan from "@/components/LoadingSpan.vue";
 
 interface WorkflowDisplayProps {
@@ -50,7 +52,7 @@ onMounted(async () => {
 
 <template>
     <b-card body-class="p-0" class="workflow-display">
-        <b-card-header v-if="!embedded">
+        <GCardHeader v-if="!embedded">
             <span class="float-right">
                 <b-button
                     v-b-tooltip.hover
@@ -80,8 +82,8 @@ onMounted(async () => {
                 <span>Workflow:</span>
                 <span class="font-weight-light" data-description="workflow name">{{ workflowName }}</span>
             </span>
-        </b-card-header>
-        <b-card-body>
+        </GCardHeader>
+        <GCardBody>
             <LoadingSpan v-if="loading" message="Loading Workflow" />
             <div v-else :class="!expanded && 'content-height'">
                 <GAlert v-if="!isEmpty(errorContent)" variant="danger" show>
@@ -100,7 +102,7 @@ onMounted(async () => {
                     </div>
                 </div>
             </div>
-        </b-card-body>
+        </GCardBody>
     </b-card>
 </template>
 <style scoped>
