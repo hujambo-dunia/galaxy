@@ -110,8 +110,8 @@ import { getAppRoot } from "onload/loadConfig";
 
 import Message from "../Message.vue";
 import BaseGrid from "./BaseGrid.vue";
-import GTabs from "@/component-library/GTabs.vue";
 import GTab from "@/component-library/GTab.vue";
+import GTabs from "@/component-library/GTabs.vue";
 
 export default {
     components: {

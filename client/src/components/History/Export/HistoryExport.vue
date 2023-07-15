@@ -18,8 +18,8 @@ import { exportToFileSource, getExportRecords, reimportHistoryFromRecord } from 
 
 import ExportOptions from "./ExportOptions.vue";
 import GAlert from "@/component-library/GAlert.vue";
-import GTabs from "@/component-library/GTabs.vue";
 import GTab from "@/component-library/GTab.vue";
+import GTabs from "@/component-library/GTabs.vue";
 import ExportForm from "components/Common/ExportForm.vue";
 import ExportRecordDetails from "components/Common/ExportRecordDetails.vue";
 import ExportRecordTable from "components/Common/ExportRecordTable.vue";

@@ -28,7 +28,7 @@
     </div>
 </template>
 <script>
-import { BButton, BCard, BCardGroup, BCarousel, BCarouselSlide, BTab, BTabs } from "bootstrap-vue";
+import { BButton, BCard, BCardGroup, BCarousel, BCarouselSlide } from "bootstrap-vue";
 import Heading from "components/Common/Heading";
 import Slides from "components/NewUserWelcome/components/Slides";
 import Subtopics from "components/NewUserWelcome/components/Subtopics";
@@ -40,14 +40,16 @@ import { getResource } from "./getResource";
 
 import GCol from "@/component-library/GCol.vue";
 import GRow from "@/component-library/GRow.vue";
+import GTab from "@/component-library/GTab.vue";
+import GTabs from "@/component-library/GTabs.vue";
 
 export default {
     components: {
         Heading,
         BCard,
         BCardGroup,
-        BTabs,
-        BTab,
+        GTab,
+        GTabs,
         BCarousel,
         BCarouselSlide,
         BButton,
