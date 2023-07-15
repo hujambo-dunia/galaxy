@@ -2,7 +2,7 @@
 import { library } from "@fortawesome/fontawesome-svg-core";
 import { faCopy, faEye, faUndo } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-import { BBadge, BButton, BButtonGroup, BListGroup, BListGroupItem, BPagination } from "bootstrap-vue";
+import { BBadge, BButton, BButtonGroup, BListGroup, BListGroupItem } from "bootstrap-vue";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router/composables";
 
@@ -17,6 +17,7 @@ import {
 import localize from "@/utils/localization";
 
 import GAlert from "@/component-library/GAlert.vue";
+import GPagination from "@/component-library/GPagination.vue";
 import DelayedInput from "@/components/Common/DelayedInput.vue";
 import Heading from "@/components/Common/Heading.vue";
 import LoadingSpan from "@/components/LoadingSpan.vue";
@@ -231,7 +232,7 @@ async function onImportCopy(history: ArchivedHistorySummary) {
                     <StatelessTags class="my-1" :value="history.tags" :disabled="true" :max-visible-tags="10" />
                 </b-list-group-item>
             </b-list-group>
-            <b-pagination
+            <GPagination
                 v-if="showPagination"
                 v-model="currentPage"
                 class="mt-3"
