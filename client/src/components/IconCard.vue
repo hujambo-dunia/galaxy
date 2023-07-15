@@ -1,11 +1,11 @@
 <template>
     <GCard :title="title" class="mx-4 icon-card">
-        <b-container class="p-0">
+        <GContainer class="p-0">
             <GRow>
                 <GCol>{{ description }}</GCol>
                 <GCol cols="auto"><i :class="icon"></i></GCol>
             </GRow>
-        </b-container>
+        </GContainer>
         <b-button variant="primary" @click="onButtonClick">{{ buttonText }}</b-button>
     </GCard>
 </template>
@@ -13,6 +13,7 @@
 <script>
 import GCard from "@/component-library/GCard.vue";
 import GCol from "@/component-library/GCol.vue";
+import GContainer from "@/component-library/GContainer.vue";
 import GRow from "@/component-library/GRow.vue";
 
 /** A generic Card, used as a template, that displays an action button,
@@ -20,6 +21,7 @@ import GRow from "@/component-library/GRow.vue";
  * Clicking the button emits an "onButtonClick" event. */
 export default {
     components: {
+        GContainer,
         GCard,
         GRow,
         GCol,

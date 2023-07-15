@@ -219,7 +219,7 @@
             </template>
         </b-table>
         <!-- hide pagination if the table is loading-->
-        <b-container>
+        <GContainer>
             <GRow align-v="center" class="justify-content-md-center">
                 <GCol md="auto">
                     <div v-if="isBusy">
@@ -254,7 +254,7 @@
                     </table>
                 </GCol>
             </GRow>
-        </b-container>
+        </GContainer>
     </div>
 </template>
 
@@ -280,6 +280,7 @@ import { fields } from "./table-fields";
 import FolderTopBar from "./TopToolbar/FolderTopBar";
 
 import GCol from "@/component-library/GCol.vue";
+import GContainer from "@/component-library/GContainer.vue";
 import GLink from "@/component-library/GLink.vue";
 import GPagination from "@/component-library/GPagination.vue";
 import GRow from "@/component-library/GRow.vue";
@@ -300,6 +301,7 @@ function initialFolderState() {
 }
 export default {
     components: {
+        GContainer,
         GPagination,
         GRow,
         GCol,

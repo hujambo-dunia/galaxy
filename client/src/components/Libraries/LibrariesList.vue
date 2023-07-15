@@ -145,7 +145,7 @@
             </template>
         </b-table>
 
-        <b-container>
+        <GContainer>
             <GRow class="justify-content-md-center">
                 <GCol md="auto">
                     <GPagination
@@ -175,7 +175,7 @@
                     </table>
                 </GCol>
             </GRow>
-        </b-container>
+        </GContainer>
     </div>
 </template>
 
@@ -201,6 +201,7 @@ import { fields } from "./table-fields";
 import GCard from "@/component-library/GCard.vue";
 import GCol from "@/component-library/GCol.vue";
 import GCollapse from "@/component-library/GCollapse.vue";
+import GContainer from "@/component-library/GContainer.vue";
 import GInputGroup from "@/component-library/GInputGroup.vue";
 import GLink from "@/component-library/GLink.vue";
 import GPagination from "@/component-library/GPagination.vue";
@@ -212,6 +213,7 @@ Vue.use(BootstrapVue);
 
 export default {
     components: {
+        GContainer,
         GPagination,
         GCollapse,
         GCard,

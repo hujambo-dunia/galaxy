@@ -1,6 +1,6 @@
 <template>
     <div>
-        <b-container fluid>
+        <GContainer fluid>
             <div v-if="dataset">
                 <LibraryBreadcrumb :current-id="dataset_id" :full_path="dataset.full_path" />
                 <b-button
@@ -69,7 +69,7 @@
                 <font-awesome-icon :icon="['far', 'save']" />
                 &nbsp;Save
             </b-button>
-        </b-container>
+        </GContainer>
     </div>
 </template>
 
@@ -90,12 +90,15 @@ import { getAppRoot } from "onload/loadConfig";
 import Vue from "vue";
 import VueObserveVisibility from "vue-observe-visibility";
 
+import GContainer from "@/component-library/GContainer.vue";
+
 Vue.use(VueObserveVisibility);
 Vue.use(BootstrapVue);
 initPermissionsIcons();
 
 export default {
     components: {
+        GContainer,
         PermissionsInputField,
         FontAwesomeIcon,
         LibraryBreadcrumb,
