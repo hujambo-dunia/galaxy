@@ -20,6 +20,10 @@ export function useFileDrop(
     function isAnyModalOpen() {
         return document.querySelectorAll(".modal.show").length > 0;
     }
+    function disableMouse(option = true) {
+        $('#qa_iframe').css('pointer-events', 'none');
+        return document.querySelectorAll("iframe").length > 0;
+    }
 
     type State = "idle" | "blocked" | "fileDragging";
     type StateMachine = {
@@ -65,6 +69,7 @@ export function useFileDrop(
             switch (event.type) {
                 case "dragover":
                     event.preventDefault();
+                    disableMouse();
                     idleTimer = setTimeout(() => (currentState.value = "idle"), idleTime);
                     break;
                 case "drop":
