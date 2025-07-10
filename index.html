@@ -684,13 +684,32 @@
       
       for (let i = 1; i < lines.length; i++) {
         const values = parseCSVLine(lines[i]);
-        if (values.length > 1 || values[0]) { // Skip empty rows
-          const row = {};
-          headers.forEach((header, index) => {
-            row[header] = values[index] || '';
-          });
-          data.push(row);
+        
+        // Skip completely empty rows or rows with only empty/whitespace values
+        const hasNonEmptyValue = values.some(value => value && value.trim() !== '');
+        if (!hasNonEmptyValue) {
+          console.log(`Skipping empty row at line ${i + 1}`);
+          continue;
         }
+        
+        const row = {};
+        headers.forEach((header, index) => {
+          row[header] = values[index] || '';
+        });
+        
+        // Stop parsing if tier is "###" - this marks end of data
+        if (row['Tier'] === '###') {
+          console.log(`Stopping data parsing at line ${i + 1} due to tier marker "###"`);
+          break;
+        }
+        
+        // Skip lines where tier starts with "#" (comment lines) but continue processing
+        if (row['Tier'] && row['Tier'].startsWith('#')) {
+          console.log(`Skipping comment line ${i + 1} with tier "${row['Tier']}"`);
+          continue;
+        }
+        
+        data.push(row);
       }
       
       return data;
