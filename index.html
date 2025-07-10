@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Galaxy Server Tracker</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
     body {
       font-family: sans-serif;
@@ -77,12 +78,55 @@
       text-align: left;
     }
     
+    /* Set column widths */
+    th:nth-child(1), td:nth-child(1) { /* Status column */
+      width: 50px;
+      max-width: 50px;
+    }
+    
+    th:nth-child(2), td:nth-child(2) { /* Tier column */
+      width: 50px;
+      max-width: 50px;
+    }
+    
+    th:nth-child(3), td:nth-child(3) { /* Name column */
+      width: 240px;
+      max-width: 240px;
+    }
+    
+    th:nth-child(4), td:nth-child(4) { /* Region column */
+      width: 100px;
+      max-width: 100px;
+    }
+    
     th {
       background: #444;
       color: white;
       cursor: pointer;
       user-select: none;
       position: relative;
+    }
+    
+    /* Center align the status and tier column headers */
+    th:nth-child(1), th:nth-child(2) {
+      text-align: center;
+    }
+    
+    /* Center align Info, Server, and Resources column headers */
+    th:nth-child(6), th:nth-child(7), th:nth-child(8) {
+      text-align: center;
+    }
+    
+    /* Server column styling for multi-line content */
+    td:nth-child(7) {
+      line-height: 1.3;
+      vertical-align: top;
+    }
+    
+    /* Resources column styling for multi-line content */
+    td:nth-child(8) {
+      line-height: 1.3;
+      vertical-align: top;
     }
     
     th:hover {
@@ -170,6 +214,96 @@
       color: #333;
     }
     
+    /* Server favicon styling */
+    .server-favicon {
+      width: 16px;
+      height: 16px;
+      margin-right: 0.5rem;
+      vertical-align: middle;
+      border-radius: 2px;
+    }
+    
+    .server-name-container {
+      display: flex;
+      align-items: center;
+    }
+    
+    .server-name-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    
+    .server-url {
+      font-size: 0.85em;
+      color: #666;
+      text-decoration: none;
+    }
+    
+    .server-url:hover {
+      color: #2196f3;
+      text-decoration: underline;
+    }
+    
+    .institution-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+    
+    .institution-notes {
+      font-size: 0.85em;
+      color: #666;
+      font-style: italic;
+      margin-top: 0.1rem;
+    }
+    
+    /* Info field styling */
+    .contact-container {
+      line-height: 1.4;
+    }
+    
+    .contact-name {
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    
+    .contact-email {
+      font-size: 0.9em;
+      color: #666;
+    }
+    
+    /* Links/Info icons styling */
+    .contact-icons {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .contact-icon {
+      color: #666;
+      font-size: 1.1rem;
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+    
+    .contact-icon:hover {
+      color: #2196f3;
+    }
+    
+    .contact-icon.disabled {
+      color: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .no-results {
+      text-align: center;
+      font-style: italic;
+      color: #666;
+      padding: 2rem !important;
+    }
+    
     /* Improved responsive design */
     @media (max-width: 768px) {
       .header-title {
@@ -221,7 +355,7 @@
   <div class="header-section">
     <div class="header-title">
       <div class="title-section">
-        <img src="https://galaxyproject.org/images/galaxy-logos/galaxy_project_logo.jpg" alt="Galaxy Project Logo" class="galaxy-logo">
+        <img src="https://galaxyproject.org/images/galaxy-logos/galaxy_project_logo_square_no_text_trans.png" alt="Galaxy Project Logo" class="galaxy-logo">
         <h1>Galaxy Server Tracker</h1>
       </div>
       
@@ -242,21 +376,24 @@
     </div>
     
     <div class="search-container">
-      <input type="text" id="search-input" class="search-input" placeholder="🔍 Search servers by name, URL, location, or any other field...">
+      <input type="text" id="search-input" class="search-input" placeholder="🔍 Search servers by name, URL, region, or any other field...">
+      <div style="margin-top: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+        <input type="checkbox" id="hide-offline-checkbox" checked>
+        <label for="hide-offline-checkbox" style="font-size: 0.9rem; cursor: pointer;">Hide offline servers</label>
+      </div>
     </div>
   </div>
   <table id="galaxy-table">
     <thead>
       <tr>
+        <th><i class="fas fa-signal" title="Status" style="color: green;"></i></th>
+        <th><i class="fas fa-star" title="Tier" style="color: gold;"></i></th>
         <th>Name</th>
-        <th>URL</th>
-        <th>Location</th>
-        <th>Notes</th>
-        <th>Contact Name</th>
-        <th>Contact Email</th>
-        <th>Tier</th>
-        <th>Version</th>
-        <th>Tool Count</th>
+        <th>Region</th>
+        <th>Institution</th>
+        <th>Info</th>
+        <th>Server</th>
+        <th title="Available tools and genomes">Resources</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -266,7 +403,7 @@
     Loading data from spreadsheet...
   </div>
 
-  <div class="spreadsheet-link" style="margin-top: 2rem; text-align: center; display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+  <div class="spreadsheet-link" style="margin-top: 1rem; text-align: center; display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
     <div>📊 <a href="https://docs.google.com/spreadsheets/d/1HSpJ7vOxfnYSjfFm1vs528eydh1gVU40rKR6-1TCeCo/edit#gid=0" target="_blank" style="color: inherit; text-decoration: none;">Source Spreadsheet</a></div>
     <div> | </div>
     <div>🔗 <a href="https://github.com/mschatz/gxyservers" target="_blank" style="color: inherit; text-decoration: none;">GitHub Repository</a></div>
@@ -284,12 +421,56 @@
     let currentSortColumn = null;
     let currentSortDirection = 'asc';
     
+    // Function to parse markdown-style links [text](url) and convert to HTML
+    function parseMarkdownLinks(text) {
+      if (!text || typeof text !== 'string') {
+        return text || '';
+      }
+      
+      // Regular expression to match markdown links: [text](url)
+      const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+      
+      // Replace all markdown links with HTML anchor tags
+      return text.replace(markdownLinkRegex, (match, linkText, url) => {
+        // Ensure URL has protocol
+        let cleanUrl = url.trim();
+        if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+          cleanUrl = 'https://' + cleanUrl;
+        }
+        
+        return `<a href="${cleanUrl}" target="_blank" style="color: #2196f3; text-decoration: none;">${linkText.trim()}</a>`;
+      });
+    }
+    
+    // Function to format server start time from configuration data
+    function formatServerStartTime(serverStartTime) {
+      if (!serverStartTime) return '';
+      
+      try {
+        // Parse the server start time (usually in ISO format or timestamp)
+        const date = new Date(serverStartTime);
+        
+        // Check if the date is valid
+        if (isNaN(date.getTime())) return '';
+        
+        // Format as a readable date
+        return date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+      } catch (error) {
+        console.log('Error parsing server start time:', error);
+        return '';
+      }
+    }
+    
     function getStatusIcon(version) {
-      if (version === 'Loading...' || version === 'N/A') return '⏳';
-      if (version === 'Offline') return '🔴';
-      if (version === 'CORS Blocked') return '🟡';
-      if (version === 'Unknown' || version === 'API Error' || version === 'Error') return '🟠';
-      return '🟢';
+      if (version === 'Loading...' || version === 'N/A') return { icon: '⏳', tooltip: 'Status unknown or loading...' };
+      if (version === 'Offline') return { icon: '🔴', tooltip: 'Server is offline or unreachable' };
+      if (version === 'CORS Blocked') return { icon: '🟡', tooltip: 'Server appears online but API calls are blocked' };
+      if (version === 'Unknown' || version === 'API Error' || version === 'Error') return { icon: '🟠', tooltip: 'Server status unknown due to API errors' };
+      return { icon: '🟢', tooltip: 'Server is online and responding' };
     }
     
     function updateSummaryStats() {
@@ -324,18 +505,32 @@
     
     function setupSearchFilter() {
       const searchInput = document.getElementById('search-input');
-      searchInput.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase().trim();
+      const hideOfflineCheckbox = document.getElementById('hide-offline-checkbox');
+      
+      const performFilter = () => {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const hideOffline = hideOfflineCheckbox.checked;
         
-        if (searchTerm === '') {
-          filteredData = [...currentData];
-        } else {
-          filteredData = currentData.filter(row => {
+        let filtered = [...currentData];
+        
+        // Apply search filter
+        if (searchTerm !== '') {
+          filtered = filtered.filter(row => {
             return Object.values(row).some(value => 
               value && value.toString().toLowerCase().includes(searchTerm)
             );
           });
         }
+        
+        // Apply offline filter
+        if (hideOffline) {
+          filtered = filtered.filter(row => {
+            const version = row['Version'] || '';
+            return version !== 'Offline' && version !== 'Error' && version !== 'N/A' && version !== 'No URL';
+          });
+        }
+        
+        filteredData = filtered;
         
         // Re-apply current sort if any
         if (currentSortColumn) {
@@ -345,23 +540,31 @@
         }
         
         // Show "no results" message if needed
-        if (filteredData.length === 0 && searchTerm !== '') {
+        if (filteredData.length === 0 && (searchTerm !== '' || hideOffline)) {
           showNoResults();
         }
-      });
+      };
+      
+      searchInput.addEventListener('input', performFilter);
+      hideOfflineCheckbox.addEventListener('change', performFilter);
     }
     
     function showNoResults() {
       const tbody = document.querySelector('#galaxy-table tbody');
-      tbody.innerHTML = '<tr><td colspan="9" class="no-results">No servers match your search criteria.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="no-results">No servers match your search criteria.</td></tr>';
     }
 
     function initializeTableSorting() {
       const headers = document.querySelectorAll('#galaxy-table th');
+      const columnNames = ['Status', 'Tier', 'Name', 'Region', 'Institution', 'Info', 'Server', 'Resources'];
+      
       headers.forEach((header, index) => {
         header.addEventListener('click', () => {
-          const columnName = header.textContent.trim();
-          sortTable(columnName);
+          // Use the predefined column name based on the header index
+          const columnName = columnNames[index];
+          if (columnName) {
+            sortTable(columnName);
+          }
         });
       });
     }
@@ -379,9 +582,11 @@
 
       // Update header indicators
       const headers = document.querySelectorAll('#galaxy-table th');
-      headers.forEach(header => {
+      const columnNames = ['Status', 'Tier', 'Name', 'Region', 'Institution', 'Info', 'Server', 'Resources'];
+      
+      headers.forEach((header, index) => {
         header.classList.remove('sort-asc', 'sort-desc');
-        if (header.textContent.trim() === columnName) {
+        if (columnNames[index] === columnName) {
           header.classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
         }
       });
@@ -395,11 +600,28 @@
       const dataToSort = filteredData.length > 0 ? filteredData : currentData;
       
       const sortedData = [...dataToSort].sort((a, b) => {
-        let aVal = a[columnName] || '';
-        let bVal = b[columnName] || '';
+        let aVal, bVal;
+        
+        // Handle special column mappings
+        if (columnName === 'Status') {
+          // Sort by Version field for status
+          aVal = a['Version'] || '';
+          bVal = b['Version'] || '';
+        } else if (columnName === 'Info') {
+          // Sort by contact name or email for info column
+          aVal = a['Contact Name'] || a['Contact Email'] || '';
+          bVal = b['Contact Name'] || b['Contact Email'] || '';
+        } else if (columnName === 'Resources') {
+          // Sort by Tool Count field for resources column
+          aVal = a['Tool Count'] || '';
+          bVal = b['Tool Count'] || '';
+        } else {
+          aVal = a[columnName] || '';
+          bVal = b[columnName] || '';
+        }
 
-        // Handle numeric values for Tool Count
-        if (columnName === 'Tool Count') {
+        // Handle numeric values for Resources and Tier
+        if (columnName === 'Resources' || columnName === 'Tier') {
           const aNum = parseInt(aVal);
           const bNum = parseInt(bVal);
           if (!isNaN(aNum) && !isNaN(bNum)) {
@@ -525,7 +747,7 @@
         errorMessage += 'For GitHub Pages hosting, please ensure: ';
         errorMessage += '1) The Google Spreadsheet is published to the web (File → Share → Publish to web), ';
         errorMessage += '2) Set sharing to "Anyone on the internet with this link can view", ';
-        errorMessage += '3) The spreadsheet has the correct column headers (Name, URL, Location, Notes, Contact Name, Contact Email, Tier).';
+        errorMessage += '3) The spreadsheet has the correct column headers (Tier, Name, URL, Region, Institution, Notes).';
         
         updateStatus(errorMessage, true);
         
@@ -542,11 +764,16 @@
         {
           'Name': 'Sample Galaxy Server',
           'URL': 'https://usegalaxy.org',
-          'Location': 'USA',
+          'Region': 'USA',
           'Notes': 'Main Galaxy server',
           'Contact Name': 'Galaxy Team',
           'Contact Email': 'galaxy@example.com',
-          'Tier': '1'
+          'Tier': '1',
+          'ConfigData': {
+            'support_url': 'https://help.galaxyproject.org',
+            'mailing_join_addr': 'galaxy-announce-join@lists.galaxyproject.org',
+            'citation_url': 'https://galaxyproject.org/citing-galaxy'
+          }
         }
       ];
       
@@ -719,6 +946,73 @@
       return 'Unknown';
     }
 
+    // Function to extract genome count from API response data
+    function extractGenomeCount(cleanUrl, genomesData) {
+      console.log(`${cleanUrl}: Extracting genome count from genomes data`);
+      
+      if (!genomesData || genomesData.error) {
+        console.log(`${cleanUrl}: Genomes data has error or is empty`);
+        return 0;
+      }
+      
+      // Handle arrays (most common for genomes API)
+      if (Array.isArray(genomesData)) {
+        console.log(`${cleanUrl}: Got ${genomesData.length} genomes from genomes API`);
+        return genomesData.length;
+      }
+      
+      // Handle objects with genome data
+      if (typeof genomesData === 'object') {
+        // Check for direct count fields
+        if (genomesData.count) {
+          console.log(`${cleanUrl}: Got ${genomesData.count} genomes from count field`);
+          return genomesData.count;
+        }
+        
+        // Check for genomes array
+        if (genomesData.genomes && Array.isArray(genomesData.genomes)) {
+          console.log(`${cleanUrl}: Got ${genomesData.genomes.length} genomes from genomes array`);
+          return genomesData.genomes.length;
+        }
+        
+        // Check for data array
+        if (genomesData.data && Array.isArray(genomesData.data)) {
+          console.log(`${cleanUrl}: Got ${genomesData.data.length} genomes from data array`);
+          return genomesData.data.length;
+        }
+        
+        console.log(`${cleanUrl}: Unrecognized genomes object structure:`, Object.keys(genomesData));
+      }
+      
+      console.log(`${cleanUrl}: Could not extract genome count`);
+      return 0;
+    }
+    
+    // Function to format tools and genomes counts into a multi-line display string
+    function formatToolsAndGenomes(toolCount, genomeCount) {
+      const hasTools = typeof toolCount === 'number' && toolCount > 0;
+      const hasGenomes = typeof genomeCount === 'number' && genomeCount > 0;
+      
+      if (!hasTools && !hasGenomes) {
+        // If both are missing/zero, return the original tool count (could be error message)
+        return toolCount;
+      }
+      
+      if (hasTools && hasGenomes) {
+        return `${toolCount} tools<br><small style="color: #666; font-size: 0.85em;">${genomeCount} genomes</small>`;
+      }
+      
+      if (hasTools && !hasGenomes) {
+        return `${toolCount} tools`;
+      }
+      
+      if (!hasTools && hasGenomes) {
+        return `${genomeCount} genomes`;
+      }
+      
+      return toolCount;
+    }
+    
     async function fetchGalaxyInfo(url) {
       // Check if we're running locally (file:// protocol)
       const isLocalFile = window.location.protocol === 'file:';
@@ -727,14 +1021,14 @@
       
       if (isLocalFile) {
         console.log('Returning local mode for:', url);
-        return Promise.resolve({ version: 'Local Mode', toolCount: 'Local Mode' });
+        return Promise.resolve({ version: 'Local Mode', toolCount: 'Local Mode', configData: {} });
       }
       
       // Clean and validate the URL
       let cleanUrl = url.trim();
       if (!cleanUrl) {
         console.log('No URL provided for server');
-        return Promise.resolve({ version: 'No URL', toolCount: 'No URL' });
+        return Promise.resolve({ version: 'No URL', toolCount: 'No URL', configData: {} });
       }
       
       // Remove trailing slash if present
@@ -757,6 +1051,7 @@
       const toolboxUrl = `${corsProxy}${encodeURIComponent(cleanUrl + '/api/toolbox')}`;
       const configUrl = `${corsProxy}${encodeURIComponent(cleanUrl + '/api/configuration')}`;
       const toolshedUrl = `${corsProxy}${encodeURIComponent(cleanUrl + '/api/tool_shed_repositories?installed=true')}`;
+      const genomesUrl = `${corsProxy}${encodeURIComponent(cleanUrl + '/api/genomes')}`;
       
       // Add timeout to prevent hanging requests
       const fetchWithTimeout = (url, timeout = 15000) => {
@@ -916,14 +1211,32 @@
             console.log(`Config API error for ${cleanUrl}:`, err.message);
             return { error: err.message, type: 'config' };
           }),
+        fetchWithTimeout(genomesUrl)
+          .then(res => {
+            console.log(`Genomes API response for ${cleanUrl}:`, res.status, res.statusText);
+            if (res.ok) {
+              return res.json();
+            } else {
+              throw new Error(`HTTP_${res.status}`);
+            }
+          })
+          .then(genomesJson => {
+            console.log(`Genomes API JSON for ${cleanUrl}:`, genomesJson);
+            return genomesJson;
+          })
+          .catch(err => {
+            console.log(`Genomes API error for ${cleanUrl}:`, err.message);
+            return { error: err.message, type: 'genomes' };
+          }),
         checkServerStatus()
-      ]).then(async ([versionData, toolsData, configData, serverStatus]) => {
-        console.log(`Galaxy info for ${cleanUrl}:`, { versionData, toolsData, configData, serverStatus });
+      ]).then(async ([versionData, toolsData, configData, genomesData, serverStatus]) => {
+        console.log(`Galaxy info for ${cleanUrl}:`, { versionData, toolsData, configData, genomesData, serverStatus });
         
         // Check for server unreachable errors from the CORS proxy
         const versionError = versionData?.error || '';
         const toolsError = toolsData?.error || '';
         const configError = configData?.error || '';
+        const genomesError = genomesData?.error || '';
         
         // Check for DNS/network errors (now indicated by CORS proxy errors)
         const hasServerError = versionError.includes('SERVER_UNREACHABLE') || 
@@ -938,13 +1251,13 @@
         // Primary check: Look for server unreachable errors from CORS proxy or DNS errors
         if (hasServerError) {
           console.log(`${cleanUrl}: Server unreachable via CORS proxy - server is offline`);
-          return { version: 'Offline', toolCount: 'Offline' };
+          return { version: 'Offline', toolCount: 'Offline', configData: {} };
         }
         
         // If timeout errors occur and static file tests also indicate unreachable, likely offline
         if (hasTimeoutError && !serverStatus.reachable && !serverStatus.corsBlocked) {
           console.log(`${cleanUrl}: Timeout errors and server tests indicate unreachable - server is offline`);
-          return { version: 'Offline', toolCount: 'Offline' };
+          return { version: 'Offline', toolCount: 'Offline', configData: {} };
         }
         
         // If we have successful API data from CORS proxy, server is definitely online
@@ -962,12 +1275,28 @@
             version = versionData.galaxy_version;
           }
           
+          // Add server start time from config data if available
+          let versionWithDate = version;
+          if (configData && !configData.error && configData.server_starttime) {
+            const startDate = formatServerStartTime(configData.server_starttime);
+            if (startDate) {
+              versionWithDate = `${version}<br><small style="color: #666; font-size: 0.85em;">Started: ${startDate}</small>`;
+            }
+          }
+          
           // Get comprehensive tool count using multiple endpoints
           const toolCount = await getComprehensiveToolCount(cleanUrl, toolsData, configData, corsProxy);
           
+          // Get genome count
+          const genomeCount = extractGenomeCount(cleanUrl, genomesData);
+          
+          // Combine tool and genome counts
+          const combinedCount = formatToolsAndGenomes(toolCount, genomeCount);
+          
           const result = {
-            version: version,
-            toolCount: toolCount
+            version: versionWithDate,
+            toolCount: combinedCount,
+            configData: configData && !configData.error ? configData : {}
           };
           console.log(`${cleanUrl}: Successfully got Galaxy info via CORS proxy:`, result);
           return result;
@@ -976,22 +1305,40 @@
         // If static file tests indicate server is unreachable without CORS issues, it's offline
         if (!serverStatus.reachable && !serverStatus.corsBlocked) {
           console.log(`${cleanUrl}: Server tests indicate unreachable - server is offline`);
-          return { version: 'Offline', toolCount: 'Offline' };
+          return { version: 'Offline', toolCount: 'Offline', configData: {} };
         }
         
         // If we get here, we have mixed results - server might be online but with API issues
         if (serverStatus.reachable || serverStatus.corsBlocked) {
           console.log(`${cleanUrl}: Server appears reachable but API calls failed - treating as API error`);
+          
+          // Try to get tool count even with partial data
+          let toolCount = 'API Error';
+          if (Array.isArray(toolsData)) {
+            toolCount = toolsData.length;
+          } else if (toolsData?.length) {
+            toolCount = toolsData.length;
+          } else if (toolsData?.error) {
+            toolCount = 'API Error';
+          } else {
+            toolCount = 'Unknown';
+          }
+          
+          // Try to get genome count even with partial data
+          const genomeCount = extractGenomeCount(cleanUrl, genomesData);
+          const combinedCount = formatToolsAndGenomes(toolCount, genomeCount);
+          
           const result = {
             version: versionData?.version || (versionData?.error ? 'API Error' : 'Unknown'),
-            toolCount: (Array.isArray(toolsData) ? toolsData.length : toolsData?.length) || (toolsData?.error ? 'API Error' : 'Unknown')
+            toolCount: combinedCount,
+            configData: configData && !configData.error ? configData : {}
           };
           return result;
         }
         
         // Default case: unable to determine conclusively
         console.log(`${cleanUrl}: Unable to determine status conclusively - treating as unknown`);
-        return { version: 'Unknown', toolCount: 'Unknown' };
+        return { version: 'Unknown', toolCount: 'Unknown', configData: {} };
       });
     }
 
@@ -1059,16 +1406,19 @@
             // Store the API results directly in the data object
             row['Version'] = info.version;
             row['Tool Count'] = info.toolCount;
+            row['ConfigData'] = info.configData || {};
             console.log(`Galaxy API completed for ${url.trim()}:`, info);
           } catch (error) {
             console.error(`Error fetching Galaxy info for ${url.trim()}:`, error);
             row['Version'] = 'Error';
             row['Tool Count'] = 'Error';
+            row['ConfigData'] = {};
           }
         } else {
           console.log(`No URL provided for server: ${row['Name']}`);
           row['Version'] = 'N/A';
           row['Tool Count'] = 'N/A';
+          row['ConfigData'] = {};
         }
         
         console.log(`Final status for ${row['Name']}: Version=${row['Version']}, ToolCount=${row['Tool Count']}`);
@@ -1095,70 +1445,169 @@
       data.forEach((row, index) => {
         const tr = document.createElement('tr');
         
-        // Name column
-        const tdName = document.createElement('td');
-        tdName.textContent = row['Name'] || '';
+        // Status column with icon and tooltip
+        const tdStatus = document.createElement('td');
+        const version = row['Version'] || 'Loading...';
+        const statusInfo = getStatusIcon(version);
+        tdStatus.innerHTML = `<span class="status-icon" style="font-size: 1.2rem;" title="${statusInfo.tooltip}">${statusInfo.icon}</span>`;
+        tdStatus.style.textAlign = 'center';
+        tdStatus.style.width = '50px';
         
-        // URL column
-        const tdUrl = document.createElement('td');
+        // Tier column (narrow to match status)
+        const tdTier = document.createElement('td');
+        const tierValue = row['Tier'] || '';
+        let tierIcon = '';
+        let tierTooltip = '';
+        
+        // Display tier icons based on tier value
+        if (tierValue === '1') {
+          tierIcon = '<i class="fas fa-globe" title="Tier 1 - Global/Major Server" style="color: #4caf50;"></i>';
+          tierTooltip = 'Tier 1 - Global/Major Server';
+        } else if (tierValue === '2') {
+          tierIcon = '<i class="fas fa-university" title="Tier 2 - Institutional Server" style="color: #ff9800;"></i>';
+          tierTooltip = 'Tier 2 - Institutional Server';
+        } else if (tierValue === '3') {
+          tierIcon = '<i class="fas fa-map-marker-alt" title="Tier 3 - Local Server" style="color: #2196f3;"></i>';
+          tierTooltip = 'Tier 3 - Local Server';
+        } else if (tierValue) {
+          // Fallback for other tier values
+          tierIcon = tierValue;
+          tierTooltip = `Tier ${tierValue}`;
+        }
+        
+        tdTier.innerHTML = tierIcon;
+        tdTier.title = tierTooltip;
+        tdTier.style.textAlign = 'center';
+        tdTier.style.width = '50px';
+        
+        // Name column with favicon, hyperlink, and URL beneath
+        const tdName = document.createElement('td');
+        const serverName = row['Name'] || '';
         const url = row['URL'] || row['url'] || '';
         
+        let faviconHtml = '';
+        let nameContent = '';
+        let urlContent = '';
+        
         if (url && url.trim()) {
-          // Ensure URL has proper protocol for display
-          let displayUrl = url.trim();
-          if (!displayUrl.startsWith('http://') && !displayUrl.startsWith('https://')) {
-            displayUrl = 'https://' + displayUrl;
+          // Ensure URL has proper protocol for favicon and links
+          let cleanUrl = url.trim();
+          if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+            cleanUrl = 'https://' + cleanUrl;
           }
-          tdUrl.innerHTML = `<a href="${displayUrl}" target="_blank">${url.trim()}</a>`;
+          faviconHtml = `<img src="${cleanUrl}/favicon.ico" alt="" class="server-favicon" onerror="this.style.display='none';">`;
+          
+          // Make server name a hyperlink
+          nameContent = `<a href="${cleanUrl}" target="_blank" style="color: inherit; text-decoration: none; font-weight: 500;">${serverName}</a>`;
+          
+          // Add URL beneath the name
+          urlContent = `<a href="${cleanUrl}" target="_blank" class="server-url">${url.trim()}</a>`;
+          
+          tdName.innerHTML = `<div class="server-name-container">${faviconHtml}<div class="server-name-info">${nameContent}${urlContent}</div></div>`;
         } else {
-          tdUrl.textContent = 'No URL provided';
+          nameContent = `<span style="font-weight: 500;">${serverName}</span>`;
+          urlContent = `<span class="server-url" style="color: #999;">No URL provided</span>`;
+          tdName.innerHTML = `<div class="server-name-container">${faviconHtml}<div class="server-name-info">${nameContent}${urlContent}</div></div>`;
         }
         
-        // Location column
-        const tdLocation = document.createElement('td');
-        tdLocation.textContent = row['Location'] || '';
+        // Remove the URL column - it's now part of the Name column
         
-        // Notes column
-        const tdNotes = document.createElement('td');
-        tdNotes.textContent = row['Notes'] || '';
+        // Region column
+        const tdRegion = document.createElement('td');
+        tdRegion.textContent = row['Region'] || '';
         
-        // Contact Name column
-        const tdContactName = document.createElement('td');
-        tdContactName.textContent = row['Contact Name'] || '';
+        // Institution column with markdown link parsing and notes beneath
+        const tdInstitution = document.createElement('td');
+        const institutionText = row['Institution'] || '';
+        const notesText = row['Notes'] || '';
         
-        // Contact Email column
-        const tdContactEmail = document.createElement('td');
-        const email = row['Contact Email'] || '';
-        if (email && email.trim()) {
-          tdContactEmail.innerHTML = `<a href="mailto:${email.trim()}">${email.trim()}</a>`;
-        } else {
-          tdContactEmail.textContent = '';
+        let institutionContent = parseMarkdownLinks(institutionText);
+        let institutionHtml = '';
+        
+        if (institutionContent) {
+          institutionHtml += `<div>${institutionContent}</div>`;
         }
         
-        // Tier column
-        const tdTier = document.createElement('td');
-        tdTier.textContent = row['Tier'] || '';
+        if (notesText) {
+          institutionHtml += `<div class="institution-notes">${notesText}</div>`;
+        }
         
-        // Version column with status icon
+        if (institutionHtml) {
+          tdInstitution.innerHTML = `<div class="institution-info">${institutionHtml}</div>`;
+        }
+        
+        // Remove the Notes column - it's now part of the Institution column
+        
+        // Info column (replaced contact with icons)
+        const tdContact = document.createElement('td');
+        const configData = row['ConfigData'] || {};
+        
+        let linksHtml = '<div class="contact-icons">';
+        
+        // Support icon (fa-question-circle)
+        if (configData.support_url) {
+          linksHtml += `<a href="${configData.support_url}" target="_blank" class="contact-icon" title="Support"><i class="fas fa-question-circle"></i></a>`;
+        } else {
+          linksHtml += `<span class="contact-icon disabled" title="Support not available"><i class="fas fa-question-circle"></i></span>`;
+        }
+        
+        // Mailing list icon (fa-envelope)
+        if (configData.mailing_join_addr) {
+          linksHtml += `<a href="mailto:${configData.mailing_join_addr}" class="contact-icon" title="Mailing List"><i class="fas fa-envelope"></i></a>`;
+        } else {
+          linksHtml += `<span class="contact-icon disabled" title="Mailing list not available"><i class="fas fa-envelope"></i></span>`;
+        }
+        
+        // Citation icon (fa-link)
+        if (configData.citation_url) {
+          linksHtml += `<a href="${configData.citation_url}" target="_blank" class="contact-icon" title="Cite"><i class="fas fa-link"></i></a>`;
+        } else {
+          linksHtml += `<span class="contact-icon disabled" title="Citation not available"><i class="fas fa-link"></i></span>`;
+        }
+        
+        // Lock/Unlock icon based on require_login
+        if (configData.require_login === true) {
+          linksHtml += `<span class="contact-icon" title="Login Required" style="color: #ff9800;"><i class="fas fa-lock"></i></span>`;
+        } else if (configData.require_login === false) {
+          linksHtml += `<span class="contact-icon" title="No Login Required" style="color: #4caf50;"><i class="fas fa-unlock"></i></span>`;
+        }
+        
+        // Quota icon based on enable_quotas
+        if (configData.enable_quotas === true) {
+          linksHtml += `<span class="contact-icon" title="Quotas Enabled" style="color: #2196f3;"><i class="fas fa-chart-pie"></i></span>`;
+        } else if (configData.enable_quotas === false) {
+          linksHtml += `<span class="contact-icon" title="Quotas Disabled" style="color: #999;"><i class="fas fa-chart-pie"></i></span>`;
+        }
+        
+        linksHtml += '</div>';
+        tdContact.innerHTML = linksHtml;
+        tdContact.style.width = '100px';
+        tdContact.style.textAlign = 'center';
+        
+        // Server column (without status icon since it's now separate)
         const tdVersion = document.createElement('td');
-        const version = row['Version'] || 'Loading...';
-        const statusIcon = getStatusIcon(version);
-        
         if (version === 'Loading...') {
           tdVersion.innerHTML = `<span class="loading-indicator"></span> ${version}`;
         } else {
-          tdVersion.innerHTML = `<span class="status-icon">${statusIcon}</span>${version}`;
+          // Use innerHTML to support the formatted version with start date
+          tdVersion.innerHTML = version;
         }
         
-        // Tool Count column
+        // Resources column (tools and genomes)
         const tdToolCount = document.createElement('td');
         const toolCount = row['Tool Count'] || 'Loading...';
         
         if (toolCount === 'Loading...') {
           tdToolCount.innerHTML = `<span class="loading-indicator"></span> ${toolCount}`;
         } else {
-          tdToolCount.textContent = toolCount;
+          // Use innerHTML to support multi-line display
+          tdToolCount.innerHTML = toolCount;
         }
+        
+        // Center align info, server, and resources columns
+        tdContact.style.textAlign = 'center';
+        tdVersion.style.textAlign = 'center';
+        tdToolCount.style.textAlign = 'center';
         
         // Apply color coding based on version status
         if (version === 'Offline') {
@@ -1185,13 +1634,12 @@
           tr.classList.add('loading-row');
         }
         
-        tr.appendChild(tdName);
-        tr.appendChild(tdUrl);
-        tr.appendChild(tdLocation);
-        tr.appendChild(tdNotes);
-        tr.appendChild(tdContactName);
-        tr.appendChild(tdContactEmail);
+        tr.appendChild(tdStatus);
         tr.appendChild(tdTier);
+        tr.appendChild(tdName);
+        tr.appendChild(tdRegion);
+        tr.appendChild(tdInstitution);
+        tr.appendChild(tdContact);
         tr.appendChild(tdVersion);
         tr.appendChild(tdToolCount);
         tbody.appendChild(tr);
