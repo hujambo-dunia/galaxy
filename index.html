@@ -264,7 +264,7 @@
   </table>
 
   <div id="status" style="margin-top: 1rem; padding: 0.75rem; background: #e3f2fd; border: 1px solid #2196f3; border-radius: 4px; text-align: center;">
-    Loading data from Google Spreadsheet...
+    Loading data from spreadsheet...
   </div>
 
   <div class="spreadsheet-link" style="margin-top: 2rem; text-align: center; display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
@@ -553,8 +553,174 @@
       
       renderTable(sampleData);
     }
+    
+    // Function to get comprehensive tool count by trying multiple endpoints
+    async function getComprehensiveToolCount(cleanUrl, primaryToolsData, configData, corsProxy) {
+      console.log(`${cleanUrl}: Starting comprehensive tool count extraction`);
+      
+      // Try the primary tools data first
+      let toolCount = extractToolCountFromData(cleanUrl, primaryToolsData, 'primary');
+      
+      // If we got a reasonable count, return it (but try to get a better one if it's low)
+      if (typeof toolCount === 'number' && toolCount > 5000) {
+        console.log(`${cleanUrl}: Primary endpoint gave good count: ${toolCount}`);
+        return toolCount;
+      }
+      
+      // If the count is low, try additional endpoints
+      const additionalEndpoints = [
+        { name: 'installed', url: `${corsProxy}${encodeURIComponent(cleanUrl + '/api/tools?installed=true')}` },
+        { name: 'toolbox', url: `${corsProxy}${encodeURIComponent(cleanUrl + '/api/toolbox')}` },
+        { name: 'toolshed', url: `${corsProxy}${encodeURIComponent(cleanUrl + '/api/tool_shed_repositories?installed=true')}` }
+      ];
+      
+      let bestCount = toolCount;
+      
+      for (const endpoint of additionalEndpoints) {
+        try {
+          console.log(`${cleanUrl}: Trying ${endpoint.name} endpoint`);
+          const response = await fetch(endpoint.url, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            const count = extractToolCountFromData(cleanUrl, data, endpoint.name);
+            
+            if (typeof count === 'number' && count > bestCount) {
+              console.log(`${cleanUrl}: ${endpoint.name} endpoint gave better count: ${count}`);
+              bestCount = count;
+              
+              // If we get a really good count, use it
+              if (count > 5000) {
+                return count;
+              }
+            }
+          } else {
+            console.log(`${cleanUrl}: ${endpoint.name} endpoint failed: ${response.status}`);
+          }
+        } catch (error) {
+          console.log(`${cleanUrl}: ${endpoint.name} endpoint error:`, error.message);
+        }
+      }
+      
+      // If still low, try config data
+      if (typeof bestCount !== 'number' || bestCount < 1000) {
+        const configCount = extractToolCountFromData(cleanUrl, configData, 'config');
+        if (typeof configCount === 'number' && configCount > bestCount) {
+          bestCount = configCount;
+        }
+      }
+      
+      console.log(`${cleanUrl}: Final comprehensive tool count: ${bestCount}`);
+      return bestCount;
+    }
+    
+    // Function to extract tool count from API response data
+    function extractToolCountFromData(cleanUrl, data, source) {
+      console.log(`${cleanUrl}: Extracting tool count from ${source} data`);
+      
+      if (!data || data.error) {
+        console.log(`${cleanUrl}: ${source} data has error or is empty`);
+        return 'API Error';
+      }
+      
+      // Handle arrays (most common for tools API)
+      if (Array.isArray(data)) {
+        if (source === 'toolshed') {
+          // Tool shed repositories - count total tools in all repos
+          let totalTools = 0;
+          data.forEach(repo => {
+            if (repo.tool_count) {
+              totalTools += repo.tool_count;
+            } else if (repo.tools && Array.isArray(repo.tools)) {
+              totalTools += repo.tools.length;
+            } else {
+              totalTools += 1; // Assume 1 tool per repo if not specified
+            }
+          });
+          console.log(`${cleanUrl}: ${source} - counted ${totalTools} tools from ${data.length} repositories`);
+          return totalTools;
+        } else {
+          // Regular tools API - count tools in sections with recursive support
+          let totalTools = 0;
+          
+          const countToolsRecursively = (item, sectionName = 'unnamed') => {
+            let count = 0;
+            
+            if (Array.isArray(item)) {
+              // Array of items - process each
+              item.forEach(subItem => {
+                count += countToolsRecursively(subItem, sectionName);
+              });
+            } else if (item && typeof item === 'object') {
+              // Check if this is a direct tool (has ID and no nested structure)
+              if (item.id && !item.tools && !item.elems) {
+                count = 1;
+              } else {
+                // This is a section - count tools inside
+                if (item.tools && Array.isArray(item.tools)) {
+                  count += countToolsRecursively(item.tools, item.name || item.id || sectionName);
+                }
+                if (item.elems && Array.isArray(item.elems)) {
+                  count += countToolsRecursively(item.elems, item.name || item.id || sectionName);
+                }
+              }
+            }
+            
+            return count;
+          };
+          
+          data.forEach((section, index) => {
+            const sectionName = section?.name || section?.id || `section-${index}`;
+            const sectionCount = countToolsRecursively(section, sectionName);
+            totalTools += sectionCount;
+            if (sectionCount > 0) {
+              console.log(`${cleanUrl}: ${source} - Section "${sectionName}" has ${sectionCount} tools`);
+            }
+          });
+          
+          if (totalTools > 0) {
+            console.log(`${cleanUrl}: ${source} - got ${totalTools} tools from ${data.length} sections (recursive count)`);
+            return totalTools;
+          } else {
+            // Fallback: count array items as tools
+            console.log(`${cleanUrl}: ${source} - no tools in sections, using array length: ${data.length}`);
+            return data.length;
+          }
+        }
+      }
+      
+      // Handle objects
+      if (typeof data === 'object') {
+        // Check for direct count fields
+        if (data.tool_count) {
+          console.log(`${cleanUrl}: ${source} - got ${data.tool_count} from tool_count field`);
+          return data.tool_count;
+        }
+        if (data.total) {
+          console.log(`${cleanUrl}: ${source} - got ${data.total} from total field`);
+          return data.total;
+        }
+        if (data.count) {
+          console.log(`${cleanUrl}: ${source} - got ${data.count} from count field`);
+          return data.count;
+        }
+        
+        // Check for tools array
+        if (data.tools && Array.isArray(data.tools)) {
+          return extractToolCountFromData(cleanUrl, data.tools, source + '.tools');
+        }
+        
+        console.log(`${cleanUrl}: ${source} - unrecognized object structure:`, Object.keys(data));
+      }
+      
+      console.log(`${cleanUrl}: ${source} - could not extract tool count`);
+      return 'Unknown';
+    }
 
-    function fetchGalaxyInfo(url) {
+    async function fetchGalaxyInfo(url) {
       // Check if we're running locally (file:// protocol)
       const isLocalFile = window.location.protocol === 'file:';
       
@@ -582,15 +748,23 @@
       
       console.log(`Fetching Galaxy info from: ${cleanUrl}`);
       
-      const versionUrl = `${cleanUrl}/api/version`;
-      const toolsUrl = `${cleanUrl}/api/tools`;
+      // Use CORS proxy for API calls to bypass CORS restrictions
+      const corsProxy = 'https://corsproxy.io/?url=';
+      const versionUrl = `${corsProxy}${encodeURIComponent(cleanUrl + '/api/version')}`;
+      // Try multiple endpoints to get the most comprehensive tool count
+      const toolsUrl = `${corsProxy}${encodeURIComponent(cleanUrl + '/api/tools?all=true&in_panel=false')}`;
+      const toolsUrlFallback = `${corsProxy}${encodeURIComponent(cleanUrl + '/api/tools')}`;
+      const toolsInstalledUrl = `${corsProxy}${encodeURIComponent(cleanUrl + '/api/tools?installed=true')}`;
+      const toolboxUrl = `${corsProxy}${encodeURIComponent(cleanUrl + '/api/toolbox')}`;
+      const configUrl = `${corsProxy}${encodeURIComponent(cleanUrl + '/api/configuration')}`;
+      const toolshedUrl = `${corsProxy}${encodeURIComponent(cleanUrl + '/api/tool_shed_repositories?installed=true')}`;
       
       // Add timeout to prevent hanging requests
       const fetchWithTimeout = (url, timeout = 15000) => {
         console.log(`Starting fetch for: ${url} with timeout: ${timeout}ms`);
         return Promise.race([
           fetch(url, { 
-            mode: 'cors',
+            method: 'GET',
             headers: {
               'Accept': 'application/json'
             }
@@ -601,80 +775,101 @@
         ]);
       };
       
-      // Advanced DNS vs CORS detection
+      // Robust server reachability check that tries to distinguish DNS failures from CORS blocks
       const checkServerStatus = async () => {
-        console.log(`Advanced status check for: ${cleanUrl}`);
+        console.log(`Checking server status for: ${cleanUrl}`);
         
-        // Try multiple quick requests to different paths to detect DNS vs CORS
-        const testPaths = ['', '/favicon.ico', '/robots.txt'];
-        const results = [];
+        // Try multiple approaches to determine if server is reachable
+        const tests = [];
         
-        for (const path of testPaths) {
-          const testUrl = cleanUrl + path;
-          const startTime = Date.now();
-          
-          try {
-            console.log(`Testing path: ${testUrl}`);
-            await fetchWithTimeout(testUrl, 2000);
-            const elapsed = Date.now() - startTime;
-            results.push({ path, success: true, elapsed });
-            console.log(`${testUrl}: SUCCESS in ${elapsed}ms`);
-            return { reachable: true, corsBlocked: false }; // If any path succeeds, server is reachable
-          } catch (error) {
-            const elapsed = Date.now() - startTime;
-            results.push({ path, success: false, elapsed, error: error.message });
-            console.log(`${testUrl}: FAILED in ${elapsed}ms (${error.message})`);
+        // Test 1: Try a simple image request that might bypass some CORS restrictions
+        tests.push(
+          new Promise(resolve => {
+            const img = new Image();
+            const timeout = setTimeout(() => {
+              resolve({ test: 'image-favicon', success: false, error: 'timeout' });
+            }, 3000);
             
-            // Check for explicit DNS resolution errors
-            if (error.message.includes('ERR_NAME_NOT_RESOLVED') ||
-                error.message.includes('ENOTFOUND') ||
-                error.message.includes('DNS') ||
-                error.message === 'Timeout') {
-              console.log(`${cleanUrl}: DNS error detected - server is offline`);
-              return { reachable: false, corsBlocked: false };
-            }
-          }
+            img.onload = () => {
+              clearTimeout(timeout);
+              resolve({ test: 'image-favicon', success: true });
+            };
+            
+            img.onerror = (e) => {
+              clearTimeout(timeout);
+              // Even 404s indicate the server is reachable
+              resolve({ test: 'image-favicon', success: false, error: 'load-error-but-reachable' });
+            };
+            
+            img.src = cleanUrl + '/favicon.ico?' + Math.random();
+          })
+        );
+        
+        // Test 2: Try a no-cors fetch
+        tests.push(
+          fetch(cleanUrl + '/robots.txt', { mode: 'no-cors', method: 'HEAD' })
+            .then(() => ({ test: 'no-cors-robots', success: true }))
+            .catch(error => ({ 
+              test: 'no-cors-robots', 
+              success: false, 
+              error: error.message,
+              isDnsError: error.message.includes('ERR_NAME_NOT_RESOLVED') || 
+                         error.message.includes('ENOTFOUND') ||
+                         error.message.includes('DNS')
+            }))
+        );
+        
+        // Test 3: Try another static file
+        tests.push(
+          fetch(cleanUrl + '/static/favicon.svg', { mode: 'no-cors', method: 'HEAD' })
+            .then(() => ({ test: 'no-cors-static', success: true }))
+            .catch(error => ({ 
+              test: 'no-cors-static', 
+              success: false, 
+              error: error.message,
+              isDnsError: error.message.includes('ERR_NAME_NOT_RESOLVED') || 
+                         error.message.includes('ENOTFOUND') ||
+                         error.message.includes('DNS')
+            }))
+        );
+        
+        const results = await Promise.all(tests);
+        console.log(`${cleanUrl}: Reachability test results:`, results);
+        
+        // If any test succeeded, server is reachable
+        if (results.some(r => r.success)) {
+          console.log(`${cleanUrl}: Server is reachable (at least one test succeeded)`);
+          return { reachable: true, corsBlocked: false };
         }
         
-        // Analyze all results to distinguish DNS vs CORS
-        const avgTime = results.reduce((sum, r) => sum + r.elapsed, 0) / results.length;
-        const allFailed = results.every(r => !r.success);
-        const maxTime = Math.max(...results.map(r => r.elapsed));
-        const minTime = Math.min(...results.map(r => r.elapsed));
-        const timeVariance = maxTime - minTime;
-        
-        console.log(`${cleanUrl}: All requests failed. Average: ${avgTime}ms, Min: ${minTime}ms, Max: ${maxTime}ms, Variance: ${timeVariance}ms`);
-        
-        // Improved DNS detection logic:
-        // DNS failures are usually very fast (under 200ms) and consistent across all paths
-        // CORS failures often show more variance because the browser connects first, then blocks
-        // Key insight: usegalaxy.br shows very consistent fast failures (31ms, 134ms, 150ms)
-        // vs CORS which shows wider variance (1ms to 335ms for usegalaxy.fr)
-        
-        if (allFailed) {
-          // If all requests are consistently fast (under 200ms average) with low variance, likely DNS
-          // Key insight: DNS failures typically have ALL requests under 200ms
-          // CORS failures often have at least one slow request as browser connects first
-          const isConsistentFastFailure = avgTime < 200 && maxTime < 200;
-          
-          if (isConsistentFastFailure) {
-            console.log(`${cleanUrl}: All requests fast (avg: ${avgTime.toFixed(0)}ms, max: ${maxTime}ms) suggest DNS error (offline)`);
-            return { reachable: false, corsBlocked: false };
-          } else {
-            console.log(`${cleanUrl}: Some slow requests (avg: ${avgTime.toFixed(0)}ms, max: ${maxTime}ms) suggest CORS blocking`);
-            return { reachable: true, corsBlocked: true };
-          }
+        // If any test shows clear DNS errors, server is offline
+        if (results.some(r => r.isDnsError)) {
+          console.log(`${cleanUrl}: DNS error detected - server is offline`);
+          return { reachable: false, corsBlocked: false };
         }
         
-        // This shouldn't happen given the loop above, but safety fallback
-        return { reachable: true, corsBlocked: true };
+        // All tests failed but no clear DNS errors - likely CORS or online but inaccessible
+        console.log(`${cleanUrl}: All tests failed without DNS errors - assuming server is online but CORS-blocked`);
+        return { reachable: false, corsBlocked: true };
       };
       
       return Promise.all([
         fetchWithTimeout(versionUrl)
           .then(res => {
-            console.log(`Version API response for ${cleanUrl}:`, res.status);
-            return res.ok ? res.json() : null;
+            console.log(`Version API response for ${cleanUrl}:`, res.status, res.statusText);
+            if (res.ok) {
+              return res.json();
+            } else {
+              // CORS proxy will return specific errors for unreachable servers
+              if (res.status === 500 || res.status === 502 || res.status === 503 || res.status === 504 || res.status === 530) {
+                throw new Error('SERVER_UNREACHABLE');
+              }
+              throw new Error(`HTTP_${res.status}`);
+            }
+          })
+          .then(versionJson => {
+            console.log(`Version API JSON for ${cleanUrl}:`, versionJson);
+            return versionJson;
           })
           .catch(err => {
             console.log(`Version API error for ${cleanUrl}:`, err.message);
@@ -682,59 +877,122 @@
           }),
         fetchWithTimeout(toolsUrl)
           .then(res => {
-            console.log(`Tools API response for ${cleanUrl}:`, res.status);
-            return res.ok ? res.json() : null;
+            console.log(`Tools API response for ${cleanUrl}:`, res.status, res.statusText);
+            if (res.ok) {
+              return res.json();
+            } else {
+              // CORS proxy will return specific errors for unreachable servers
+              if (res.status === 500 || res.status === 502 || res.status === 503 || res.status === 504 || res.status === 530) {
+                throw new Error('SERVER_UNREACHABLE');
+              }
+              throw new Error(`HTTP_${res.status}`);
+            }
+          })
+          .then(toolsJson => {
+            console.log(`Tools API JSON for ${cleanUrl} (type: ${typeof toolsJson}, isArray: ${Array.isArray(toolsJson)}):`, toolsJson);
+            // Log the structure to help debug
+            if (Array.isArray(toolsJson) && toolsJson.length > 0) {
+              console.log(`${cleanUrl}: First section structure:`, toolsJson[0]);
+            }
+            return toolsJson;
           })
           .catch(err => {
             console.log(`Tools API error for ${cleanUrl}:`, err.message);
             return { error: err.message, type: 'tools' };
           }),
+        fetchWithTimeout(configUrl)
+          .then(res => {
+            console.log(`Config API response for ${cleanUrl}:`, res.status, res.statusText);
+            if (res.ok) {
+              return res.json();
+            } else {
+              throw new Error(`HTTP_${res.status}`);
+            }
+          })
+          .then(configJson => {
+            console.log(`Config API JSON for ${cleanUrl}:`, configJson);
+            return configJson;
+          })
+          .catch(err => {
+            console.log(`Config API error for ${cleanUrl}:`, err.message);
+            return { error: err.message, type: 'config' };
+          }),
         checkServerStatus()
-      ]).then(([versionData, toolsData, serverStatus]) => {
-        console.log(`Galaxy info for ${cleanUrl}:`, { versionData, toolsData, serverStatus });
+      ]).then(async ([versionData, toolsData, configData, serverStatus]) => {
+        console.log(`Galaxy info for ${cleanUrl}:`, { versionData, toolsData, configData, serverStatus });
         
-        // Check if we have actual DNS resolution errors from the network
+        // Check for server unreachable errors from the CORS proxy
         const versionError = versionData?.error || '';
         const toolsError = toolsData?.error || '';
+        const configError = configData?.error || '';
         
-        // DNS errors are indicated by ERR_NAME_NOT_RESOLVED in the browser console
-        const hasDnsError = versionError.includes('ERR_NAME_NOT_RESOLVED') || 
-                           toolsError.includes('ERR_NAME_NOT_RESOLVED') ||
-                           versionError.includes('ENOTFOUND') || 
-                           toolsError.includes('ENOTFOUND');
+        // Check for DNS/network errors (now indicated by CORS proxy errors)
+        const hasServerError = versionError.includes('SERVER_UNREACHABLE') || 
+                              toolsError.includes('SERVER_UNREACHABLE') ||
+                              versionError.includes('ERR_NAME_NOT_RESOLVED') || 
+                              toolsError.includes('ERR_NAME_NOT_RESOLVED') ||
+                              versionError.includes('ENOTFOUND') || 
+                              toolsError.includes('ENOTFOUND');
         
         const hasTimeoutError = versionError === 'Timeout' || toolsError === 'Timeout';
         
-        // If we detect DNS errors OR server status indicates unreachable, it's offline
-        if (hasDnsError || hasTimeoutError || !serverStatus.reachable) {
-          console.log(`${cleanUrl}: Server appears offline (DNS: ${hasDnsError}, Timeout: ${hasTimeoutError}, Unreachable: ${!serverStatus.reachable})`);
+        // Primary check: Look for server unreachable errors from CORS proxy or DNS errors
+        if (hasServerError) {
+          console.log(`${cleanUrl}: Server unreachable via CORS proxy - server is offline`);
           return { version: 'Offline', toolCount: 'Offline' };
         }
         
-        // If server appears reachable but API calls failed, it's likely CORS
-        if ((versionData?.error || toolsData?.error) && serverStatus.reachable) {
-          console.log(`${cleanUrl}: Server exists but CORS blocked`);
-          return { version: 'CORS Blocked', toolCount: 'CORS Blocked' };
+        // If timeout errors occur and static file tests also indicate unreachable, likely offline
+        if (hasTimeoutError && !serverStatus.reachable && !serverStatus.corsBlocked) {
+          console.log(`${cleanUrl}: Timeout errors and server tests indicate unreachable - server is offline`);
+          return { version: 'Offline', toolCount: 'Offline' };
         }
         
-        // If we have successful data
-        if (versionData && !versionData.error && toolsData && !toolsData.error) {
+        // If we have successful API data from CORS proxy, server is definitely online
+        if (versionData && !versionData.error) {
+          // Extract version - try different possible fields
+          let version = 'Unknown';
+          if (versionData.version_major && versionData.version_minor) {
+            version = `${versionData.version_major}.${versionData.version_minor}`;
+            if (versionData.version_micro) {
+              version += `.${versionData.version_micro}`;
+            }
+          } else if (versionData.version) {
+            version = versionData.version;
+          } else if (versionData.galaxy_version) {
+            version = versionData.galaxy_version;
+          }
+          
+          // Get comprehensive tool count using multiple endpoints
+          const toolCount = await getComprehensiveToolCount(cleanUrl, toolsData, configData, corsProxy);
+          
           const result = {
-            version: versionData.version || 'Unknown',
-            toolCount: toolsData.length || 'Unknown'
+            version: version,
+            toolCount: toolCount
           };
-          console.log(`${cleanUrl}: Successfully got Galaxy info:`, result);
+          console.log(`${cleanUrl}: Successfully got Galaxy info via CORS proxy:`, result);
           return result;
         }
         
-        // Mixed results - some success, some failure
-        const result = {
-          version: versionData?.version || (versionData?.error ? 'API Error' : 'Unknown'),
-          toolCount: toolsData?.length || (toolsData?.error ? 'API Error' : 'Unknown')
-        };
+        // If static file tests indicate server is unreachable without CORS issues, it's offline
+        if (!serverStatus.reachable && !serverStatus.corsBlocked) {
+          console.log(`${cleanUrl}: Server tests indicate unreachable - server is offline`);
+          return { version: 'Offline', toolCount: 'Offline' };
+        }
         
-        console.log(`${cleanUrl}: Mixed results:`, result);
-        return result;
+        // If we get here, we have mixed results - server might be online but with API issues
+        if (serverStatus.reachable || serverStatus.corsBlocked) {
+          console.log(`${cleanUrl}: Server appears reachable but API calls failed - treating as API error`);
+          const result = {
+            version: versionData?.version || (versionData?.error ? 'API Error' : 'Unknown'),
+            toolCount: (Array.isArray(toolsData) ? toolsData.length : toolsData?.length) || (toolsData?.error ? 'API Error' : 'Unknown')
+          };
+          return result;
+        }
+        
+        // Default case: unable to determine conclusively
+        console.log(`${cleanUrl}: Unable to determine status conclusively - treating as unknown`);
+        return { version: 'Unknown', toolCount: 'Unknown' };
       });
     }
 
