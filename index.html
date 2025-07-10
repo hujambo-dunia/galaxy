@@ -3,36 +3,259 @@
 <head>
   <meta charset="UTF-8">
   <title>Galaxy Server Tracker</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tabletop.js/1.5.3/tabletop.min.js"></script>
   <style>
     body {
       font-family: sans-serif;
       padding: 2rem;
       background: #f4f4f4;
     }
+    
+    .header-section {
+      background: #fff;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .summary-stats {
+      display: flex;
+      gap: 1.5rem;
+      font-size: 1rem;
+    }
+    
+    .stat-box {
+      background: #e3f2fd;
+      padding: 0.75rem;
+      border-radius: 6px;
+      text-align: center;
+      min-width: 100px;
+    }
+    
+    .stat-number {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #1976d2;
+    }
+    
+    .spreadsheet-link {
+      margin: 1rem 0;
+      padding: 0.75rem;
+      background: #f5f5f5;
+      border-radius: 4px;
+      border-left: 4px solid #2196f3;
+    }
+    
+    .search-container {
+      margin: 1rem 0;
+    }
+    
+    .search-input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    
+    .search-input:focus {
+      border-color: #2196f3;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+    }
+    
     table {
       width: 100%;
       border-collapse: collapse;
       background: #fff;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
+    
     th, td {
       padding: 0.75rem;
       border: 1px solid #ccc;
       text-align: left;
     }
+    
     th {
       background: #444;
       color: white;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+    }
+    
+    th:hover {
+      background: #555;
+    }
+    
+    th.sort-asc::after {
+      content: ' ▲';
+      position: absolute;
+      right: 8px;
+    }
+    
+    th.sort-desc::after {
+      content: ' ▼';
+      position: absolute;
+      right: 8px;
+    }
+    
+    /* Zebra striping for table rows */
+    tbody tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    
+    tbody tr:hover {
+      background-color: #e3f2fd;
+    }
+    
+    .status-icon {
+      margin-right: 0.5rem;
+      font-size: 1.1rem;
+    }
+    
+    /* Progressive loading indicator */
+    .loading-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #2196f3;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 0.5rem;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Smooth transitions for progressive loading */
+    tbody tr {
+      transition: opacity 0.3s ease;
+    }
+    
+    .loading-row {
+      opacity: 0.7;
+    }
+    
+    /* Galaxy logo styling in header */
+    .header-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .title-section {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .galaxy-logo {
+      max-width: 150px;
+      max-height: 60px;
+      height: auto;
+      width: auto;
+      object-fit: contain;
+    }
+    
+    .header-title h1 {
+      margin: 0;
+      font-size: 2.5rem;
+      color: #333;
+    }
+    
+    /* Improved responsive design */
+    @media (max-width: 768px) {
+      .header-title {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+      }
+      
+      .title-section {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      
+      .summary-stats {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      
+      .stat-box {
+        min-width: auto;
+      }
+      
+      table {
+        font-size: 0.9rem;
+      }
+      
+      th, td {
+        padding: 0.5rem;
+      }
+      
+      .header-title {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+      }
+      
+      .galaxy-logo {
+        max-width: 120px;
+        max-height: 45px;
+      }
+      
+      .header-title h1 {
+        font-size: 1.8rem;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>Galaxy Server Tracker</h1>
+  <div class="header-section">
+    <div class="header-title">
+      <div class="title-section">
+        <img src="https://galaxyproject.org/images/galaxy-logos/galaxy_project_logo.jpg" alt="Galaxy Project Logo" class="galaxy-logo">
+        <h1>Galaxy Server Tracker</h1>
+      </div>
+      
+      <div id="summary-stats" class="summary-stats" style="display: none;">
+        <div class="stat-box">
+          <div class="stat-number" id="total-servers">0</div>
+          <div>Total Servers</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="online-servers">0</div>
+          <div>Online Servers</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="offline-servers">0</div>
+          <div>Offline/Unknown</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="search-container">
+      <input type="text" id="search-input" class="search-input" placeholder="🔍 Search servers by name, URL, location, or any other field...">
+    </div>
+  </div>
   <table id="galaxy-table">
     <thead>
       <tr>
-        <th>Galaxy URL</th>
+        <th>Name</th>
+        <th>URL</th>
+        <th>Location</th>
+        <th>Notes</th>
+        <th>Contact Name</th>
+        <th>Contact Email</th>
+        <th>Tier</th>
         <th>Version</th>
         <th>Tool Count</th>
       </tr>
@@ -40,58 +263,686 @@
     <tbody></tbody>
   </table>
 
+  <div id="status" style="margin-top: 1rem; padding: 0.75rem; background: #e3f2fd; border: 1px solid #2196f3; border-radius: 4px; text-align: center;">
+    Loading data from Google Spreadsheet...
+  </div>
+
+  <div class="spreadsheet-link" style="margin-top: 2rem; text-align: center; display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+    <div>📊 <a href="https://docs.google.com/spreadsheets/d/1HSpJ7vOxfnYSjfFm1vs528eydh1gVU40rKR6-1TCeCo/edit#gid=0" target="_blank" style="color: inherit; text-decoration: none;">Source Spreadsheet</a></div>
+    <div> | </div>
+    <div>🔗 <a href="https://github.com/mschatz/gxyservers" target="_blank" style="color: inherit; text-decoration: none;">GitHub Repository</a></div>
+  </div>
+
   <script>
-    const sheetUrl = 'https://docs.google.com/spreadsheets/d/1HSpJ7vOxfnYSjfFm1vs528eydh1gVU40rKR6-1TCeCo/edit#gid=0';
+    const sheetId = '1HSpJ7vOxfnYSjfFm1vs528eydh1gVU40rKR6-1TCeCo';
+    
+    // Using Google Sheets public CSV endpoint - works well with GitHub Pages
+    const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`;
 
-    function fetchGalaxyInfo(url) {
-      const versionUrl = `${url}/api/version`;
-      const toolsUrl = `${url}/api/tools`;
-
-      return Promise.all([
-        fetch(versionUrl).then(res => res.ok ? res.json() : { version: 'Error' }).catch(() => ({ version: 'Error' })),
-        fetch(toolsUrl).then(res => res.ok ? res.json() : []).catch(() => [])
-      ]).then(([versionData, toolsData]) => {
-        return {
-          version: versionData.version || 'Unknown',
-          toolCount: toolsData.length
-        };
+    // Global variables for sorting and filtering
+    let currentData = [];
+    let filteredData = [];
+    let currentSortColumn = null;
+    let currentSortDirection = 'asc';
+    
+    function getStatusIcon(version) {
+      if (version === 'Loading...' || version === 'N/A') return '⏳';
+      if (version === 'Offline') return '🔴';
+      if (version === 'CORS Blocked') return '🟡';
+      if (version === 'Unknown' || version === 'API Error' || version === 'Error') return '🟠';
+      return '🟢';
+    }
+    
+    function updateSummaryStats() {
+      if (!currentData || currentData.length === 0) return;
+      
+      const total = currentData.length;
+      
+      console.log('updateSummaryStats called with data:', currentData.map(row => ({ 
+        name: row['Name'], 
+        version: row['Version'] 
+      })));
+      
+      const online = currentData.filter(row => {
+        const version = row['Version'] || '';
+        const isOnline = version && version !== 'Loading...' && version !== 'N/A' && 
+               version !== 'Offline' && version !== 'Error' && version !== 'No URL' && 
+               version !== 'Local Mode';
+        
+        console.log(`Server ${row['Name']}: version="${version}", isOnline=${isOnline}`);
+        return isOnline;
+      }).length;
+      
+      const offline = total - online;
+      
+      console.log(`Summary stats: Total=${total}, Online=${online}, Offline=${offline}`);
+      
+      document.getElementById('total-servers').textContent = total;
+      document.getElementById('online-servers').textContent = online;
+      document.getElementById('offline-servers').textContent = offline;
+      document.getElementById('summary-stats').style.display = 'flex';
+    }
+    
+    function setupSearchFilter() {
+      const searchInput = document.getElementById('search-input');
+      searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase().trim();
+        
+        if (searchTerm === '') {
+          filteredData = [...currentData];
+        } else {
+          filteredData = currentData.filter(row => {
+            return Object.values(row).some(value => 
+              value && value.toString().toLowerCase().includes(searchTerm)
+            );
+          });
+        }
+        
+        // Re-apply current sort if any
+        if (currentSortColumn) {
+          sortFilteredData(currentSortColumn, currentSortDirection);
+        } else {
+          renderTableRows(filteredData);
+        }
+        
+        // Show "no results" message if needed
+        if (filteredData.length === 0 && searchTerm !== '') {
+          showNoResults();
+        }
       });
     }
-
-    function renderTable(data) {
+    
+    function showNoResults() {
       const tbody = document.querySelector('#galaxy-table tbody');
-      data.forEach(row => {
-        const url = row['Galaxy URL'];
-        if (!url) return;
+      tbody.innerHTML = '<tr><td colspan="9" class="no-results">No servers match your search criteria.</td></tr>';
+    }
 
-        const tr = document.createElement('tr');
-        const tdUrl = document.createElement('td');
-        tdUrl.innerHTML = `<a href="${url}" target="_blank">${url}</a>`;
-
-        const tdVersion = document.createElement('td');
-        tdVersion.textContent = 'Loading...';
-
-        const tdTools = document.createElement('td');
-        tdTools.textContent = 'Loading...';
-
-        tr.appendChild(tdUrl);
-        tr.appendChild(tdVersion);
-        tr.appendChild(tdTools);
-        tbody.appendChild(tr);
-
-        fetchGalaxyInfo(url).then(info => {
-          tdVersion.textContent = info.version;
-          tdTools.textContent = info.toolCount;
+    function initializeTableSorting() {
+      const headers = document.querySelectorAll('#galaxy-table th');
+      headers.forEach((header, index) => {
+        header.addEventListener('click', () => {
+          const columnName = header.textContent.trim();
+          sortTable(columnName);
         });
       });
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      Tabletop.init({
-        key: sheetUrl,
-        simpleSheet: true,
-        callback: renderTable
+    function sortTable(columnName) {
+      if (!currentData || currentData.length === 0) return;
+
+      // Determine sort direction
+      if (currentSortColumn === columnName) {
+        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSortDirection = 'asc';
+        currentSortColumn = columnName;
+      }
+
+      // Update header indicators
+      const headers = document.querySelectorAll('#galaxy-table th');
+      headers.forEach(header => {
+        header.classList.remove('sort-asc', 'sort-desc');
+        if (header.textContent.trim() === columnName) {
+          header.classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+        }
       });
+
+      // Sort the filtered data (or all data if no filter)
+      const dataToSort = filteredData.length > 0 ? filteredData : currentData;
+      sortFilteredData(columnName, currentSortDirection);
+    }
+    
+    function sortFilteredData(columnName, direction) {
+      const dataToSort = filteredData.length > 0 ? filteredData : currentData;
+      
+      const sortedData = [...dataToSort].sort((a, b) => {
+        let aVal = a[columnName] || '';
+        let bVal = b[columnName] || '';
+
+        // Handle numeric values for Tool Count
+        if (columnName === 'Tool Count') {
+          const aNum = parseInt(aVal);
+          const bNum = parseInt(bVal);
+          if (!isNaN(aNum) && !isNaN(bNum)) {
+            return direction === 'asc' ? aNum - bNum : bNum - aNum;
+          }
+        }
+
+        // Handle string comparison
+        aVal = aVal.toString().toLowerCase();
+        bVal = bVal.toString().toLowerCase();
+
+        if (direction === 'asc') {
+          return aVal.localeCompare(bVal);
+        } else {
+          return bVal.localeCompare(aVal);
+        }
+      });
+
+      // Update filtered data and re-render
+      if (filteredData.length > 0) {
+        filteredData = sortedData;
+      }
+      renderTableRows(sortedData);
+    }
+
+    function parseCSV(text) {
+      const lines = text.split('\n').filter(line => line.trim());
+      if (lines.length === 0) return [];
+      
+      // Handle CSV parsing with proper quote handling
+      function parseCSVLine(line) {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          const nextChar = line[i + 1];
+          
+          if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+              current += '"';
+              i++; // Skip next quote
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        result.push(current.trim());
+        return result;
+      }
+      
+      const headers = parseCSVLine(lines[0]);
+      const data = [];
+      
+      for (let i = 1; i < lines.length; i++) {
+        const values = parseCSVLine(lines[i]);
+        if (values.length > 1 || values[0]) { // Skip empty rows
+          const row = {};
+          headers.forEach((header, index) => {
+            row[header] = values[index] || '';
+          });
+          data.push(row);
+        }
+      }
+      
+      return data;
+    }
+
+    async function loadSpreadsheetData() {
+      updateStatus('Loading data from Google Spreadsheet...');
+      
+      // Check if we're running locally (file:// protocol)
+      const isLocalFile = window.location.protocol === 'file:';
+      
+      if (isLocalFile) {
+        console.log('Running from local file - CORS will be blocked. Use a web server for testing.');
+        updateStatus('Running from local file. For testing, please use a web server (e.g., python3 -m http.server 8000) or deploy to GitHub Pages.', false);
+        renderSampleData();
+        return;
+      }
+      
+      try {
+        const response = await fetch(sheetUrl, {
+          method: 'GET',
+          mode: 'cors',
+          headers: {
+            'Accept': 'text/csv'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const csvText = await response.text();
+        console.log('CSV data received:', csvText);
+        
+        const data = parseCSV(csvText);
+        console.log('Parsed data:', data);
+        
+        if (data.length === 0) {
+          throw new Error('No data found in spreadsheet');
+        }
+        
+        renderTable(data);
+        
+      } catch (error) {
+        console.error('Error loading spreadsheet:', error);
+        
+        // Provide helpful error message for GitHub Pages
+        let errorMessage = 'Unable to load data from Google Spreadsheet. ';
+        
+        if (error.message.includes('CORS')) {
+          errorMessage += 'This appears to be a CORS issue. ';
+        }
+        
+        errorMessage += 'For GitHub Pages hosting, please ensure: ';
+        errorMessage += '1) The Google Spreadsheet is published to the web (File → Share → Publish to web), ';
+        errorMessage += '2) Set sharing to "Anyone on the internet with this link can view", ';
+        errorMessage += '3) The spreadsheet has the correct column headers (Name, URL, Location, Notes, Contact Name, Contact Email, Tier).';
+        
+        updateStatus(errorMessage, true);
+        
+        // Show sample data for testing
+        console.log('Showing sample data for testing...');
+        renderSampleData();
+      }
+    }
+
+    function renderSampleData() {
+      updateStatus('Showing sample data for testing purposes...', false);
+      
+      const sampleData = [
+        {
+          'Name': 'Sample Galaxy Server',
+          'URL': 'https://usegalaxy.org',
+          'Location': 'USA',
+          'Notes': 'Main Galaxy server',
+          'Contact Name': 'Galaxy Team',
+          'Contact Email': 'galaxy@example.com',
+          'Tier': '1'
+        }
+      ];
+      
+      renderTable(sampleData);
+    }
+
+    function fetchGalaxyInfo(url) {
+      // Check if we're running locally (file:// protocol)
+      const isLocalFile = window.location.protocol === 'file:';
+      
+      console.log(`fetchGalaxyInfo called for: ${url}, isLocalFile: ${isLocalFile}, protocol: ${window.location.protocol}`);
+      
+      if (isLocalFile) {
+        console.log('Returning local mode for:', url);
+        return Promise.resolve({ version: 'Local Mode', toolCount: 'Local Mode' });
+      }
+      
+      // Clean and validate the URL
+      let cleanUrl = url.trim();
+      if (!cleanUrl) {
+        console.log('No URL provided for server');
+        return Promise.resolve({ version: 'No URL', toolCount: 'No URL' });
+      }
+      
+      // Remove trailing slash if present
+      cleanUrl = cleanUrl.replace(/\/$/, '');
+      
+      // Ensure URL has protocol
+      if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+        cleanUrl = 'https://' + cleanUrl;
+      }
+      
+      console.log(`Fetching Galaxy info from: ${cleanUrl}`);
+      
+      const versionUrl = `${cleanUrl}/api/version`;
+      const toolsUrl = `${cleanUrl}/api/tools`;
+      
+      // Add timeout to prevent hanging requests
+      const fetchWithTimeout = (url, timeout = 15000) => {
+        console.log(`Starting fetch for: ${url} with timeout: ${timeout}ms`);
+        return Promise.race([
+          fetch(url, { 
+            mode: 'cors',
+            headers: {
+              'Accept': 'application/json'
+            }
+          }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout')), timeout)
+          )
+        ]);
+      };
+      
+      // Advanced DNS vs CORS detection
+      const checkServerStatus = async () => {
+        console.log(`Advanced status check for: ${cleanUrl}`);
+        
+        // Try multiple quick requests to different paths to detect DNS vs CORS
+        const testPaths = ['', '/favicon.ico', '/robots.txt'];
+        const results = [];
+        
+        for (const path of testPaths) {
+          const testUrl = cleanUrl + path;
+          const startTime = Date.now();
+          
+          try {
+            console.log(`Testing path: ${testUrl}`);
+            await fetchWithTimeout(testUrl, 2000);
+            const elapsed = Date.now() - startTime;
+            results.push({ path, success: true, elapsed });
+            console.log(`${testUrl}: SUCCESS in ${elapsed}ms`);
+            return { reachable: true, corsBlocked: false }; // If any path succeeds, server is reachable
+          } catch (error) {
+            const elapsed = Date.now() - startTime;
+            results.push({ path, success: false, elapsed, error: error.message });
+            console.log(`${testUrl}: FAILED in ${elapsed}ms (${error.message})`);
+            
+            // Check for explicit DNS resolution errors
+            if (error.message.includes('ERR_NAME_NOT_RESOLVED') ||
+                error.message.includes('ENOTFOUND') ||
+                error.message.includes('DNS') ||
+                error.message === 'Timeout') {
+              console.log(`${cleanUrl}: DNS error detected - server is offline`);
+              return { reachable: false, corsBlocked: false };
+            }
+          }
+        }
+        
+        // Analyze all results to distinguish DNS vs CORS
+        const avgTime = results.reduce((sum, r) => sum + r.elapsed, 0) / results.length;
+        const allFailed = results.every(r => !r.success);
+        const maxTime = Math.max(...results.map(r => r.elapsed));
+        const minTime = Math.min(...results.map(r => r.elapsed));
+        const timeVariance = maxTime - minTime;
+        
+        console.log(`${cleanUrl}: All requests failed. Average: ${avgTime}ms, Min: ${minTime}ms, Max: ${maxTime}ms, Variance: ${timeVariance}ms`);
+        
+        // Improved DNS detection logic:
+        // DNS failures are usually very fast (under 200ms) and consistent across all paths
+        // CORS failures often show more variance because the browser connects first, then blocks
+        // Key insight: usegalaxy.br shows very consistent fast failures (31ms, 134ms, 150ms)
+        // vs CORS which shows wider variance (1ms to 335ms for usegalaxy.fr)
+        
+        if (allFailed) {
+          // If all requests are consistently fast (under 200ms average) with low variance, likely DNS
+          // Key insight: DNS failures typically have ALL requests under 200ms
+          // CORS failures often have at least one slow request as browser connects first
+          const isConsistentFastFailure = avgTime < 200 && maxTime < 200;
+          
+          if (isConsistentFastFailure) {
+            console.log(`${cleanUrl}: All requests fast (avg: ${avgTime.toFixed(0)}ms, max: ${maxTime}ms) suggest DNS error (offline)`);
+            return { reachable: false, corsBlocked: false };
+          } else {
+            console.log(`${cleanUrl}: Some slow requests (avg: ${avgTime.toFixed(0)}ms, max: ${maxTime}ms) suggest CORS blocking`);
+            return { reachable: true, corsBlocked: true };
+          }
+        }
+        
+        // This shouldn't happen given the loop above, but safety fallback
+        return { reachable: true, corsBlocked: true };
+      };
+      
+      return Promise.all([
+        fetchWithTimeout(versionUrl)
+          .then(res => {
+            console.log(`Version API response for ${cleanUrl}:`, res.status);
+            return res.ok ? res.json() : null;
+          })
+          .catch(err => {
+            console.log(`Version API error for ${cleanUrl}:`, err.message);
+            return { error: err.message, type: 'version' };
+          }),
+        fetchWithTimeout(toolsUrl)
+          .then(res => {
+            console.log(`Tools API response for ${cleanUrl}:`, res.status);
+            return res.ok ? res.json() : null;
+          })
+          .catch(err => {
+            console.log(`Tools API error for ${cleanUrl}:`, err.message);
+            return { error: err.message, type: 'tools' };
+          }),
+        checkServerStatus()
+      ]).then(([versionData, toolsData, serverStatus]) => {
+        console.log(`Galaxy info for ${cleanUrl}:`, { versionData, toolsData, serverStatus });
+        
+        // Check if we have actual DNS resolution errors from the network
+        const versionError = versionData?.error || '';
+        const toolsError = toolsData?.error || '';
+        
+        // DNS errors are indicated by ERR_NAME_NOT_RESOLVED in the browser console
+        const hasDnsError = versionError.includes('ERR_NAME_NOT_RESOLVED') || 
+                           toolsError.includes('ERR_NAME_NOT_RESOLVED') ||
+                           versionError.includes('ENOTFOUND') || 
+                           toolsError.includes('ENOTFOUND');
+        
+        const hasTimeoutError = versionError === 'Timeout' || toolsError === 'Timeout';
+        
+        // If we detect DNS errors OR server status indicates unreachable, it's offline
+        if (hasDnsError || hasTimeoutError || !serverStatus.reachable) {
+          console.log(`${cleanUrl}: Server appears offline (DNS: ${hasDnsError}, Timeout: ${hasTimeoutError}, Unreachable: ${!serverStatus.reachable})`);
+          return { version: 'Offline', toolCount: 'Offline' };
+        }
+        
+        // If server appears reachable but API calls failed, it's likely CORS
+        if ((versionData?.error || toolsData?.error) && serverStatus.reachable) {
+          console.log(`${cleanUrl}: Server exists but CORS blocked`);
+          return { version: 'CORS Blocked', toolCount: 'CORS Blocked' };
+        }
+        
+        // If we have successful data
+        if (versionData && !versionData.error && toolsData && !toolsData.error) {
+          const result = {
+            version: versionData.version || 'Unknown',
+            toolCount: toolsData.length || 'Unknown'
+          };
+          console.log(`${cleanUrl}: Successfully got Galaxy info:`, result);
+          return result;
+        }
+        
+        // Mixed results - some success, some failure
+        const result = {
+          version: versionData?.version || (versionData?.error ? 'API Error' : 'Unknown'),
+          toolCount: toolsData?.length || (toolsData?.error ? 'API Error' : 'Unknown')
+        };
+        
+        console.log(`${cleanUrl}: Mixed results:`, result);
+        return result;
+      });
+    }
+
+    function updateStatus(message, isError = false) {
+      const statusDiv = document.getElementById('status');
+      statusDiv.textContent = message;
+      statusDiv.style.background = isError ? '#ffebee' : '#e3f2fd';
+      statusDiv.style.borderColor = isError ? '#f44336' : '#2196f3';
+    }
+
+    function renderTable(data) {
+      if (!data || data.length === 0) {
+        updateStatus('No data found in the spreadsheet or unable to access it.', true);
+        return;
+      }
+
+      console.log('Rendering table with data:', data);
+      updateStatus(`Found ${data.length} server(s) in the spreadsheet. Loading Galaxy API data...`);
+      
+      // Store data globally for sorting and filtering
+      currentData = data;
+      filteredData = [...data]; // Initialize filtered data
+      
+      // Initialize sorting functionality
+      initializeTableSorting();
+      
+      // Initialize search filter
+      setupSearchFilter();
+      
+      // Show initial loading state with status icons
+      renderTableRows(currentData);
+      updateSummaryStats();
+      
+      // Fetch Galaxy info for all servers ONCE
+      fetchAllGalaxyInfo(data).then(() => {
+        // After all API calls are done, render the table again with updated data
+        renderTableRows(filteredData.length > 0 ? filteredData : currentData);
+        updateStatus(`Loaded ${data.length} server(s). Galaxy API data fetched successfully.`);
+        updateSummaryStats();
+      });
+    }
+
+    async function fetchAllGalaxyInfo(data) {
+      let completedCount = 0;
+      const totalCount = data.length;
+      
+      console.log(`Starting fetchAllGalaxyInfo for ${totalCount} servers`);
+      
+      const updateProgress = () => {
+        completedCount++;
+        updateStatus(`Loading Galaxy API data... (${completedCount}/${totalCount} completed)`);
+        
+        // Re-render table to show progressive updates
+        renderTableRows(filteredData.length > 0 ? filteredData : currentData);
+        updateSummaryStats();
+      };
+      
+      const promises = data.map(async (row, index) => {
+        const url = row['URL'] || row['url'] || '';
+        console.log(`Processing server ${index + 1}/${totalCount}: ${row['Name']} - ${url}`);
+        
+        if (url && url.trim()) {
+          try {
+            const info = await fetchGalaxyInfo(url.trim());
+            // Store the API results directly in the data object
+            row['Version'] = info.version;
+            row['Tool Count'] = info.toolCount;
+            console.log(`Galaxy API completed for ${url.trim()}:`, info);
+          } catch (error) {
+            console.error(`Error fetching Galaxy info for ${url.trim()}:`, error);
+            row['Version'] = 'Error';
+            row['Tool Count'] = 'Error';
+          }
+        } else {
+          console.log(`No URL provided for server: ${row['Name']}`);
+          row['Version'] = 'N/A';
+          row['Tool Count'] = 'N/A';
+        }
+        
+        console.log(`Final status for ${row['Name']}: Version=${row['Version']}, ToolCount=${row['Tool Count']}`);
+        
+        // Update progress and re-render after each completion
+        updateProgress();
+      });
+
+      // Wait for all API calls to complete
+      await Promise.all(promises);
+      console.log('All Galaxy API calls completed');
+      console.log('Final data state:', currentData.map(row => ({ name: row['Name'], version: row['Version'], toolCount: row['Tool Count'] })));
+    }
+
+    function renderTableRows(data) {
+      const tbody = document.querySelector('#galaxy-table tbody');
+      tbody.innerHTML = ''; // Clear existing rows
+      
+      if (!data || data.length === 0) {
+        showNoResults();
+        return;
+      }
+      
+      data.forEach((row, index) => {
+        const tr = document.createElement('tr');
+        
+        // Name column
+        const tdName = document.createElement('td');
+        tdName.textContent = row['Name'] || '';
+        
+        // URL column
+        const tdUrl = document.createElement('td');
+        const url = row['URL'] || row['url'] || '';
+        
+        if (url && url.trim()) {
+          // Ensure URL has proper protocol for display
+          let displayUrl = url.trim();
+          if (!displayUrl.startsWith('http://') && !displayUrl.startsWith('https://')) {
+            displayUrl = 'https://' + displayUrl;
+          }
+          tdUrl.innerHTML = `<a href="${displayUrl}" target="_blank">${url.trim()}</a>`;
+        } else {
+          tdUrl.textContent = 'No URL provided';
+        }
+        
+        // Location column
+        const tdLocation = document.createElement('td');
+        tdLocation.textContent = row['Location'] || '';
+        
+        // Notes column
+        const tdNotes = document.createElement('td');
+        tdNotes.textContent = row['Notes'] || '';
+        
+        // Contact Name column
+        const tdContactName = document.createElement('td');
+        tdContactName.textContent = row['Contact Name'] || '';
+        
+        // Contact Email column
+        const tdContactEmail = document.createElement('td');
+        const email = row['Contact Email'] || '';
+        if (email && email.trim()) {
+          tdContactEmail.innerHTML = `<a href="mailto:${email.trim()}">${email.trim()}</a>`;
+        } else {
+          tdContactEmail.textContent = '';
+        }
+        
+        // Tier column
+        const tdTier = document.createElement('td');
+        tdTier.textContent = row['Tier'] || '';
+        
+        // Version column with status icon
+        const tdVersion = document.createElement('td');
+        const version = row['Version'] || 'Loading...';
+        const statusIcon = getStatusIcon(version);
+        
+        if (version === 'Loading...') {
+          tdVersion.innerHTML = `<span class="loading-indicator"></span> ${version}`;
+        } else {
+          tdVersion.innerHTML = `<span class="status-icon">${statusIcon}</span>${version}`;
+        }
+        
+        // Tool Count column
+        const tdToolCount = document.createElement('td');
+        const toolCount = row['Tool Count'] || 'Loading...';
+        
+        if (toolCount === 'Loading...') {
+          tdToolCount.innerHTML = `<span class="loading-indicator"></span> ${toolCount}`;
+        } else {
+          tdToolCount.textContent = toolCount;
+        }
+        
+        // Apply color coding based on version status
+        if (version === 'Offline') {
+          tdVersion.style.color = '#f44336';
+          tdToolCount.style.color = '#f44336';
+        } else if (version === 'CORS Blocked') {
+          tdVersion.style.color = '#ff9800';
+          tdToolCount.style.color = '#ff9800';
+          tdVersion.title = 'Server appears online but API calls blocked by browser CORS policy. Will work when deployed to GitHub Pages.';
+          tdToolCount.title = 'Server appears online but API calls blocked by browser CORS policy. Will work when deployed to GitHub Pages.';
+        } else if (version === 'Unknown' || version === 'API Error' || version === 'Error') {
+          tdVersion.style.color = '#ff9800';
+          tdToolCount.style.color = '#ff9800';
+        } else if (version === 'Loading...' || version === 'N/A') {
+          tdVersion.style.color = '#999';
+          tdToolCount.style.color = '#999';
+        } else {
+          tdVersion.style.color = '#4caf50';
+          tdToolCount.style.color = '#4caf50';
+        }
+        
+        // Add loading class for progressive update effect
+        if (version === 'Loading...' || toolCount === 'Loading...') {
+          tr.classList.add('loading-row');
+        }
+        
+        tr.appendChild(tdName);
+        tr.appendChild(tdUrl);
+        tr.appendChild(tdLocation);
+        tr.appendChild(tdNotes);
+        tr.appendChild(tdContactName);
+        tr.appendChild(tdContactEmail);
+        tr.appendChild(tdTier);
+        tr.appendChild(tdVersion);
+        tr.appendChild(tdToolCount);
+        tbody.appendChild(tr);
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSpreadsheetData();
     });
   </script>
 </body>
