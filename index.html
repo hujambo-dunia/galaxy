@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Galaxy Server Tracker</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tabletop.js/1.5.3/tabletop.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      background: #f4f4f4;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 0.75rem;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+    th {
+      background: #444;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h1>Galaxy Server Tracker</h1>
+  <table id="galaxy-table">
+    <thead>
+      <tr>
+        <th>Galaxy URL</th>
+        <th>Version</th>
+        <th>Tool Count</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/1HSpJ7vOxfnYSjfFm1vs528eydh1gVU40rKR6-1TCeCo/edit#gid=0';
+
+    function fetchGalaxyInfo(url) {
+      const versionUrl = `${url}/api/version`;
+      const toolsUrl = `${url}/api/tools`;
+
+      return Promise.all([
+        fetch(versionUrl).then(res => res.ok ? res.json() : { version: 'Error' }).catch(() => ({ version: 'Error' })),
+        fetch(toolsUrl).then(res => res.ok ? res.json() : []).catch(() => [])
+      ]).then(([versionData, toolsData]) => {
+        return {
+          version: versionData.version || 'Unknown',
+          toolCount: toolsData.length
+        };
+      });
+    }
+
+    function renderTable(data) {
+      const tbody = document.querySelector('#galaxy-table tbody');
+      data.forEach(row => {
+        const url = row['Galaxy URL'];
+        if (!url) return;
+
+        const tr = document.createElement('tr');
+        const tdUrl = document.createElement('td');
+        tdUrl.innerHTML = `<a href="${url}" target="_blank">${url}</a>`;
+
+        const tdVersion = document.createElement('td');
+        tdVersion.textContent = 'Loading...';
+
+        const tdTools = document.createElement('td');
+        tdTools.textContent = 'Loading...';
+
+        tr.appendChild(tdUrl);
+        tr.appendChild(tdVersion);
+        tr.appendChild(tdTools);
+        tbody.appendChild(tr);
+
+        fetchGalaxyInfo(url).then(info => {
+          tdVersion.textContent = info.version;
+          tdTools.textContent = info.toolCount;
+        });
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      Tabletop.init({
+        key: sheetUrl,
+        simpleSheet: true,
+        callback: renderTable
+      });
+    });
+  </script>
+</body>
+</html>
