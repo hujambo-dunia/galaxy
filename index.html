@@ -100,8 +100,8 @@
     }
     
     th:nth-child(6), td:nth-child(6) { /* Info column - narrower with rowspan */
-      width: 60px;
-      max-width: 60px;
+      width: 75px;
+      max-width: 75px;
     }
     
     th {
@@ -162,6 +162,18 @@
     .status-icon {
       margin-right: 0.5rem;
       font-size: 1.1rem;
+      display: inline-block;
+      min-width: 20px;
+      text-align: center;
+    }
+    
+    /* Ensure status column is always visible and properly sized */
+    .status-column {
+      width: 50px !important;
+      max-width: 50px !important;
+      min-width: 50px !important;
+      text-align: center !important;
+      vertical-align: middle !important;
     }
     
     /* Progressive loading indicator */
@@ -548,7 +560,7 @@
       
       // Replace all markdown links with HTML anchor tags
       return text.replace(markdownLinkRegex, (match, linkText, url) => {
-        // Ensure URL has protocol
+        // Only add protocol if none is present (preserve existing http:// or https://)
         let cleanUrl = url.trim();
         if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
           cleanUrl = 'https://' + cleanUrl;
@@ -581,12 +593,94 @@
       }
     }
     
-    function getStatusIcon(version) {
-      if (version === 'Loading...' || version === 'N/A') return { icon: '⏳', tooltip: 'Status unknown or loading...' };
-      if (version === 'Offline') return { icon: '🔴', tooltip: 'Server is offline or unreachable' };
-      if (version === 'CORS Blocked') return { icon: '🟡', tooltip: 'Server appears online but API calls are blocked' };
-      if (version === 'Unknown' || version === 'API Error' || version === 'Error') return { icon: '🟠', tooltip: 'Server status unknown due to API errors' };
-      return { icon: '🟢', tooltip: 'Server is online and responding' };
+    function getStatusIcon(version, toolCount) {
+      // Handle null, undefined, or empty version
+      if (!version || version === '' || version === null || version === undefined) {
+        return { icon: '⏳', tooltip: 'Status unknown - loading or no data available' };
+      }
+      
+      // Convert to string and trim for consistent comparison
+      const versionStr = String(version).trim();
+      const toolCountStr = String(toolCount || '').trim();
+      
+      // Handle specific status values that indicate the server is completely offline/unreachable
+      if (versionStr === 'Offline') {
+        return { icon: '🔴', tooltip: 'Server is offline or unreachable' };
+      }
+      
+      // Check if both version and tools indicate offline/unreachable
+      if (toolCountStr === 'Offline' && (versionStr === 'Unknown' || versionStr === 'Error' || versionStr === 'API Error' || versionStr === 'Timeout')) {
+        return { icon: '🔴', tooltip: 'Server is offline or unreachable' };
+      }
+      
+      // Check if both version and tool count show API errors (completely unreachable)
+      if (versionStr === 'API Error' && toolCountStr === 'API Error') {
+        return { icon: '🔴', tooltip: 'Server is offline or unreachable (API calls failed)' };
+      }
+      
+      // Check for explicit network/DNS errors that indicate server is completely offline
+      if (versionStr.includes('ERR_NAME_NOT_RESOLVED') || versionStr.includes('ENOTFOUND') || 
+          versionStr.includes('SERVER_UNREACHABLE') || versionStr === 'DNS Error') {
+        return { icon: '🔴', tooltip: 'Server is offline or unreachable (DNS/network error)' };
+      }
+      
+      if (versionStr === 'No URL') {
+        return { icon: '⚫', tooltip: 'No URL provided for this server' };
+      }
+      if (versionStr === 'Local Mode') {
+        return { icon: '🏠', tooltip: 'Running in local mode - limited functionality' };
+      }
+      
+      // Handle loading states
+      if (versionStr === 'Loading...' || versionStr === 'N/A') {
+        return { icon: '⏳', tooltip: 'Status unknown or loading...' };
+      }
+      
+      // Check if server is providing data (tools/genomes) even if version is problematic
+      const hasToolData = toolCountStr && 
+                         toolCountStr !== 'Loading...' && 
+                         toolCountStr !== 'N/A' && 
+                         toolCountStr !== 'Offline' && 
+                         toolCountStr !== 'Error' && 
+                         toolCountStr !== 'API Error' && 
+                         toolCountStr !== 'Unknown' &&
+                         toolCountStr !== 'No URL' &&
+                         toolCountStr !== 'Local Mode' &&
+                         (toolCountStr.includes('tools') || toolCountStr.includes('genomes') || /^\d+$/.test(toolCountStr));
+      
+      // If we can fetch tools/genomes but version is unknown, server is online with issues
+      if ((versionStr === 'Unknown' || versionStr === 'API Error' || versionStr === 'Error') && hasToolData) {
+        return { icon: '🟡', tooltip: 'Server is online but has API issues (version unknown, but tools/genomes accessible)' };
+      }
+      
+      // CORS blocked but server appears online
+      if (versionStr === 'CORS Blocked') {
+        return { icon: '🟡', tooltip: 'Server appears online but API calls are blocked by browser CORS policy' };
+      }
+      
+      // Server has issues but may be partially accessible (only if no tool data)
+      if ((versionStr === 'Unknown' || versionStr === 'API Error' || versionStr === 'Error') && !hasToolData) {
+        return { icon: '🟡', tooltip: 'Server status unknown due to API errors' };
+      }
+      
+      // If version contains HTML (like version with start date), check for known patterns
+      if (versionStr.includes('<br>') || versionStr.includes('<small>')) {
+        // Extract the main version number before any HTML formatting
+        const mainVersion = versionStr.split('<br>')[0].split('<small>')[0].trim();
+        if (mainVersion && mainVersion !== '' && mainVersion !== 'Unknown' && mainVersion !== 'Error') {
+          return { icon: '🟢', tooltip: 'Server is online and responding' };
+        } else {
+          return { icon: '❓', tooltip: 'Server status uncertain' };
+        }
+      }
+      
+      // Default case: if we have a meaningful version string that's not an error, server is online
+      if (versionStr && versionStr !== '' && versionStr !== 'Unknown' && versionStr !== 'Error') {
+        return { icon: '🟢', tooltip: 'Server is online and responding' };
+      }
+      
+      // Final fallback for any unhandled cases
+      return { icon: '⏳', tooltip: 'Status unknown' };
     }
     
     function updateSummaryStats() {
@@ -596,11 +690,56 @@
       
       const online = currentData.filter(row => {
         const version = row['Version'] || '';
-        const isOnline = version && version !== 'Loading...' && version !== 'N/A' && 
-               version !== 'Offline' && version !== 'Error' && version !== 'No URL' && 
-               version !== 'Local Mode';
+        const toolCount = row['Tool Count'] || '';
+        const versionStr = String(version).trim();
+        const toolCountStr = String(toolCount).trim();
         
-        return isOnline;
+        // Server is offline only if it's explicitly marked as such or completely unreachable
+        if (versionStr === 'Offline' || versionStr === 'No URL' || versionStr === 'Local Mode') {
+          return false;
+        }
+        
+        // Also check for network/DNS errors that indicate completely offline
+        if (versionStr.includes('ERR_NAME_NOT_RESOLVED') || versionStr.includes('ENOTFOUND') || 
+            versionStr.includes('SERVER_UNREACHABLE') || versionStr === 'DNS Error') {
+          return false;
+        }
+        
+        // Check if both version and tools indicate offline
+        if (toolCountStr === 'Offline' && (versionStr === 'Unknown' || versionStr === 'Error' || versionStr === 'API Error' || versionStr === 'Timeout')) {
+          return false;
+        }
+        
+        // Check if both version and tool count show API errors (completely unreachable)
+        if (versionStr === 'API Error' && toolCountStr === 'API Error') {
+          return false;
+        }
+        
+        // Server is loading or no data yet
+        if (versionStr === 'Loading...' || versionStr === 'N/A' || versionStr === '' || !versionStr) {
+          return false;
+        }
+        
+        // Check if server is providing data (tools/genomes) even if version is problematic
+        const hasToolData = toolCountStr && 
+                           toolCountStr !== 'Loading...' && 
+                           toolCountStr !== 'N/A' && 
+                           toolCountStr !== 'Offline' && 
+                           toolCountStr !== 'Error' && 
+                           toolCountStr !== 'API Error' && 
+                           toolCountStr !== 'Unknown' &&
+                           toolCountStr !== 'No URL' &&
+                           toolCountStr !== 'Local Mode' &&
+                           (toolCountStr.includes('tools') || toolCountStr.includes('genomes') || /^\d+$/.test(toolCountStr));
+        
+        // If we can fetch tools/genomes OR have a valid version, server is considered online
+        const hasValidVersion = versionStr !== 'Unknown' && 
+                               versionStr !== 'API Error' && 
+                               versionStr !== 'Error' && 
+                               versionStr !== 'CORS Blocked';
+        
+        // Server is online if it has valid version OR can provide tool/genome data
+        return hasValidVersion || hasToolData;
       }).length;
       
       const offline = total - online;
@@ -1160,19 +1299,31 @@
       const isLocalFile = window.location.protocol === 'file:';
       
       if (isLocalFile) {
-        return Promise.resolve({ version: 'Local Mode', toolCount: 'Local Mode', configData: {} });
+        return Promise.resolve({ 
+          version: 'Local Mode', 
+          toolCount: 'Local Mode', 
+          configData: {},
+          hasProxyIssues: false,
+          proxiesAttempted: 0
+        });
       }
       
       // Clean and validate the URL
       let cleanUrl = url.trim();
       if (!cleanUrl) {
-        return Promise.resolve({ version: 'No URL', toolCount: 'No URL', configData: {} });
+        return Promise.resolve({ 
+          version: 'No URL', 
+          toolCount: 'No URL', 
+          configData: {},
+          hasProxyIssues: false,
+          proxiesAttempted: 0
+        });
       }
       
       // Remove trailing slash if present
       cleanUrl = cleanUrl.replace(/\/$/, '');
       
-      // Ensure URL has protocol
+      // Only add protocol if none is present (preserve existing http:// or https://)
       if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
         cleanUrl = 'https://' + cleanUrl;
       }
@@ -1561,6 +1712,49 @@
             proxiesAttempted: totalProxiesAttempted
           };
         }
+        // Fallback for older Galaxy servers: if /api/version failed but we have config data, try to extract version from config
+        else if (versionData && versionData.error && configData && !configData.error) {
+          let version = 'Unknown';
+          
+          // Try to extract version from config data (older Galaxy servers)
+          if (configData.version_major && configData.version_minor) {
+            version = `${configData.version_major}.${configData.version_minor}`;
+            if (configData.version_micro) {
+              version += `.${configData.version_micro}`;
+            }
+          } else if (configData.version) {
+            version = configData.version;
+          } else if (configData.galaxy_version) {
+            version = configData.galaxy_version;
+          }
+          
+          // Add server start time from config data if available
+          let versionWithDate = version;
+          if (configData.server_starttime) {
+            const startDate = formatServerStartTime(configData.server_starttime);
+            if (startDate) {
+              versionWithDate = `${version}<br><small style="color: #666; font-size: 0.85em;">Started: ${startDate}</small>`;
+            }
+          }
+          
+          // Get comprehensive tool count using multiple endpoints
+          const corsProxy = corsProxies[0]; // Use the first proxy for additional calls
+          const toolCount = await getComprehensiveToolCount(cleanUrl, toolsData, configData, corsProxy);
+          
+          // Get genome count
+          const genomeCount = extractGenomeCount(cleanUrl, genomesData);
+          
+          // Combine tool and genome counts
+          const combinedCount = formatToolsAndGenomes(toolCount, genomeCount);
+          
+          result = {
+            version: versionWithDate,
+            toolCount: combinedCount,
+            configData: configData,
+            hasProxyIssues: hasProxyIssues,
+            proxiesAttempted: totalProxiesAttempted
+          };
+        }
         // If static file tests indicate server is unreachable without CORS issues, it's offline
         else if (!serverStatus.reachable && !serverStatus.corsBlocked) {
           result = { version: 'Offline', toolCount: 'Offline', configData: {} };
@@ -1605,6 +1799,17 @@
         // Save successful results to cache (don't cache errors or offline status)
         if (result.version !== 'Offline' && result.version !== 'Error' && result.version !== 'Unknown') {
           saveToCache(cleanUrl, result);
+        }
+        
+        // Validate that we always return a valid version string
+        if (!result.version || result.version === '' || result.version === null || result.version === undefined) {
+          console.warn(`${cleanUrl}: fetchGalaxyInfo returned empty version, defaulting to 'Unknown'`);
+          result.version = 'Unknown';
+        }
+        
+        // Ensure toolCount is also set
+        if (!result.toolCount || result.toolCount === '' || result.toolCount === null || result.toolCount === undefined) {
+          result.toolCount = 'Unknown';
         }
         
         return result;
@@ -1680,9 +1885,19 @@
             row['ConfigData'] = info.configData || {};
             
             // Log server status once for debugging/monitoring
-            console.log(`${row['Name']}: ${info.version === 'Offline' ? 'OFFLINE' : 
+            const statusSummary = info.version === 'Offline' ? 'OFFLINE' : 
                         info.version === 'Error' || info.version === 'API Error' ? 'ERROR' : 
-                        info.version === 'Unknown' ? 'UNKNOWN' : 'ONLINE'} (${info.version})`);
+                        info.version === 'Unknown' ? 'UNKNOWN' : 
+                        info.version === 'Loading' ? 'LOADING' :
+                        info.version === 'N/A' ? 'NO_URL' :
+                        !info.version ? 'MISSING_VERSION' : 'ONLINE';
+            
+            console.log(`${row['Name']}: ${statusSummary} (Version: "${info.version}", ToolCount: "${info.toolCount}")`);
+            
+            // Additional debug for missing or problematic versions
+            if (!info.version || info.version === '' || info.version === null) {
+              console.warn(`${row['Name']}: Version field is empty/null/undefined`, info);
+            }
           } catch (error) {
             console.error(`Error fetching Galaxy info for ${url.trim()}:`, error);
             row['Version'] = 'Error';
@@ -1730,10 +1945,20 @@
         // Status column with icon and tooltip
         const tdStatus = document.createElement('td');
         const version = row['Version'] || 'Loading...';
-        const statusInfo = getStatusIcon(version);
-        tdStatus.innerHTML = `<span class="status-icon" style="font-size: 1.2rem;" title="${statusInfo.tooltip}">${statusInfo.icon}</span>`;
-        tdStatus.style.textAlign = 'center';
-        tdStatus.style.width = '50px';
+        const toolCountForStatus = row['Tool Count'] || '';
+        const statusInfo = getStatusIcon(version, toolCountForStatus);
+        
+        // Ensure we always have valid icon and tooltip
+        const safeIcon = statusInfo?.icon || '⏳';
+        const safeTooltip = statusInfo?.tooltip || 'Status unknown';
+        
+        tdStatus.innerHTML = `<span class="status-icon" style="font-size: 1.2rem;" title="${safeTooltip}">${safeIcon}</span>`;
+        tdStatus.className = 'status-column';
+        
+        // Add debug logging for missing icons (only in development)
+        if (!statusInfo || !statusInfo.icon) {
+          console.warn(`Missing status icon for server ${row['Name']} with version: "${version}"`);
+        }
         
         // Tier column (narrow to match status)
         const tdTier = document.createElement('td');
@@ -1772,7 +1997,7 @@
         let urlContent = '';
         
         if (url && url.trim()) {
-          // Ensure URL has proper protocol for favicon and links
+          // Only add protocol if none is present (preserve existing http:// or https://)
           let cleanUrl = url.trim();
           if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
             cleanUrl = 'https://' + cleanUrl;
@@ -1840,11 +2065,22 @@
           linksHtml += `<span class="contact-icon disabled" title="Mailing list not available"><i class="fas fa-envelope"></i></span>`;
         }
         
-        // Citation icon (fa-link)
-        if (configData.citation_url) {
-          linksHtml += `<a href="${configData.citation_url}" target="_blank" class="contact-icon" title="Cite"><i class="fas fa-link"></i></a>`;
+        // Configuration icon (fa-cog) - opens server configuration API
+        const serverUrl = row['URL'] || row['url'] || '';
+        let configUrl = '';
+        if (serverUrl && serverUrl.trim()) {
+          let cleanUrl = serverUrl.trim().replace(/\/$/, '');
+          // Only add protocol if none is present (preserve existing http:// or https://)
+          if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+            cleanUrl = 'https://' + cleanUrl;
+          }
+          configUrl = cleanUrl + '/api/configuration';
+        }
+        
+        if (configUrl) {
+          linksHtml += `<a href="${configUrl}" target="_blank" class="contact-icon" title="View Server Configuration"><i class="fas fa-cog"></i></a>`;
         } else {
-          linksHtml += `<span class="contact-icon disabled" title="Citation not available"><i class="fas fa-link"></i></span>`;
+          linksHtml += `<span class="contact-icon disabled" title="Configuration not available"><i class="fas fa-cog"></i></span>`;
         }
         
         // Lock/Unlock icon based on require_login
@@ -1948,6 +2184,199 @@
         tbody.appendChild(tr);
       });
     }
+
+    // Diagnostic function to check status icon issues (call from browser console)
+    window.debugStatusIcons = function() {
+      console.log('=== Galaxy Server Status Icon Debug ===');
+      if (!currentData || currentData.length === 0) {
+        console.log('No data available');
+        return;
+      }
+      
+      let redCount = 0, yellowCount = 0, greenCount = 0, otherCount = 0;
+      
+      currentData.forEach((row, index) => {
+        const version = row['Version'];
+        const toolCount = row['Tool Count'];
+        const statusInfo = getStatusIcon(version, toolCount);
+        const hasIssue = !statusInfo || !statusInfo.icon || statusInfo.icon === '';
+        
+        // Count status types
+        if (statusInfo?.icon === '🔴') redCount++;
+        else if (statusInfo?.icon === '🟡') yellowCount++;
+        else if (statusInfo?.icon === '🟢') greenCount++;
+        else otherCount++;
+        
+        console.log(`${index + 1}. ${row['Name']}:`);
+        console.log(`   Version: "${version}" (type: ${typeof version})`);
+        console.log(`   Tool Count: "${toolCount}" (type: ${typeof toolCount})`);
+        console.log(`   Status Icon: "${statusInfo?.icon || 'MISSING'}" - ${statusInfo?.tooltip || 'NO_TOOLTIP'}`);
+        
+        // Highlight potential offline servers
+        if (version === 'Offline' || toolCount === 'Offline') {
+          console.log(`   🔴 OFFLINE SERVER DETECTED`);
+        }
+        
+        if (hasIssue) {
+          console.warn(`   ⚠️  ISSUE: Missing or empty status icon`);
+        }
+        console.log('');
+      });
+      
+      console.log('=== STATUS SUMMARY ===');
+      console.log(`🔴 Red (Offline): ${redCount}`);
+      console.log(`🟡 Yellow (Issues): ${yellowCount}`);
+      console.log(`🟢 Green (Online): ${greenCount}`);
+      console.log(`Other: ${otherCount}`);
+      console.log('=== End Debug ===');
+    };
+    
+    // Function to refresh status icons for all servers
+    window.refreshStatusIcons = function() {
+      console.log('Refreshing status icons...');
+      renderTableRows(filteredData.length > 0 ? filteredData : currentData);
+      console.log('Status icons refreshed');
+    };
+
+    // Debug function to identify servers that should show red (offline) status
+    window.debugOfflineServers = function() {
+      console.log('=== Offline Servers Debug ===');
+      if (!currentData || currentData.length === 0) {
+        console.log('No data available');
+        return;
+      }
+      
+      const offlineServers = currentData.filter(row => {
+        const version = row['Version'] || '';
+        const toolCount = row['Tool Count'] || '';
+        const versionStr = String(version).trim();
+        const toolCountStr = String(toolCount).trim();
+        
+        // Check conditions that should result in red status
+        const isVersionOffline = versionStr === 'Offline';
+        const isToolsOffline = toolCountStr === 'Offline';
+        const isBothApiError = versionStr === 'API Error' && toolCountStr === 'API Error';
+        const isDnsError = versionStr.includes('ERR_NAME_NOT_RESOLVED') || versionStr.includes('ENOTFOUND') || 
+                          versionStr.includes('SERVER_UNREACHABLE') || versionStr === 'DNS Error';
+        const isBothOffline = isVersionOffline || (isToolsOffline && (versionStr === 'Unknown' || versionStr === 'Error' || versionStr === 'API Error' || versionStr === 'Timeout'));
+        
+        return isBothOffline || isBothApiError || isDnsError;
+      });
+      
+      console.log(`Found ${offlineServers.length} servers that should show red (offline) status:`);
+      
+      offlineServers.forEach((row, index) => {
+        const statusInfo = getStatusIcon(row['Version'], row['Tool Count']);
+        const isCorrectRed = statusInfo?.icon === '🔴';
+        
+        console.log(`${index + 1}. ${row['Name']}:`);
+        console.log(`   Version: "${row['Version']}"`);
+        console.log(`   Tool Count: "${row['Tool Count']}"`);
+        console.log(`   Current Icon: "${statusInfo?.icon}" ${isCorrectRed ? '✅' : '❌'}`);
+        console.log(`   URL: "${row['URL'] || 'No URL'}"`);
+        
+        if (!isCorrectRed) {
+          console.warn(`   ⚠️  SHOULD BE RED: Expected 🔴 but got ${statusInfo?.icon}`);
+        }
+        console.log('');
+      });
+      
+      // Also check for servers currently showing red icons
+      const currentlyRed = currentData.filter(row => {
+        const statusInfo = getStatusIcon(row['Version'], row['Tool Count']);
+        return statusInfo?.icon === '🔴';
+      });
+      
+      console.log(`=== Currently showing red icons: ${currentlyRed.length} servers ===`);
+      currentlyRed.forEach(row => {
+        console.log(`- ${row['Name']}: Version="${row['Version']}", Tools="${row['Tool Count']}"`);
+      });
+    };
+
+    // Test function to verify status icon logic (call from browser console)
+    window.testStatusIcons = function() {
+      console.log('=== Testing Status Icon Logic ===');
+      
+      const testCases = [
+        { version: 'Offline', toolCount: 'Offline', expected: '🔴', description: 'Explicitly offline server' },
+        { version: 'Unknown', toolCount: 'Offline', expected: '🔴', description: 'Tools offline + unknown version' },
+        { version: 'API Error', toolCount: 'Offline', expected: '🔴', description: 'Tools offline + API error' },
+        { version: 'API Error', toolCount: 'API Error', expected: '🔴', description: 'Both version and tools API error (completely unreachable)' },
+        { version: 'ERR_NAME_NOT_RESOLVED', toolCount: 'Error', expected: '🔴', description: 'DNS error' },
+        { version: 'SERVER_UNREACHABLE', toolCount: 'Error', expected: '🔴', description: 'Server unreachable' },
+        { version: 'Unknown', toolCount: '1500 tools', expected: '🟡', description: 'Unknown version but has tools' },
+        { version: 'API Error', toolCount: '2000 tools', expected: '🟡', description: 'API error but has tools' },
+        { version: '21.05', toolCount: '3000 tools', expected: '🟢', description: 'Valid version and tools' },
+        { version: 'CORS Blocked', toolCount: 'Error', expected: '🟡', description: 'CORS blocked' },
+        { version: 'No URL', toolCount: 'No URL', expected: '⚫', description: 'No URL provided' },
+        { version: 'Local Mode', toolCount: 'Local Mode', expected: '🏠', description: 'Local mode' },
+        { version: 'Loading...', toolCount: 'Loading...', expected: '⏳', description: 'Loading state' }
+      ];
+      
+      testCases.forEach((testCase, index) => {
+        const result = getStatusIcon(testCase.version, testCase.toolCount);
+        const isCorrect = result.icon === testCase.expected;
+        
+        console.log(`${index + 1}. ${testCase.description}:`);
+        console.log(`   Input: version="${testCase.version}", toolCount="${testCase.toolCount}"`);
+        console.log(`   Expected: ${testCase.expected}, Got: ${result.icon} ${isCorrect ? '✅' : '❌'}`);
+        console.log(`   Tooltip: "${result.tooltip}"`);
+        
+        if (!isCorrect) {
+          console.warn(`   ⚠️  TEST FAILED: Expected ${testCase.expected} but got ${result.icon}`);
+        }
+        console.log('');
+      });
+      
+      console.log('=== Test Summary ===');
+      const passed = testCases.filter(tc => getStatusIcon(tc.version, tc.toolCount).icon === tc.expected).length;
+      console.log(`${passed}/${testCases.length} tests passed`);
+    };
+    
+    // Debug function to check URL protocol handling (call from browser console)
+    window.debugUrlProtocols = function() {
+      console.log('=== URL Protocol Debug ===');
+      if (!currentData || currentData.length === 0) {
+        console.log('No data available');
+        return;
+      }
+      
+      currentData.forEach((row, index) => {
+        const originalUrl = row['URL'] || row['url'] || '';
+        
+        if (originalUrl && originalUrl.trim()) {
+          // Simulate the URL cleaning logic
+          let cleanUrl = originalUrl.trim();
+          cleanUrl = cleanUrl.replace(/\/$/, '');
+          
+          const hadProtocol = cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://');
+          const protocol = cleanUrl.startsWith('http://') ? 'HTTP' : 
+                          cleanUrl.startsWith('https://') ? 'HTTPS' : 'NONE';
+          
+          if (!hadProtocol) {
+            cleanUrl = 'https://' + cleanUrl;
+          }
+          
+          console.log(`${index + 1}. ${row['Name']}:`);
+          console.log(`   Original URL: "${originalUrl}"`);
+          console.log(`   Protocol: ${protocol}`);
+          console.log(`   Final URL: "${cleanUrl}"`);
+          console.log(`   Protocol Preserved: ${hadProtocol ? '✅' : '❌ (added HTTPS)'}`);
+          console.log('');
+        }
+      });
+      
+      // Show HTTP servers specifically
+      const httpServers = currentData.filter(row => {
+        const url = row['URL'] || row['url'] || '';
+        return url && url.trim().startsWith('http://');
+      });
+      
+      console.log(`=== HTTP Servers Found: ${httpServers.length} ===`);
+      httpServers.forEach(row => {
+        console.log(`- ${row['Name']}: ${row['URL'] || row['url']}`);
+      });
+    };
 
     window.addEventListener('DOMContentLoaded', () => {
       loadSpreadsheetData();
