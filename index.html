@@ -658,6 +658,11 @@
         return { icon: '🟡', tooltip: 'Server appears online but API calls are blocked by browser CORS policy' };
       }
       
+      // Server requires authentication but is online
+      if (versionStr.includes('Auth Required') || versionStr.includes('Authentication')) {
+        return { icon: '🟡', tooltip: 'Server is online but requires authentication for API access' };
+      }
+      
       // Server has issues but may be partially accessible (only if no tool data)
       if ((versionStr === 'Unknown' || versionStr === 'API Error' || versionStr === 'Error') && !hasToolData) {
         return { icon: '🟡', tooltip: 'Server status unknown due to API errors' };
@@ -1296,7 +1301,7 @@
     
     async function fetchGalaxyInfo(url, forceRefresh = false) {
       // Check if we're running locally (file:// protocol)
-      const isLocalFile = window.location.protocol === 'file:';
+      const isLocalFile = window.location.protocol === 'file';
       
       if (isLocalFile) {
         return Promise.resolve({ 
@@ -1381,6 +1386,27 @@
               // Success!
               if (response.ok) {
                 return response;
+              }
+              
+              // Handle authentication required (indicates server is online but needs auth)
+              if (response.status === 401 || response.status === 403) {
+                // Check if this is a Galaxy API authentication error
+                try {
+                  const errorData = await response.clone().json();
+                  if (errorData.err_msg && errorData.err_msg.toLowerCase().includes('authentication')) {
+                    // Server is online but requires auth - return a special indicator
+                    return { 
+                      status: 'auth_required', 
+                      data: errorData,
+                      ok: true // Treat as success since server is responding
+                    };
+                  }
+                } catch (e) {
+                  // Not JSON, continue with regular error handling
+                }
+                
+                lastError = new Error('AUTH_REQUIRED');
+                break; // Try next proxy
               }
               
               // Handle specific proxy/rate limit errors
@@ -1534,14 +1560,70 @@
             return versionJson;
           })
           .catch(err => {
-            // Track proxy issues for user feedback
-            const hasProxyIssues = err.proxiesAttempted > 1 || err.message.includes('PROXY_BLOCKED') || err.message.includes('RATE_LIMITED');
-            return { 
-              error: err.message, 
-              type: 'version',
-              proxiesAttempted: err.proxiesAttempted,
-              hasProxyIssues: hasProxyIssues
+            // Try fallback endpoints for older Galaxy servers
+            const fallbackEndpoints = [
+              '/api', // Some servers expose version info at the base API endpoint
+              '/api/whoami', // User info might contain version
+              '/history/current_history_json', // Very old Galaxy endpoint
+              '/' // Some servers put version info in the main page HTML
+            ];
+            
+            // Try the fallback endpoints sequentially
+            const tryFallbacks = async () => {
+              for (const endpoint of fallbackEndpoints) {
+                try {
+                  const response = await fetchWithTimeout(endpoint);
+                  if (response.ok) {
+                    const contentType = response.headers.get('content-type') || '';
+                    
+                    if (contentType.includes('application/json')) {
+                      const data = await response.json();
+                      
+                      // Check if we can extract version from this endpoint
+                      if (data && (data.version || data.galaxy_version || data.version_major)) {
+                        return data;
+                      }
+                    } else if (endpoint === '/' && contentType.includes('text/html')) {
+                      // For the main page, try to extract Galaxy info from HTML
+                      const html = await response.text();
+                      
+                      // Check if this is a Galaxy server
+                      if (html.includes('Galaxy') || html.includes('galaxy')) {
+                        // Try to extract version from HTML comments or meta tags
+                        const versionMatch = html.match(/Galaxy\s+(?:version\s+)?v?(\d+\.\d+(?:\.\d+)?)/i) ||
+                                           html.match(/version["\s]*[:=]["\s]*v?(\d+\.\d+(?:\.\d+)?)/i) ||
+                                           html.match(/galaxy["\s]*[:=]["\s]*v?(\d+\.\d+(?:\.\d+)?)/i);
+                        
+                        if (versionMatch) {
+                          return { version: versionMatch[1], detectedFrom: 'html' };
+                        } else {
+                          // We know it's Galaxy but don't have version
+                          return { version: 'Galaxy (Legacy)', detectedFrom: 'html' };
+                        }
+                      }
+                    }
+                  }
+                } catch (fallbackError) {
+                  // Continue to next fallback
+                  continue;
+                }
+              }
+              
+              // If all fallbacks failed, return the original error
+              throw err;
             };
+            
+            return tryFallbacks().catch(() => {
+              // Track proxy issues for user feedback
+              const hasProxyIssues = err.proxiesAttempted > 1 || err.message.includes('PROXY_BLOCKED') || err.message.includes('RATE_LIMITED');
+              return { 
+                error: err.message, 
+                type: 'version',
+                proxiesAttempted: err.proxiesAttempted,
+                hasProxyIssues: hasProxyIssues,
+                authRequired: err.message.includes('AUTH_REQUIRED')
+              };
+            });
           }),
         fetchWithTimeout('/api/tools?all=true&in_panel=false')
           .then(res => {
@@ -1559,15 +1641,37 @@
             return toolsJson;
           })
           .catch(err => {
-            // Try fallback API endpoint if main one fails
-            return fetchWithTimeout('/api/tools')
-              .then(res => {
-                return res.ok ? res.json() : Promise.reject(new Error(`HTTP_${res.status}`));
-              })
-              .then(toolsJson => {
-                return toolsJson;
-              })
-              .catch(fallbackErr => {
+            // Try fallback API endpoints if main one fails
+            const toolsFallbacks = [
+              '/api/tools', // Basic tools endpoint
+              '/api/tools?in_panel=true', // Tools in panel
+              '/toolbox', // Very old Galaxy toolbox endpoint
+              '/api/tool_shed_repositories' // Tool shed repos as fallback
+            ];
+            
+            const tryToolsFallbacks = async () => {
+              for (const endpoint of toolsFallbacks) {
+                try {
+                  const response = await fetchWithTimeout(endpoint);
+                  if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Check if we got valid tools data
+                    if (Array.isArray(data) || (data && data.tools)) {
+                      return data;
+                    }
+                  }
+                } catch (fallbackError) {
+                  // Continue to next fallback
+                  continue;
+                }
+              }
+              
+              // If all fallbacks failed, throw the original error
+              throw err;
+            };
+            
+            return tryToolsFallbacks().catch(fallbackErr => {
                 const hasProxyIssues = err.proxiesAttempted > 1 || fallbackErr.proxiesAttempted > 1 || 
                                       err.message.includes('PROXY_BLOCKED') || err.message.includes('RATE_LIMITED') ||
                                       fallbackErr.message.includes('PROXY_BLOCKED') || fallbackErr.message.includes('RATE_LIMITED');
@@ -1575,7 +1679,8 @@
                   error: err.message, 
                   type: 'tools',
                   proxiesAttempted: Math.max(err.proxiesAttempted || 0, fallbackErr.proxiesAttempted || 0),
-                  hasProxyIssues: hasProxyIssues
+                  hasProxyIssues: hasProxyIssues,
+                  authRequired: err.message.includes('AUTH_REQUIRED') || fallbackErr.message.includes('AUTH_REQUIRED')
                 };
               });
           }),
@@ -1648,10 +1753,24 @@
         
         const hasTimeoutError = versionError === 'Timeout' || toolsError === 'Timeout';
         
+        // Check for authentication required errors (server is online but requires auth)
+        const hasAuthRequired = versionData?.authRequired || toolsData?.authRequired || 
+                               versionError.includes('AUTH_REQUIRED') || toolsError.includes('AUTH_REQUIRED');
+        
         let result;
         
+        // Authentication required - server is online but needs auth for API access
+        if (hasAuthRequired) {
+          result = {
+            version: 'Galaxy (Auth Required)',
+            toolCount: 'Requires Authentication',
+            configData: {},
+            hasProxyIssues: hasProxyIssues,
+            proxiesAttempted: totalProxiesAttempted
+          };
+        }
         // Primary check: Look for server unreachable errors from CORS proxy or DNS errors
-        if (hasServerError) {
+        else if (hasServerError) {
           result = { 
             version: 'Offline', 
             toolCount: 'Offline', 
@@ -1672,17 +1791,59 @@
         }
         // If we have successful API data from CORS proxy, server is definitely online
         else if (versionData && !versionData.error) {
-          // Extract version - try different possible fields
+          // Extract version - try different possible fields and formats
           let version = 'Unknown';
+          
+          // Standard modern Galaxy API version fields
           if (versionData.version_major && versionData.version_minor) {
             version = `${versionData.version_major}.${versionData.version_minor}`;
             if (versionData.version_micro) {
               version += `.${versionData.version_micro}`;
             }
-          } else if (versionData.version) {
+          } 
+          // Direct version field
+          else if (versionData.version) {
             version = versionData.version;
-          } else if (versionData.galaxy_version) {
+          } 
+          // Galaxy-specific version field
+          else if (versionData.galaxy_version) {
             version = versionData.galaxy_version;
+          }
+          // Check for version in nested data structures
+          else if (versionData.data && versionData.data.version) {
+            version = versionData.data.version;
+          }
+          // Check for user info with version (from /api/whoami fallback)
+          else if (versionData.user && versionData.user.version) {
+            version = versionData.user.version;
+          }
+          // Check for version info in configuration-like responses
+          else if (versionData.config && versionData.config.version) {
+            version = versionData.config.version;
+          }
+          // Handle cases where version might be in a different structure
+          else if (typeof versionData === 'object') {
+            // Look for any field that might contain version info
+            const versionFields = ['galaxy_version', 'server_version', 'application_version', 'build_version'];
+            for (const field of versionFields) {
+              if (versionData[field]) {
+                version = versionData[field];
+                break;
+              }
+            }
+          }
+          
+          // If we still don't have a version but the response indicates a Galaxy server
+          if (version === 'Unknown' && versionData && typeof versionData === 'object') {
+            // Check if response indicates this is a Galaxy server
+            const hasGalaxyIndicators = JSON.stringify(versionData).toLowerCase().includes('galaxy') ||
+                                       versionData.brand === 'Galaxy' ||
+                                       versionData.name === 'Galaxy' ||
+                                       versionData.application === 'Galaxy';
+            
+            if (hasGalaxyIndicators) {
+              version = 'Galaxy (Legacy)';
+            }
           }
           
           // Add server start time from config data if available
@@ -2376,6 +2537,147 @@
       httpServers.forEach(row => {
         console.log(`- ${row['Name']}: ${row['URL'] || row['url']}`);
       });
+    };
+
+    // Debug function specifically for testing HTTP-only servers like APOSTL
+    window.testHttpServer = async function(url = 'http://apostl.moffitt.org') {
+      console.log(`=== Testing HTTP Server: ${url} ===`);
+      
+      const corsProxies = [
+        'https://corsproxy.io/?url=',
+        'https://api.codetabs.com/v1/proxy?quest=',
+        'https://cors.bridged.cc/',
+        'https://api.allorigins.win/raw?url='
+      ];
+      
+      // Test multiple endpoints that might exist on older Galaxy servers
+      const endpoints = [
+        '/api/version',
+        '/api/configuration', 
+        '/api',
+        '/api/whoami',
+        '/api/tools',
+        '/toolbox',
+        '/history/current_history_json',
+        '/'  // Main page (might contain version info)
+      ];
+      
+      for (const endpoint of endpoints) {
+        console.log(`\nTesting endpoint: ${endpoint}`);
+        
+        for (let proxyIndex = 0; proxyIndex < corsProxies.length; proxyIndex++) {
+          const corsProxy = corsProxies[proxyIndex];
+          const testUrl = `${corsProxy}${encodeURIComponent(url + endpoint)}`;
+          
+          try {
+            console.log(`  Trying proxy ${proxyIndex + 1}: ${corsProxy.replace('https://', '')}`);
+            
+            const response = await fetch(testUrl, {
+              method: 'GET',
+              headers: {
+                'Accept': 'application/json, text/html, */*',
+                'User-Agent': 'Galaxy-Server-Tracker/1.0'
+              },
+              timeout: 10000
+            });
+            
+            console.log(`    Status: ${response.status} ${response.statusText}`);
+            console.log(`    Content-Type: ${response.headers.get('content-type')}`);
+            
+            if (response.ok) {
+              const contentType = response.headers.get('content-type') || '';
+              
+              if (contentType.includes('application/json')) {
+                try {
+                  const data = await response.json();
+                  console.log(`    ✅ JSON Response:`, data);
+                  
+                  // Try to extract version info
+                  if (data.version || data.galaxy_version || data.version_major) {
+                    console.log(`    🎯 FOUND VERSION DATA!`);
+                  }
+                } catch (jsonError) {
+                  console.log(`    ❌ JSON Parse Error:`, jsonError.message);
+                }
+              } else {
+                const text = await response.text();
+                const preview = text.substring(0, 200);
+                console.log(`    📄 Text Response (${text.length} chars):`, preview);
+                
+                // Check if it's HTML that might contain Galaxy info
+                if (text.includes('Galaxy') || text.includes('galaxy')) {
+                  console.log(`    🎯 FOUND GALAXY REFERENCES IN HTML!`);
+                }
+              }
+              
+              // If we got a successful response, we can stop trying more proxies for this endpoint
+              break;
+            } else if (response.status === 404) {
+              console.log(`    ⚠️  Endpoint not found (404)`);
+              // Try next proxy in case this one has issues
+              continue;
+            } else {
+              console.log(`    ❌ HTTP Error: ${response.status}`);
+            }
+            
+          } catch (error) {
+            console.log(`    ❌ Network Error:`, error.message);
+          }
+        }
+      }
+      
+      console.log(`\n=== Test Complete for ${url} ===`);
+    };
+
+    // Debug function to test the actual fetchGalaxyInfo call for a specific server
+    window.testSpecificServer = async function(serverName = 'APOSTL') {
+      console.log(`=== Testing Specific Server: ${serverName} ===`);
+      
+      if (!currentData || currentData.length === 0) {
+        console.log('No data available. Load the page first.');
+        return;
+      }
+      
+      const server = currentData.find(row => 
+        row['Name'] && row['Name'].toLowerCase().includes(serverName.toLowerCase())
+      );
+      
+      if (!server) {
+        console.log(`Server "${serverName}" not found. Available servers:`);
+        currentData.forEach(row => console.log(`- ${row['Name']}`));
+        return;
+      }
+      
+      console.log(`Found server: ${server['Name']}`);
+      console.log(`URL: ${server['URL'] || server['url'] || 'No URL'}`);
+      console.log(`Current Version: ${server['Version']}`);
+      console.log(`Current Tool Count: ${server['Tool Count']}`);
+      
+      // Test the fetchGalaxyInfo function directly
+      const url = server['URL'] || server['url'] || '';
+      if (url) {
+        console.log(`\nTesting fetchGalaxyInfo with URL: ${url}`);
+        
+        try {
+          const result = await fetchGalaxyInfo(url, true); // Force refresh
+          console.log('fetchGalaxyInfo result:', result);
+          
+          // Update the server data with the new result
+          server['Version'] = result.version;
+          server['Tool Count'] = result.toolCount;
+          server['ConfigData'] = result.configData || {};
+          
+          // Re-render the table to show updated results
+          renderTableRows(filteredData.length > 0 ? filteredData : currentData);
+          
+          console.log(`✅ Updated server data. New version: ${result.version}`);
+          
+        } catch (error) {
+          console.error('fetchGalaxyInfo error:', error);
+        }
+      }
+      
+      console.log(`=== Test Complete ===`);
     };
 
     window.addEventListener('DOMContentLoaded', () => {
