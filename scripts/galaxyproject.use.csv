@@ -1,0 +1,185 @@
+Resource Name,Page URL,Server URL,Summary,Keywords
+AB-OpenLab,https://galaxyproject.org/use/ab-openlab/,http://ab-openlab.csir.res.in/frog/,FROG stands for F inge R printing O ntology of G enomic variations. FROG fingerprints have been devised to capture genomic variations at various levels.,Genomics
+ABiMS,https://galaxyproject.org/use/abims/,http://galaxy.sb-roscoff.fr/,Analysis and bioinformatics for Marine Science.,
+ABiMS-Tools,https://galaxyproject.org/use/abims-tools/,http://galaxy3.sb-roscoff.fr/,Hosts tools/resources developed at the Station Biologique de Roscoff in collaboration with ABiMS .,"Tool Publishing, Tools"
+AGEseq @ AspenDB,https://galaxyproject.org/use/ageseq-aspendb/,http://aspendb.uga.edu:8085/,This site provides a user-friendly interface for AGEseq (Analysis of Genome Editing by Sequencing) in a Galaxy instance.,
+Amazon Web Services (AWS),https://galaxyproject.org/use/aws/,,Set up you own general purpose genomics server running AWS using GVL and CloudMan.,Genomics
+ANASTASIA,https://galaxyproject.org/use/anastasia/,http://motherbox.chemeng.ntua.gr/anastasia_dev/,A utomated N ucleotide A minoacid S equences T ranslational pl A tform for S ystemic I nterpretation and A nalysis,
+AnVIL,https://galaxyproject.org/use/anvil/,,Run Galaxy inside the secure AnVIL environment on Google Cloud Platform.,
+APOSTL,https://galaxyproject.org/use/apostl/,http://apostl.moffitt.org/,"Automated Processing of SAINT Templated Layouts (APOSTL) is a freely available software suite and analysis pipeline for reproducible, interactive analysis of AP-MS data.",
+ARGA,https://galaxyproject.org/use/arga/,http://mem.rcees.ac.cn:8083/,Antibiotic Resistance Gene Analyzer,
+ARGs-OAP,https://galaxyproject.org/use/args-oap/,http://smile.hku.hk/SARGs,Fast annotation and classification of antibiotic resistance gene-like sequences from metagenomic data.,Genomics
+ARIAweb,https://galaxyproject.org/use/ariaweb/,https://ariaweb.pasteur.fr/,Automated NOE assignment and NMR structure calculation,
+ARIES,https://galaxyproject.org/use/aries/,https://w3.iss.it/site/aries/,"Analysis of genomic data in the field of public health and food safety, with the aim of deploying a comprehensive bioinformatics approach to the study of food-borne zoonoses and infectious diseases at the human and animal interface.",Genomics
+ASaiM,https://galaxyproject.org/use/asaim/,,Integrates tools specifically chosen for metagenomic and metatranscriptomic studies and hierarchically organized to orient user choice toward the best tool for a given task.,"Genomics, Tool Publishing, Tools"
+ATACgraph,https://galaxyproject.org/use/atacgraph/,,ATAC-seq for biologists with minimal bioinformatics knowledge to analyze chromatin accessibility,
+BF2I-MAP,https://galaxyproject.org/use/bf2i-map/,http://bf2i-galaxy.insa-lyon.fr:8080/,"Locally developed as well as standard tools are available on a 16-core server with 32GB memory, accessible to all users, and located in the BF2I lab.","Tool Publishing, Tools"
+BioBix,https://galaxyproject.org/use/biobix/,http://galaxy.ugent.be/,A general genomics server. Includes the PROTEOFORMER pipeline tools.,"Genomics, Tool Publishing, Tools"
+BioCiphers Lab Galaxy,https://galaxyproject.org/use/biociphers-lab-galaxy/,http://avispa.biociphers.org/,BCL Galaxy gives a user friendly interface for analysis tools developed by the BioCiphers Lab at the University of Pennsylvania.,"Tool Publishing, Tools"
+BioCompute Object Galaxy,https://galaxyproject.org/use/biocompute-object/,https://galaxy.aws.biochemistry.gwu.edu/,"BioCompute Objects is a standard for communication of High-throughput Sequencing (HTS) analysis results, data set creation and curation, and bioinformatics verification protocols.",
+BioDivine Toolset,https://galaxyproject.org/use/biodivine/,https://biodivine-vm.fi.muni.cz/galaxy/,Systems biology tools implemented by the Sybila team.,"Tool Publishing, Tools"
+BioMaS,https://galaxyproject.org/use/biomas/,http://galaxy.cloud.ba.infn.it:8080/,Taxonomic studies of environmental microbial communities,
+Biomina,https://galaxyproject.org/use/biomina/,http://143.169.238.104/galaxy/,"A general purpose Galaxy instance that includes most standard tools for DNA/RNA sequencing, plus extra tools for panel resequencing, variant annotation and some tools for Illumina SNParray analysis.","Tool Publishing, Tools"
+BitLAB,https://galaxyproject.org/use/bitlab/,https://pistacho.ac.uma.es/galaxy-bitlab,Detailed analysis of metagenomes.,
+BRIDGE,https://galaxyproject.org/use/bridge/,https://galaxy-compchem.ilifu.ac.za/,"Prepare, simulate and analyse and visualise molecular simulations, especially molecular dynamics and free energies.",
+CAFU,https://galaxyproject.org/use/cafu/,http://omicstudio.cloud:4001/,A Galaxy framework for exploring unmapped RNA-Seq data,
+CBiB Galaxy,https://galaxyproject.org/use/cbib-galaxy/,http://services.cbib.u-bordeaux2.fr/galaxy/,A general purpose Galaxy instance that includes EMBOSS (a software analysis package for molecular biology) and fibronectin (diversity analysis of synthetic libraries of a Fibronectin domain).,Domain
+CellOrganizer for Galaxy,https://galaxyproject.org/use/cell-organizer/,http://galaxy3.compbio.cs.cmu.edu:9001/,Create generative models of the spatial organization of cells from microscope images and automatically provide geometries for spatial simulations of cell processes and behaviors,Scope
+Center for Phage Technology (CPT),https://galaxyproject.org/use/center-for-phage-technology-cpt/,https://cpt.tamu.edu/galaxy-pub/,Phage biology and automated annotation.,
+ChemFlow,https://galaxyproject.org/use/chemflow/,https://vm-chemflow-francegrille.eu/,Chemometrics without programming: infrared spectrometry on a Galaxy platform.,
+Chemical Annotation Retrieval Toolkit (CART),https://galaxyproject.org/use/cart/,http://cart.embl.de/,Retrieves annotations on biological effects of chemicals and determines which ones are enriched.,"Tool Publishing, Tools"
+ChemicalToolbox,https://galaxyproject.org/use/chemicaltoolbox/,https://cheminformatics.usegalaxy.eu/,"For processing, analysing and visualising chemical data, and performing molecular simulations.","Tool Publishing, Tools"
+CIRM-CFBP,https://galaxyproject.org/use/cirm-cfbp/,https://iris.angers.inra.fr/galaxypub-cfbp,"Web based access to tools ( SkIf , KI-S ) of IRHS-EmerSys lab.","Tool Publishing, Tools"
+Cistrome Analysis Pipeline,https://galaxyproject.org/use/cistrome-analysis-pipeline/,http://cistrome.org/ap/root,ChIP-chip/seq and gene expression data,
+Climate Science Workbench,https://galaxyproject.org/use/climate-science-workbench/,https://climate.usegalaxy.eu/,A comprehensive set of analysis tools and consolidated workflows for climate analysis and visualisation,"Tool Publishing, Tools"
+CLIMB,https://galaxyproject.org/use/climb/,,"The CLIMB project (Cloud Infrastructure for Microbial Bioinformatics) develops and deploys a world leading cyber-infrastructure for microbial bioinformatics; providing free cloud-based compute, storage, and analysis tools for academic microbiologists in the UK.","Tool Publishing, Tools"
+CLIP-Explorer,https://galaxyproject.org/use/clip-explorer/,https://clipseq.usegalaxy.eu/,"The CLIP-Explorer is a webserver to process, analyse and visualise CLIP-Seq data.",
+Codon Harmonizer,https://galaxyproject.org/use/codon-harmonizer/,http://codonharmonizer.systemsbiology.nl/,Easily generate codon harmonized variants of gene sequences for heterologous expression,
+Coloc-stats,https://galaxyproject.org/use/coloc-stats/,https://hyperbrowser.uio.no/coloc-stats,a unified web interface to perform co-localization analysis of genomic features,Genomics
+COMBAT-TB Workbench,https://galaxyproject.org/use/combat-tb/,,"A modular, easy to install application that provides a web based environment for Mycobacterium tuberculosis bioinformatics",
+CoralSNP,https://galaxyproject.org/use/coral-snp/,https://coralsnp.science.psu.edu/galaxy/,Standard Tools for Acroporid Genotyping (STAG),"Tool Publishing, Tools"
+CorGAT,https://galaxyproject.org/use/corgat/,http://corgat.cloud.ba.infn.it/galaxy,"Align complete assemblies of SARS-CoV-2 genomes wih the reference genomic sequence, to obtain a list of polymorphic positions and to annotate genetic variants.",Genomics
+CoSSci,https://galaxyproject.org/use/cossci/,http://socscicompute.ss.uci.edu/,Tools for solving Galton's problem in Comparative Research and complex network problems in Social Science.,"Tool Publishing, Tools"
+COVID-19,https://galaxyproject.org/use/covid-19/,https://covid19.usegalaxy.eu/,A companion to our study describing the analysis of early COVID-19 data,
+covid19.UseGalaxy.fr,https://galaxyproject.org/use/covid-19-fr/,https://covid19.usegalaxy.fr/,Provides numerous workflows for COVID-19 analysis.,UseGalaxy
+CRAVAT-P,https://galaxyproject.org/use/cravat-p/,,A Docker image containing a fully-operational Galaxy instance with pre-installed demonstration material for CRAVAT-P.,
+CropGalaxy,https://galaxyproject.org/use/cropgalaxy/,http://cropgalaxy.excellenceinbreeding.org/,"Hosts tools for the RiceGalaxy , GOBii project , HTPG project and the Excellence in Breeding (EiB) platform , including genomic selection, marker selection, GWAS, imputation, file conversion, and cluster analysis.","Genomics, Tool Publishing, Tools"
+deepTS,https://galaxyproject.org/use/deepts/,https://deepts.nwafu.edu.cn/,"Explore transcriptional switches from pairwise, temporal, and population RNA-Seq using deepTS.",
+Dintor,https://galaxyproject.org/use/dintor/,http://dintor.eurac.edu/,GWA and NGS tools and modules for functional annotation of genes and gene products,"Tool Publishing, Tools"
+epiGeEC,https://galaxyproject.org/use/epigeec/,https://epigeec.genap.ca/galaxy/,Compare user-provided epigenomic datasets with thousands of public datasets.,Genomics
+Epigenomics Galaxy,https://galaxyproject.org/use/epigenomics/,,Galaxy Docker image for epigenomics analysis,Genomics
+Erasmus MC,https://galaxyproject.org/use/erasmus-mc/,https://erasmusmc.usegalaxy.eu/,"General purpose genomics analysis, featuring many standard tools plus many additional tools.","Genomics, Tool Publishing, Tools"
+EWAS-Galaxy,https://galaxyproject.org/use/ewas-galaxy/,,Galaxy Docker image for population epigenetics data analysis,
+FreeBioinfo,https://galaxyproject.org/use/freebioinfo/,http://www.freebioinfo.org/,Galaxy for metagenomic analysis.,Genomics
+G-OnRamp,https://galaxyproject.org/use/g-onramp/,,"G-OnRamp provides a user-friendly, web-based platform for collaborative, end-to-end annotation of eukaryotic genomes using UCSC Assembly Hubs and JBrowse/Apollo genome browsers with evidence tracks derived from sequence alignments, ab initio gene predictors, RNA-Seq data, and repeat finders.",
+GalaxEast,https://galaxyproject.org/use/galaxeast/,http://www.galaxeast.fr/,Integrative 'omics data analysis,
+Galaxy Africa,https://galaxyproject.org/use/galaxy-africa/,https://africa.usegalaxy.eu/,Devoted to assisting researchers on the African continent accelerate their genomics research and analyses.,Genomics
+Galaxy basic sequence manipulation,https://galaxyproject.org/use/basic-sequence/,,Galaxy Docker repository for basic sequence data analysis.,
+Galaxy BLAST+,https://galaxyproject.org/use/blast/,,A complete and production ready Galaxy instance with installed BLAST+ tools.,"Tool Publishing, Tools"
+Galaxy Docker,https://galaxyproject.org/use/galaxy-docker/,,"The Galaxy Docker Image is an easily distributable full-fledged Galaxy installation, that can be used for testing, teaching and presenting new tools and features.","Tool Publishing, Tools"
+Galaxy Exome-Seq,https://galaxyproject.org/use/exome-seq/,,Galaxy Docker repository for Exome sequencing data analysis,
+Galaxy for Ecology,https://galaxyproject.org/use/ecology/,https://ecology.usegalaxy.eu/,"A web platform to get, process, analyze and visualize ecological data",
+Galaxy Genome Annotation (GGA),https://galaxyproject.org/use/gga/,https://annotation.usegalaxy.eu/,Galaxy for genome annotation,
+Galaxy Imaging,https://galaxyproject.org/use/imaging/,https://imaging.usegalaxy.eu/,Galaxy Docker repository for image analysis,
+Galaxy India,https://galaxyproject.org/use/galaxy-india/,https://india.usegalaxy.eu/,"This is the Indian galaxy server, Welcome Home!",
+Galaxy Integrated Omics (GIO),https://galaxyproject.org/use/galaxy-integrated-omics-gio/,http://gio.sbcs.qmul.ac.uk/,"Proteomics Informed by Transcriptomics (PIT) methodology, and selection of surrogate peptides for targeted proteomics.",
+Galaxy Test,https://galaxyproject.org/use/galaxy-test/,https://test.galaxyproject.org/,Beta version of Galaxy Main,
+Galaxy Workbench for Mass Spectrometry Imaging,https://galaxyproject.org/use/msi/,,Galaxy Docker image for mass spec imaging,
+Galaxy-GSA,https://galaxyproject.org/use/galaxy-gsa/,http://www.moralab.science:8080/,Gene Set Analysis tools,"Tool Publishing, Tools"
+Galaxy-P,https://galaxyproject.org/use/galaxy-p/,https://usegalaxyp.org/,"Galaxy-P is a multiple 'omics' data analysis platform with particular emphasis on mass spectrometry-based proteomics. Galaxy-P is developed at the University of Minnesota , deployed at the Minnesota Supercomputing Institute .",
+Galaxy-SynBioCAD,https://galaxyproject.org/use/synbiocad/,https://galaxy-synbiocad.org/,Synthetic biology and metabolic engineering,
+Galaxy@AuBi,https://galaxyproject.org/use/galaxy-aubi/,https://galaxy.mesocentre.uca.fr/,General purpose genomics analysis server.,Genomics
+Galaxy@Pasteur,https://galaxyproject.org/use/galaxy-pasteur/,https://galaxy.pasteur.fr/,General purpose genomics analysis server.,Genomics
+Galaxy@PRABI,https://galaxyproject.org/use/galaxy-prabi/,http://galaxy.prabi.fr/,"Includes bioinformatics tools developed by the research teams working in the perimeter of the PRABI core facility, including kissplice/kissDE, TETools, SEX-DETector, and priam .","Tool Publishing, Tools"
+Galaxy@SLU,https://galaxyproject.org/use/galaxy-slu/,http://pharmacology.slu.edu/,"Standard and custom-built bioinformatics tools with special focus on ChIP-Seq, RNA-Seq, single-cell RNA-Seq, Gene Expression and Cancer Genomics (e.g. TCGA).","Genomics, Tool Publishing, Tools"
+GalaxyTrakr,https://galaxyproject.org/use/galaxytrakr/,https://galaxytrakr.org/,Supporting food-borne pathogen research,
+GASLINI,https://galaxyproject.org/use/gaslini/,http://igg.cloud.ba.infn.it/galaxy,"Supports PIPE-T, a tool for Reverse transcription quantitative real-time polymerase chain reaction (RT-qPCR) analysis.","Tool Publishing, Tools"
+GCAC : Galaxy for Compound Activity Classification,https://galaxyproject.org/use/gcac/,http://ccbb.jnu.ac.in/gcac,GCAC is a web enabled platform for predictive model building using R and caret package for virtual screening.,
+GeneLab,https://galaxyproject.org/use/genelab/,https://galaxy.genelab.nasa.gov/,"NASA GeneLab is a comprehensive space-related omics database in which users can upload, download, share, store, and analyze spaceflight and corresponding model organism data.",
+Genomic Hyperbrowser,https://galaxyproject.org/use/genomic-hyperbrowser/,http://hyperbrowser.uio.no/hb/,Statistical methodology and computing power to handle a variety of biological inquires on genomic datasets,Genomics
+GigaGalaxy,https://galaxyproject.org/use/gigagalaxy/,http://gigagalaxy.net/,GigaGalaxy hosts tools and data analyses from papers published in GigaScience .,"Tool Publishing, Tools"
+Globus Genomics,https://galaxyproject.org/use/globus-genomics/,,Globus Genomics provides hardened high-performance Galaxy servers running with Globus on AWS.,Genomics
+GraphClust,https://galaxyproject.org/use/graphclust/,https://graphclust.usegalaxy.eu/,GraphClust2 is a workflow for scalable clustering of RNAs based on sequence and secondary structures feature. GraphClust2 is implemented within the Galaxy framework and consists a set of integrated Galaxy tools and flavors of the linear-time clustering workflow.,"Tool Publishing, Tools"
+GrAPPA,https://galaxyproject.org/use/grappa/,https://grappa.eecs.utk.edu/grappa/,"GrAPPA is a web-based interface constructed on the Galaxy framework for graph theoretical tools. It contains novel combinatorial methods integrated into a complete microarray analysis toolchain, from uploading raw high-throughput data to visualization of results.","Tool Publishing, Tools"
+Halogen Bonding,https://galaxyproject.org/use/halogen-bonding/,http://134.2.17.68:8081/,Visualize halogen bond contacts in the protein binding site. Analyze a protein binding site for halogen bonding hotspots. Evaluate halogen contacts with the protein backbone using the scoring function XBScore.,
+Hardwood Genomics,https://galaxyproject.org/use/hardwood-genomics/,https://www.hardwoodgenomics.org/content/tripal-galaxy-workflows,"A simplified, workflow-centic interface to Galaxy, focused on genomics data from hardwood trees.",Genomics
+HiCExplorer,https://galaxyproject.org/use/hic-explorer/,https://hicexplorer.usegalaxy.eu/,Tools to process and visualize chromosome conformation.,"Tool Publishing, Tools"
+Human Cell Atlas,https://galaxyproject.org/use/human-cell-atlas/,https://humancellatlas.usegalaxy.eu/,Tools and workflows for the analysis of Single Cell RNA-Seq data. It includes a module that connects to the Matrix Service API of the Human Cell Atlas ’s Data Coordination Platform that enables retrieval of gene expression matrices from any data sets in the Human Cell Atlas.,"Tool Publishing, Tools"
+Huttenhower Lab,https://galaxyproject.org/use/huttenhower-lab/,http://huttenhower.sph.harvard.edu/galaxy/,"metagenomic and functional genomic analyses, intended for research and academic use",Genomics
+HyPhy HIV NGS Tools,https://galaxyproject.org/use/hyphy/,https://galaxy.hyphy.org/,Tools for HIV sequencing analysis.,"Tool Publishing, Tools"
+IBERS @ Aberystwyth,https://galaxyproject.org/use/ibers-aberystwyth/,http://share-galaxy.ibers.aber.ac.uk/,"Software, tools and pages written by IBERS researchers for release to the wider community.","Tool Publishing, Tools"
+IDENAP,https://galaxyproject.org/use/idenap/,http://mem.rcees.ac.cn:8081/,Inter-Domain Ecological Network Analysis Pipeline,Domain
+ImmPort Galaxy,https://galaxyproject.org/use/immport-galaxy/,https://www.immportgalaxy.org/,Flow Cytometry Analysis.,
+immuneML,https://galaxyproject.org/use/immuneml/,https://galaxy.immuneml.uio.no/,Machine learning-based analysis and classification of adaptive immune receptors and repertoires (AIRR).,
+InteractoMIX,https://galaxyproject.org/use/interactomix/,http://galaxy.interactomix.com/,A one-stop resource offering a wide range of computational analyses from proteome-wide interactomes to structure of protein complexes,
+IPK Galaxy Blast Suite,https://galaxyproject.org/use/ipk-blast/,https://galaxy-web.ipk-gatersleben.de/,Part of the IPK Crop Analysis Tools Suite (CATS). Offers access to genomic references published by IPK and collaborative projects,"Genomics, Tool Publishing, Tools"
+Langille Lab,https://galaxyproject.org/use/langille-lab/,http://galaxy.morganlangille.com/,Prediction of the unobserved character states in a community of organisms from phylogenetic information.,
+Laniakea,https://galaxyproject.org/use/laniakea/,,"Laniakea provides the possibility to automate the creation of Galaxy-based virtualized environments through an easy setup procedure, providing an on-demand workspace ready to be used by life scientists and bioinformaticians, with built-in storage encryption for user data.",
+LAPPS Grid,https://galaxyproject.org/use/lapps-grid/,http://galaxy.lappsgrid.org/,"An open, interoperable web service platform for natural language processing (NLP) research and development.",
+Lebanese University Galaxy,https://galaxyproject.org/use/lebanese-university/,http://galaxy.ul.edu.lb/,Includes the SpCLUST tool set for fast and reliable clustering of potentially divergent biological sequences,"Tool Publishing, Tools"
+Lifeportal,https://galaxyproject.org/use/lifeportal-oslo/,https://lifeportal.uio.no/,a Galaxy instance to satisfy the computational needs of the Norwegian research community in life sciences but also of any other user willing to use the service.,
+LiSIs,https://galaxyproject.org/use/lisis/,http://lisis.cs.ucy.ac.cy/,A platform for Virtual Screening.,
+Machine Learning Workbench,https://galaxyproject.org/use/ml-workbench/,https://ml.usegalaxy.eu/,"A comprehensive set of data preprocessing, machine learning, deep learning and visualisation tools, consolidated workflows for end-to-end machine learning analysis and training materials to showcase the usage of these tools.","Tool Publishing, Tools"
+Majewski Lab,https://galaxyproject.org/use/majewski-lab/,http://genomequebec.mcgill.ca/exomeai,Detection of recurrent Allelic Imbalance in tumors using whole Exome sequencing data.,
+Mandoiu Lab,https://galaxyproject.org/use/mandoiu/,https://neo.engr.uconn.edu/,A customized installation of the Galaxy framework deploying bioinformatic tools and pipelines developed in the Mandoiu Lab at the University of Connecticut for high-throughput sequencing and immunogenomics data analysis,"Genomics, Tool Publishing, Tools"
+MaREA4Galaxy,https://galaxyproject.org/use/marea4galaxy/,http://bimib.disco.unimib.it:5555/,Metabolic Reaction Enrichment Analysis and visualization of RNA-seq data,
+Martin Luther U. Halle-Wittenberg,https://galaxyproject.org/use/martin-luther-u-halle-wittenberg/,http://galaxy.informatik.uni-halle.de/,"Provides implementations of GeMoMa , InMoDe, CRISPRer, TALgetter, TALgetterLong, TALENoffer, and Dimont",
+Metabolomics,https://galaxyproject.org/use/metabolomics/,https://metabolomics.usegalaxy.eu/,A community driven metabolomics Galaxy service,
+Metagenomics,https://galaxyproject.org/use/metagenomics/,https://metagenomics.usegalaxy.eu/,"a webserver to process, analyse and visualize Metagenomic and Microbiota data in general.",Genomics
+Metaproteomics Gateway,https://galaxyproject.org/use/metaproteomics-gateway/,http://z.umn.edu/metaproteomicsgateway,"Metaproteomics gateway providing access to documentation and other instructional materials, and an opportunity for hands-on training using example datasets and optimized metaproteomics workflows",
+Migale,https://galaxyproject.org/use/migale/,http://galaxy.migale.inra.fr/,"A general purpose genomics server with an emphasis on metagenomics, including FROGS and several Migale developed tools.","Genomics, Tool Publishing, Tools"
+MiModD NacreousMap,https://galaxyproject.org/use/mimodd-nacreousmap/,http://mapping-by-sequencing.vm.uni-freiburg.de:8080/,NacreousMap mapping/plotting tool of MiModD for users of MiModD who do not want to install the required dependencies (R and rpy2) for graphical output from this tool on their local system.,"Tool Publishing, Tools"
+miRGalaxy,https://galaxyproject.org/use/mirgalaxy/,,NGS data analysis focusing on microRNAs and their sequence variants—isomiRs.,
+MISSISSIPPI,https://galaxyproject.org/use/mississippi/,https://mississippi.sorbonne-universite.fr/,Support for analyses of RNA and small RNA sequencing datasets as well as for epigenetics or metagenomics studies.,Genomics
+MitoLink,https://galaxyproject.org/use/mitolink/,https://ab-openlab.csir.res.in/mitolink_v1,MitoLink is an integrated workflow system to facilitate understanding of genotype-phenotype correlations in cases of mitochondrial dysfunction.,
+Molecular Property Diagnostic Suite - Tuberculosis (MPDSTB),https://galaxyproject.org/use/mpdstb/,http://mpds.osdd.net/,A disease-specific web portal for Tuberculosis for drug discovery and development.,
+NanoGalaxy,https://galaxyproject.org/use/nanogalaxy/,https://nanopore.usegalaxy.eu/,"a webserver to process, analyse and visualize Oxford Nanopore Technologies (ONT) data and similar long-reads technologies.",
+Nectar Cloud,https://galaxyproject.org/use/nectar/,,Set up a Galaxy server on Australia's Nectar research cloud.,
+NetworkAnalyst,https://galaxyproject.org/use/network-analyst/,https://galaxy.networkanalyst.ca/,For mapping and quantification of raw RNA-seq data,
+NG-Tax,https://galaxyproject.org/use/ng-tax/,https://ngtax.systemsbiology.nl/,A Semantic Framework for High-throughput Marker Gene (Amplicon) Analysis,
+NGPhylogeny.fr,https://galaxyproject.org/use/ngphylogeny/,https://ngphylogeny.fr/,Robust phylogenetic analysis for everyone.,
+Oqtans,https://galaxyproject.org/use/oqtans/,http://galaxy.inf.ethz.ch/,"Customized Galaxy, extended with machine learning based tools for sequence and tiling array data analysis.","Tool Publishing, Tools"
+Orione,https://galaxyproject.org/use/orione/,http://orione.crs4.it/,A Galaxy based web server for microbiology. Orione includes all post mapping or assembling steps from scaffolding to complete annotation pipelines.,
+OSDDlinux LiveGalaxy,https://galaxyproject.org/use/osddlinux-livegalaxy/,http://osddlinux.osdd.net:8001/,Drug discovery,
+Palfinder,https://galaxyproject.org/use/palfinder/,https://palfinder.ls.manchester.ac.uk/,Microsatellite development.,
+PepSimili,https://galaxyproject.org/use/pepsimili/,http://pepsimili.e-nios.com:8080/,"Integrated workflow tool for mapping of massive peptide repertoires on whole proteomes and delivering streamlined, systems-level biological interpretation.","Tool Publishing, Tools"
+PhagePromotor,https://galaxyproject.org/use/phagepromoter/,https://galaxy.bio.di.uminho.pt/,"Predict promoter sequences in phage genomes, using machine learning models.",
+PhenoMeNal,https://galaxyproject.org/use/phenomenal/,,Large scale computing for medical informatics,
+PiRATE: a Pipeline to Retrieve and Annotate Transposable Elements,https://galaxyproject.org/use/pirate/,,"Detect, classify and annotate TEs of non-model organisms.",
+Plant Anaylsis Workbench,https://galaxyproject.org/use/plants/,https://plants.usegalaxy.eu/,A community driven plant data analsys Galaxy service,
+PlantGenIE,https://galaxyproject.org/use/plantgenie/,http://galaxy.plantgenie.org:8080/,Plant Genome Integrative Explorer Galaxy instance,
+PreSTIGE,https://galaxyproject.org/use/prestige/,http://prestige.case.edu/,Predicting Specific Tissue Interactions of Genes and Enhancers,
+Proteogenomics Gateway,https://galaxyproject.org/use/proteogenomics-gateway/,http://z.umn.edu/proteogenomicsgateway,"Provides access to documentation and other instructional materials, and an opportunity for hands-on training using example datasets and optimized proteogenomics workflows. The main goal of this server is to provide documentation to facilitate training and mastery of these software and workflows.",Genomics
+ProteoRE,https://galaxyproject.org/use/proteore/,http://www.proteore.org/,ProteoRE (Proteomics Research Environment),
+Protologger,https://galaxyproject.org/use/protologger/,http://protologger.de/,"All-in-one genome description tool, aimed at simplifying gathering the data required for writing protologues. This includes providing taxonomic, functional and ecological insights.","Tool Publishing, Tools"
+q2Galaxy,https://galaxyproject.org/use/qiime2/,,QIIME 2 Galaxy Docker image.,
+QuanTP,https://galaxyproject.org/use/quantp/,,A Docker image containing a fully-operational Galaxy instance with pre-installed QuanTP tools.,"Tool Publishing, Tools"
+RepeatExplorer,https://galaxyproject.org/use/repeatexplorer/,https://repeatexplorer-elixir.cerit-sc.cz/,"Graph-based clustering and characterization of repetitive sequences, and detection of transposable element protein coding domains.",Domain
+RiboGalaxy,https://galaxyproject.org/use/ribogalaxy/,http://ribogalaxy.ucc.ie/,Tools for the analysis and visualization of ribo-seq data obtained with the ribosome profiling technique.,"Tool Publishing, Tools"
+Rice Galaxy,https://galaxyproject.org/use/rice-galaxy/,http://galaxy.irri.org/,"Tools for designing single-nucleotide polymorphism assays, analyzing genome-wide association studies, population diversity, rice−bacterial pathogen diagnostics, and a suite of published genomic prediction methods.","Genomics, Tool Publishing, Tools"
+RNA Modification Calling,https://galaxyproject.org/use/rna-modification-calling/,,Galaxy Docker image for RNA analysis and modification calling,
+RNA Workbench,https://galaxyproject.org/use/rna-workbench/,https://rna.usegalaxy.eu/,"more than 50 bioinformatics tools dedicated to different research areas of RNA biology, including RNA structure analysis, RNA alignment, RNA annotation, RNA-protein interaction, ribosome profiling, RNA-Seq analysis, and RNA target prediction.","Tool Publishing, Tools"
+SARS-CoV-2 ENA Submission,https://galaxyproject.org/use/ena-submission/,,Galaxy Docker image for submitting SARS-CoV-2 data to ENA,
+Sciensano,https://galaxyproject.org/use/sciensano/,https://galaxy.sciensano.be/policy/disclaimer.html,Galaxy server for microbiological genomics applications with a focus on public health.,Genomics
+SHAMAN,https://galaxyproject.org/use/shaman/,https://shaman.pasteur.fr/,A user-friendly website for metataxonomic analysis from raw reads to statistical analysis,
+Shapiro Lab,https://galaxyproject.org/use/shapiro-lab/,,RNA structure and design tools including RNA2D3D and StructureLab,"Tool Publishing, Tools"
+Single Cell Omics workbench,https://galaxyproject.org/use/singlecell/,https://singlecell.usegalaxy.eu/,The Single Cell Omics workbench is a comprehensive set of analysis tools and consolidated workflows,"Tool Publishing, Tools"
+SNIC Science Cloud (SSC),https://galaxyproject.org/use/snic-science-cloud/,,A national-scale cloud infrastructure for Swedish Academia,
+Street Science,https://galaxyproject.org/use/streetscience/,https://streetscience.usegalaxy.eu/,a Galaxy dedicated for the Street Science Community,
+SURF Research Cloud,https://galaxyproject.org/use/surf/,,Running reproducible Galaxy instances in a secure multicloud environment for Dutch scientists.,
+Terra,https://galaxyproject.org/use/terra/,,Run Galaxy inside the Terra cloud platform.,
+TGM,https://galaxyproject.org/use/tgm/,http://tgm-pipeline.uni.lu/galaxy/,"The TGM pipeline is a workflow combining tranSMART server, Galaxy Server and MINERVA platform to enable visually-aided exploration, analysis and interpretation of high-throughput translational medicine data.",
+TreeGenes,https://galaxyproject.org/use/treegenes/,https://treegenes.cam.uchc.edu/,"TreeGenes integrates genotype, phenotype, and environmental data that can be processed for association mapping and landscape genomics, with a focus on forest trees. This functionality is provided by Tripal Galaxy , a module for Tripal that provides seamless support for running Galaxy workflows directly in the site. Users can analyze data provided by TreeGenes or their own.",Genomics
+UseGalaxy.be,https://galaxyproject.org/use/usegalaxy-be/,https://usegalaxy.be/,General purpose genomics Galaxy server,"Genomics, UseGalaxy"
+UseGalaxy.cz,https://galaxyproject.org/use/usegalaxy-cz/,https://usegalaxy.cz/,General purpose Galaxy server,UseGalaxy
+UseGalaxy.eu,https://galaxyproject.org/use/usegalaxy-eu/,https://usegalaxy.eu/,The free public European Galaxy server,UseGalaxy
+UseGalaxy.fr,https://galaxyproject.org/use/usegalaxy-fr/,https://usegalaxy.fr/,General purpose genomics Galaxy server,"Genomics, UseGalaxy"
+UseGalaxy.no,https://galaxyproject.org/use/usegalaxy-no/,https://usegalaxy.no/,"A central, joint & free Galaxy instance for Norway-based researchers and their collaborators, with ~2000 bioinformatics tools, 200GB short-term storage and project storage on nels.bioinfo.no.","Tool Publishing, Tools, UseGalaxy"
+UseGalaxy.org (Main),https://galaxyproject.org/use/usegalaxy-org/,https://usegalaxy.org/,The Galaxy Project free public server; biomedical research,UseGalaxy
+UseGalaxy.org.au,https://galaxyproject.org/use/usegalaxy-au/,https://usegalaxy.org.au/,The Australian UseGalaxy server.,UseGalaxy
+USMI Galaxy Demonstrator,https://galaxyproject.org/use/usmi-galaxy-demonstrator/,http://bioinformatics.hsanmartino.it:8080/,This Galaxy implementation is meant to demonstrate integration of microbial domain Biological Resource Center (mBRC) catalogues into the bioinformatics data integration environment.,Domain
+VEuPathDB Galaxy,https://galaxyproject.org/use/veupathdb/,,"A free, interactive, web-based platform for large-scale data analysis focused on eukaryotic pathogens. Merges the former VectorBase and EuPathDB servers.",
+Vinther Lab,https://galaxyproject.org/use/vinther-lab/,http://galaxy.bio.ku.dk/,RNA structure-probing data analysis to improve the prediction of RNA secondary and tertiary structure and allow structural changes to be identified and investigated.,
+VINYL (Variant prIoritizatioN bY survivaL analysis),https://galaxyproject.org/use/vinyl/,http://www.beaconlab.it/VINYL,A flexible and fully automated system for the functional annotation and prioritization of genetic variants.,
+Viral Variant Visualizer (VVV),https://galaxyproject.org/use/vvv/,https://viralvariant.anses.fr/,Determine the composition of a viral population,
+VirAmp,https://galaxyproject.org/use/viramp/,http://viramp.com/,VirAmp is a web-based semi- de novo fast virus genome assembly pipeline designed for extremely high coverage NGS data.,
+Virology,https://galaxyproject.org/use/virology/,https://virology.usegalaxy.eu/,"A comprehensive set of analysis tools and consolidated workflows for virology work, including SARS-CoV-2.","Tool Publishing, Tools"
+Workflow4Metabolomics,https://galaxyproject.org/use/workflow4metabolomics/,https://workflow4metabolomics.usegalaxy.fr/,"A collaborative portal dedicated to metabolomics data processing, analysis and annotation.",
+wQAP,https://galaxyproject.org/use/wqap/,http://life2cloud.com:6005/,"QAP is an open source software that can be used to analyze virus quasispecies using CBS, NGS and TGS data. wQAP (web QAP), is the online version of QAP.",
+AnVIL,https://galaxyproject.org/use/anvil/,https://anvilproject.org/,Genomics,Genomics
+CLIMB,https://galaxyproject.org/use/climb/,http://www.climb.ac.uk/,Genomics,Genomics
+Globus Genomics,https://galaxyproject.org/use/globus-genomics/,http://globusgenomics.org/,Genomics,Genomics
+Laniakea,https://galaxyproject.org/use/laniakea/,https://laniakea-dashboard.cloud.ba.infn.it/login,Genomics,Genomics
+Nectar Cloud,https://galaxyproject.org/use/nectar/,https://nectar.org.au/research-cloud/,Genomics,Genomics
+PhenoMeNal,https://galaxyproject.org/use/phenomenal/,https://portal.phenomenal-h2020.eu/cloud-research-environment-setup,Domain,Domain
+SNIC Science Cloud (SSC),https://galaxyproject.org/use/snic-science-cloud/,https://cloud.snic.se/,Genomics,Genomics
+SURF Research Cloud,https://galaxyproject.org/use/surf/,https://www.surf.nl/en/services/compute/surf-research-cloud,Genomics,Genomics
+Terra,https://galaxyproject.org/use/terra/,https://terra.bio/,Genomics,Genomics
+VEuPathDB Galaxy,https://galaxyproject.org/use/veupathdb/,https://veupathdb.org/veupathdb/app/galaxy-orientation,Domain,Domain
+Free to use,,,Yes 1,
+Uses your local compute infrastructure,,,No,
+Datasets total > 250GB(including intermediate),,,Yes,
+Computational requirements are similarly large,,,Yes,
+Share Galaxy objects outside your organization,,,Yes,
+Install custom tools and reference genomces,,,Yes 5,"Tool Publishing, Tools"
+Have absolute data security requirements,,,? 5,
