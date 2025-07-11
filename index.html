@@ -99,6 +99,11 @@
       max-width: 100px;
     }
     
+    th:nth-child(6), td:nth-child(6) { /* Info column - narrower with rowspan */
+      width: 60px;
+      max-width: 60px;
+    }
+    
     th {
       background: #444;
       color: white;
@@ -275,10 +280,30 @@
     
     /* Links/Info icons styling */
     .contact-icons {
-      display: flex;
-      gap: 0.75rem;
-      justify-content: center;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 0.4rem;
+      justify-items: center;
       align-items: center;
+      max-width: 60px;
+      margin: 0 auto;
+    }
+    
+    /* Place the 4th, 5th, and 6th icons on the second row, filling all three columns */
+    .contact-icons .contact-icon:nth-child(4) {
+      grid-column: 1 / 2;
+      grid-row: 2;
+    }
+    
+    .contact-icons .contact-icon:nth-child(5) {
+      grid-column: 2 / 3;
+      grid-row: 2;
+    }
+    
+    .contact-icons .contact-icon:nth-child(6) {
+      grid-column: 3 / 4;
+      grid-row: 2;
     }
     
     .contact-icon {
@@ -294,6 +319,17 @@
     
     .contact-icon.disabled {
       color: #ccc;
+      cursor: not-allowed;
+    }
+    
+    /* Refresh button styling */
+    #refresh-button:hover:not(:disabled) {
+      background: #1976d2;
+      transform: translateY(-1px);
+    }
+    
+    #refresh-button:disabled {
+      opacity: 0.6;
       cursor: not-allowed;
     }
     
@@ -377,9 +413,14 @@
     
     <div class="search-container">
       <input type="text" id="search-input" class="search-input" placeholder="🔍 Search servers by name, URL, region, or any other field...">
-      <div style="margin-top: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
-        <input type="checkbox" id="hide-offline-checkbox">
-        <label for="hide-offline-checkbox" style="font-size: 0.9rem; cursor: pointer;">Hide offline servers</label>
+      <div style="margin-top: 0.75rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <input type="checkbox" id="hide-offline-checkbox">
+          <label for="hide-offline-checkbox" style="font-size: 0.9rem; cursor: pointer;">Hide offline servers</label>
+        </div>
+        <button id="refresh-button" style="padding: 0.3rem 0.75rem; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
+          <i class="fas fa-sync-alt"></i> Refresh All
+        </button>
       </div>
     </div>
   </div>
@@ -391,7 +432,7 @@
         <th>Name</th>
         <th>Region</th>
         <th>Institution</th>
-        <th>Info</th>
+        <th style="width: 60px;">Info</th>
         <th>Server</th>
         <th title="Available tools and genomes">Resources</th>
       </tr>
@@ -420,6 +461,81 @@
     let filteredData = [];
     let currentSortColumn = null;
     let currentSortDirection = 'asc';
+    
+    // Cache configuration
+    const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+    const CACHE_KEY = 'galaxyServerCache';
+    
+    // Cache management functions
+    function saveToCache(serverUrl, apiData) {
+      try {
+        const cache = getCache();
+        cache[serverUrl] = {
+          data: apiData,
+          timestamp: Date.now()
+        };
+        localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+      } catch (error) {
+        console.log('Error saving to cache:', error);
+      }
+    }
+    
+    function getFromCache(serverUrl) {
+      try {
+        const cache = getCache();
+        const cached = cache[serverUrl];
+        
+        if (cached && (Date.now() - cached.timestamp < CACHE_DURATION)) {
+          return cached.data;
+        }
+        
+        // Remove expired cache entry
+        if (cached) {
+          delete cache[serverUrl];
+          localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+        }
+        
+        return null;
+      } catch (error) {
+        console.log('Error reading from cache:', error);
+        return null;
+      }
+    }
+    
+    function getCache() {
+      try {
+        const cache = localStorage.getItem(CACHE_KEY);
+        return cache ? JSON.parse(cache) : {};
+      } catch (error) {
+        return {};
+      }
+    }
+    
+    function clearCache() {
+      try {
+        localStorage.removeItem(CACHE_KEY);
+        console.log('Galaxy server cache cleared');
+      } catch (error) {
+        console.log('Error clearing cache:', error);
+      }
+    }
+    
+    function getCacheStats() {
+      const cache = getCache();
+      const now = Date.now();
+      let validEntries = 0;
+      let expiredEntries = 0;
+      
+      Object.values(cache).forEach(entry => {
+        if (now - entry.timestamp < CACHE_DURATION) {
+          validEntries++;
+        } else {
+          expiredEntries++;
+        }
+      });
+      
+      return { validEntries, expiredEntries, totalEntries: Object.keys(cache).length };
+    }
     
     // Function to parse markdown-style links [text](url) and convert to HTML
     function parseMarkdownLinks(text) {
@@ -478,24 +594,16 @@
       
       const total = currentData.length;
       
-      console.log('updateSummaryStats called with data:', currentData.map(row => ({ 
-        name: row['Name'], 
-        version: row['Version'] 
-      })));
-      
       const online = currentData.filter(row => {
         const version = row['Version'] || '';
         const isOnline = version && version !== 'Loading...' && version !== 'N/A' && 
                version !== 'Offline' && version !== 'Error' && version !== 'No URL' && 
                version !== 'Local Mode';
         
-        console.log(`Server ${row['Name']}: version="${version}", isOnline=${isOnline}`);
         return isOnline;
       }).length;
       
       const offline = total - online;
-      
-      console.log(`Summary stats: Total=${total}, Online=${online}, Offline=${offline}`);
       
       document.getElementById('total-servers').textContent = total;
       document.getElementById('online-servers').textContent = online;
@@ -506,6 +614,7 @@
     function setupSearchFilter() {
       const searchInput = document.getElementById('search-input');
       const hideOfflineCheckbox = document.getElementById('hide-offline-checkbox');
+      const refreshButton = document.getElementById('refresh-button');
       
       const performFilter = () => {
         const searchTerm = searchInput.value.toLowerCase().trim();
@@ -545,8 +654,45 @@
         }
       };
       
+      const performRefresh = () => {
+        // Clear cache and reload data
+        clearCache();
+        
+        // Show refresh indicator
+        refreshButton.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Refreshing...';
+        refreshButton.disabled = true;
+        
+        // Reset all server data to loading state
+        currentData.forEach(row => {
+          row['Version'] = 'Loading...';
+          row['Tool Count'] = 'Loading...';
+          row['ConfigData'] = {};
+        });
+        
+        // Re-render table to show loading state
+        renderTableRows(filteredData.length > 0 ? filteredData : currentData);
+        updateSummaryStats();
+        
+        // Fetch fresh data for all servers
+        fetchAllGalaxyInfo(currentData, true).then(() => {
+          // Restore button state
+          refreshButton.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh All';
+          refreshButton.disabled = false;
+          
+          // Re-render table with updated data
+          renderTableRows(filteredData.length > 0 ? filteredData : currentData);
+          updateStatus(`Refreshed ${currentData.length} server(s). All data updated from Galaxy APIs.`);
+          updateSummaryStats();
+          
+          // Log cache stats
+          const cacheStats = getCacheStats();
+          console.log(`Cache refreshed. New entries: ${cacheStats.validEntries}`);
+        });
+      };
+      
       searchInput.addEventListener('input', performFilter);
       hideOfflineCheckbox.addEventListener('change', performFilter);
+      refreshButton.addEventListener('click', performRefresh);
     }
     
     function showNoResults() {
@@ -688,7 +834,6 @@
         // Skip completely empty rows or rows with only empty/whitespace values
         const hasNonEmptyValue = values.some(value => value && value.trim() !== '');
         if (!hasNonEmptyValue) {
-          console.log(`Skipping empty row at line ${i + 1}`);
           continue;
         }
         
@@ -699,13 +844,11 @@
         
         // Stop parsing if tier is "###" - this marks end of data
         if (row['Tier'] === '###') {
-          console.log(`Stopping data parsing at line ${i + 1} due to tier marker "###"`);
           break;
         }
         
         // Skip lines where tier starts with "#" (comment lines) but continue processing
         if (row['Tier'] && row['Tier'].startsWith('#')) {
-          console.log(`Skipping comment line ${i + 1} with tier "${row['Tier']}"`);
           continue;
         }
         
@@ -718,17 +861,23 @@
     async function loadSpreadsheetData() {
       updateStatus('Loading data from Google Spreadsheet...');
       
-      // Check if we're running locally (file:// protocol)
+      // Check if we're running locally (file:// protocol or localhost)
       const isLocalFile = window.location.protocol === 'file:';
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
       
       if (isLocalFile) {
-        console.log('Running from local file - CORS will be blocked. Use a web server for testing.');
         updateStatus('Running from local file. For testing, please use a web server (e.g., python3 -m http.server 8000) or deploy to GitHub Pages.', false);
         renderSampleData();
         return;
       }
       
+      if (isLocalhost) {
+        updateStatus('Loading data... (Note: Some Galaxy API data may be limited when testing locally due to CORS proxy restrictions)');
+      }
+      
       try {
+        updateStatus('Fetching data from Google Spreadsheet...');
+        
         const response = await fetch(sheetUrl, {
           method: 'GET',
           mode: 'cors',
@@ -741,15 +890,17 @@
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         
+        updateStatus('Spreadsheet fetched successfully. Parsing CSV data...');
+        
         const csvText = await response.text();
-        console.log('CSV data received:', csvText);
         
         const data = parseCSV(csvText);
-        console.log('Parsed data:', data);
         
         if (data.length === 0) {
           throw new Error('No data found in spreadsheet');
         }
+        
+        updateStatus(`CSV data parsed successfully. Found ${data.length} server(s). Preparing table...`);
         
         renderTable(data);
         
@@ -771,7 +922,6 @@
         updateStatus(errorMessage, true);
         
         // Show sample data for testing
-        console.log('Showing sample data for testing...');
         renderSampleData();
       }
     }
@@ -781,12 +931,12 @@
       
       const sampleData = [
         {
-          'Name': 'Sample Galaxy Server',
+          'Name': 'US Galaxy Main',
           'URL': 'https://usegalaxy.org',
           'Region': 'USA',
-          'Notes': 'Main Galaxy server',
+          'Notes': 'Main Galaxy server for the US',
           'Contact Name': 'Galaxy Team',
-          'Contact Email': 'galaxy@example.com',
+          'Contact Email': 'outreach@galaxyproject.org',
           'Tier': '1',
           'ConfigData': {
             'support_url': 'https://help.galaxyproject.org',
@@ -800,74 +950,69 @@
     }
     
     // Function to get comprehensive tool count by trying multiple endpoints
-    async function getComprehensiveToolCount(cleanUrl, primaryToolsData, configData, corsProxy) {
-      console.log(`${cleanUrl}: Starting comprehensive tool count extraction`);
-      
+    async function getComprehensiveToolCount(cleanUrl, primaryToolsData, configData, corsProxy = null) {
       // Try the primary tools data first
       let toolCount = extractToolCountFromData(cleanUrl, primaryToolsData, 'primary');
       
-      // If we got a reasonable count, return it (but try to get a better one if it's low)
-      if (typeof toolCount === 'number' && toolCount > 5000) {
-        console.log(`${cleanUrl}: Primary endpoint gave good count: ${toolCount}`);
+      // If we got a reasonable count, return it
+      if (typeof toolCount === 'number' && toolCount > 0) {
         return toolCount;
       }
       
-      // If the count is low, try additional endpoints
-      const additionalEndpoints = [
-        { name: 'installed', url: `${corsProxy}${encodeURIComponent(cleanUrl + '/api/tools?installed=true')}` },
-        { name: 'toolbox', url: `${corsProxy}${encodeURIComponent(cleanUrl + '/api/toolbox')}` },
-        { name: 'toolshed', url: `${corsProxy}${encodeURIComponent(cleanUrl + '/api/tool_shed_repositories?installed=true')}` }
-      ];
+      // If no CORS proxy provided or primary data failed, try config data
+      if (typeof toolCount !== 'number' || toolCount <= 0) {
+        const configCount = extractToolCountFromData(cleanUrl, configData, 'config');
+        if (typeof configCount === 'number' && configCount > 0) {
+          return configCount;
+        }
+      }
       
-      let bestCount = toolCount;
-      
-      for (const endpoint of additionalEndpoints) {
-        try {
-          console.log(`${cleanUrl}: Trying ${endpoint.name} endpoint`);
-          const response = await fetch(endpoint.url, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' }
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            const count = extractToolCountFromData(cleanUrl, data, endpoint.name);
+      // If corsProxy is available and count is still low, try additional endpoints
+      if (corsProxy && (typeof toolCount !== 'number' || toolCount < 1000)) {
+        const additionalEndpoints = [
+          { name: 'installed', url: `${corsProxy}${encodeURIComponent(cleanUrl + '/api/tools?installed=true')}` },
+          { name: 'toolbox', url: `${corsProxy}${encodeURIComponent(cleanUrl + '/api/toolbox')}` },
+          { name: 'toolshed', url: `${corsProxy}${encodeURIComponent(cleanUrl + '/api/tool_shed_repositories?installed=true')}` }
+        ];
+        
+        let bestCount = toolCount;
+        
+        for (const endpoint of additionalEndpoints) {
+          try {
+            const response = await fetch(endpoint.url, {
+              method: 'GET',
+              headers: { 'Accept': 'application/json' },
+              timeout: 5000 // Shorter timeout for additional calls
+            });
             
-            if (typeof count === 'number' && count > bestCount) {
-              console.log(`${cleanUrl}: ${endpoint.name} endpoint gave better count: ${count}`);
-              bestCount = count;
+            if (response.ok) {
+              const data = await response.json();
+              const count = extractToolCountFromData(cleanUrl, data, endpoint.name);
               
-              // If we get a really good count, use it
-              if (count > 5000) {
-                return count;
+              if (typeof count === 'number' && count > bestCount) {
+                bestCount = count;
+                
+                // If we get a really good count, use it
+                if (count > 5000) {
+                  return count;
+                }
               }
             }
-          } else {
-            console.log(`${cleanUrl}: ${endpoint.name} endpoint failed: ${response.status}`);
+          } catch (error) {
+            // Silent error handling for additional endpoints
           }
-        } catch (error) {
-          console.log(`${cleanUrl}: ${endpoint.name} endpoint error:`, error.message);
         }
+        
+        toolCount = bestCount;
       }
       
-      // If still low, try config data
-      if (typeof bestCount !== 'number' || bestCount < 1000) {
-        const configCount = extractToolCountFromData(cleanUrl, configData, 'config');
-        if (typeof configCount === 'number' && configCount > bestCount) {
-          bestCount = configCount;
-        }
-      }
-      
-      console.log(`${cleanUrl}: Final comprehensive tool count: ${bestCount}`);
-      return bestCount;
+      // Return the best count we found
+      return toolCount;
     }
     
     // Function to extract tool count from API response data
     function extractToolCountFromData(cleanUrl, data, source) {
-      console.log(`${cleanUrl}: Extracting tool count from ${source} data`);
-      
       if (!data || data.error) {
-        console.log(`${cleanUrl}: ${source} data has error or is empty`);
         return 'API Error';
       }
       
@@ -885,7 +1030,6 @@
               totalTools += 1; // Assume 1 tool per repo if not specified
             }
           });
-          console.log(`${cleanUrl}: ${source} - counted ${totalTools} tools from ${data.length} repositories`);
           return totalTools;
         } else {
           // Regular tools API - count tools in sections with recursive support
@@ -921,17 +1065,12 @@
             const sectionName = section?.name || section?.id || `section-${index}`;
             const sectionCount = countToolsRecursively(section, sectionName);
             totalTools += sectionCount;
-            if (sectionCount > 0) {
-              console.log(`${cleanUrl}: ${source} - Section "${sectionName}" has ${sectionCount} tools`);
-            }
           });
           
           if (totalTools > 0) {
-            console.log(`${cleanUrl}: ${source} - got ${totalTools} tools from ${data.length} sections (recursive count)`);
             return totalTools;
           } else {
             // Fallback: count array items as tools
-            console.log(`${cleanUrl}: ${source} - no tools in sections, using array length: ${data.length}`);
             return data.length;
           }
         }
@@ -941,15 +1080,12 @@
       if (typeof data === 'object') {
         // Check for direct count fields
         if (data.tool_count) {
-          console.log(`${cleanUrl}: ${source} - got ${data.tool_count} from tool_count field`);
           return data.tool_count;
         }
         if (data.total) {
-          console.log(`${cleanUrl}: ${source} - got ${data.total} from total field`);
           return data.total;
         }
         if (data.count) {
-          console.log(`${cleanUrl}: ${source} - got ${data.count} from count field`);
           return data.count;
         }
         
@@ -957,26 +1093,19 @@
         if (data.tools && Array.isArray(data.tools)) {
           return extractToolCountFromData(cleanUrl, data.tools, source + '.tools');
         }
-        
-        console.log(`${cleanUrl}: ${source} - unrecognized object structure:`, Object.keys(data));
       }
       
-      console.log(`${cleanUrl}: ${source} - could not extract tool count`);
       return 'Unknown';
     }
 
     // Function to extract genome count from API response data
     function extractGenomeCount(cleanUrl, genomesData) {
-      console.log(`${cleanUrl}: Extracting genome count from genomes data`);
-      
       if (!genomesData || genomesData.error) {
-        console.log(`${cleanUrl}: Genomes data has error or is empty`);
         return 0;
       }
       
       // Handle arrays (most common for genomes API)
       if (Array.isArray(genomesData)) {
-        console.log(`${cleanUrl}: Got ${genomesData.length} genomes from genomes API`);
         return genomesData.length;
       }
       
@@ -984,26 +1113,20 @@
       if (typeof genomesData === 'object') {
         // Check for direct count fields
         if (genomesData.count) {
-          console.log(`${cleanUrl}: Got ${genomesData.count} genomes from count field`);
           return genomesData.count;
         }
         
         // Check for genomes array
         if (genomesData.genomes && Array.isArray(genomesData.genomes)) {
-          console.log(`${cleanUrl}: Got ${genomesData.genomes.length} genomes from genomes array`);
           return genomesData.genomes.length;
         }
         
         // Check for data array
         if (genomesData.data && Array.isArray(genomesData.data)) {
-          console.log(`${cleanUrl}: Got ${genomesData.data.length} genomes from data array`);
           return genomesData.data.length;
         }
-        
-        console.log(`${cleanUrl}: Unrecognized genomes object structure:`, Object.keys(genomesData));
       }
       
-      console.log(`${cleanUrl}: Could not extract genome count`);
       return 0;
     }
     
@@ -1018,35 +1141,31 @@
       }
       
       if (hasTools && hasGenomes) {
-        return `${toolCount} tools<br><small style="color: #666; font-size: 0.85em;">${genomeCount} genomes</small>`;
+        return `<span style="color: #4caf50; font-weight: 500;">${toolCount} tools</span><br><small style="color: #2196f3; font-size: 0.85em; font-weight: 500;">${genomeCount} genomes</small>`;
       }
       
       if (hasTools && !hasGenomes) {
-        return `${toolCount} tools`;
+        return `<span style="color: #4caf50; font-weight: 500;">${toolCount} tools</span>`;
       }
       
       if (!hasTools && hasGenomes) {
-        return `${genomeCount} genomes`;
+        return `<span style="color: #2196f3; font-weight: 500;">${genomeCount} genomes</span>`;
       }
       
       return toolCount;
     }
     
-    async function fetchGalaxyInfo(url) {
+    async function fetchGalaxyInfo(url, forceRefresh = false) {
       // Check if we're running locally (file:// protocol)
       const isLocalFile = window.location.protocol === 'file:';
       
-      console.log(`fetchGalaxyInfo called for: ${url}, isLocalFile: ${isLocalFile}, protocol: ${window.location.protocol}`);
-      
       if (isLocalFile) {
-        console.log('Returning local mode for:', url);
         return Promise.resolve({ version: 'Local Mode', toolCount: 'Local Mode', configData: {} });
       }
       
       // Clean and validate the URL
       let cleanUrl = url.trim();
       if (!cleanUrl) {
-        console.log('No URL provided for server');
         return Promise.resolve({ version: 'No URL', toolCount: 'No URL', configData: {} });
       }
       
@@ -1058,40 +1177,125 @@
         cleanUrl = 'https://' + cleanUrl;
       }
       
-      console.log(`Fetching Galaxy info from: ${cleanUrl}`);
+      // Check cache first (unless forced refresh)
+      if (!forceRefresh) {
+        const cachedData = getFromCache(cleanUrl);
+        if (cachedData) {
+          console.log(`${cleanUrl}: Using cached data`);
+          return cachedData;
+        }
+      }
       
-      // Use CORS proxy for API calls to bypass CORS restrictions
-      const corsProxy = 'https://corsproxy.io/?url=';
-      const versionUrl = `${corsProxy}${encodeURIComponent(cleanUrl + '/api/version')}`;
-      // Try multiple endpoints to get the most comprehensive tool count
-      const toolsUrl = `${corsProxy}${encodeURIComponent(cleanUrl + '/api/tools?all=true&in_panel=false')}`;
-      const toolsUrlFallback = `${corsProxy}${encodeURIComponent(cleanUrl + '/api/tools')}`;
-      const toolsInstalledUrl = `${corsProxy}${encodeURIComponent(cleanUrl + '/api/tools?installed=true')}`;
-      const toolboxUrl = `${corsProxy}${encodeURIComponent(cleanUrl + '/api/toolbox')}`;
-      const configUrl = `${corsProxy}${encodeURIComponent(cleanUrl + '/api/configuration')}`;
-      const toolshedUrl = `${corsProxy}${encodeURIComponent(cleanUrl + '/api/tool_shed_repositories?installed=true')}`;
-      const genomesUrl = `${corsProxy}${encodeURIComponent(cleanUrl + '/api/genomes')}`;
+      // Multiple CORS proxy options for better reliability
+      const corsProxies = [
+        'https://corsproxy.io/?url=',
+        'https://api.codetabs.com/v1/proxy?quest=',
+        'https://cors.bridged.cc/',
+        'https://api.allorigins.win/raw?url='
+      ];
       
-      // Add timeout to prevent hanging requests
-      const fetchWithTimeout = (url, timeout = 15000) => {
-        console.log(`Starting fetch for: ${url} with timeout: ${timeout}ms`);
-        return Promise.race([
-          fetch(url, { 
-            method: 'GET',
-            headers: {
-              'Accept': 'application/json'
+      // Enhanced fetch with timeout and robust multi-proxy retry logic
+      const fetchWithTimeout = async (apiEndpoint, timeout = 15000, maxRetries = 2) => {
+        const originalUrl = `${cleanUrl}${apiEndpoint}`;
+        
+        let lastError;
+        let proxiesAttempted = 0;
+        
+        // Try each proxy with retries
+        for (let proxyIndex = 0; proxyIndex < corsProxies.length; proxyIndex++) {
+          const corsProxy = corsProxies[proxyIndex];
+          const url = `${corsProxy}${encodeURIComponent(originalUrl)}`;
+          proxiesAttempted++;
+          
+          // Update status to show proxy retry progress for user feedback
+          if (proxyIndex > 0) {
+            updateStatus(`Loading Galaxy API data... (Trying backup proxy ${proxyIndex + 1}/${corsProxies.length} for ${cleanUrl.replace('https://', '').replace('http://', '')})`, false);
+          }
+          
+          for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+              const response = await Promise.race([
+                fetch(url, { 
+                  method: 'GET',
+                  headers: {
+                    'Accept': 'application/json',
+                    'User-Agent': 'Galaxy-Server-Tracker/1.0'
+                  }
+                }),
+                new Promise((_, reject) => 
+                  setTimeout(() => reject(new Error('Timeout')), timeout)
+                )
+              ]);
+              
+              // Success!
+              if (response.ok) {
+                return response;
+              }
+              
+              // Handle specific proxy/rate limit errors
+              if (response.status === 403) {
+                lastError = new Error('PROXY_BLOCKED');
+                break; // Try next proxy immediately
+              }
+              
+              if (response.status === 429) {
+                lastError = new Error('RATE_LIMITED');
+                
+                if (attempt < maxRetries) {
+                  // Wait before retry with exponential backoff
+                  const delay = Math.min(2000 * Math.pow(2, attempt), 8000);
+                  updateStatus(`Loading Galaxy API data... (Rate limited, waiting ${Math.round(delay/1000)}s before retry for ${cleanUrl.replace('https://', '').replace('http://', '')})`, false);
+                  await new Promise(resolve => setTimeout(resolve, delay));
+                  continue;
+                } else {
+                  break; // Try next proxy
+                }
+              }
+              
+              // Server errors that might indicate the target server is down
+              if (response.status >= 500) {
+                lastError = new Error('SERVER_ERROR');
+                
+                if (attempt < maxRetries) {
+                  await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+                  continue;
+                } else {
+                  break; // Try next proxy
+                }
+              }
+              
+              // Other HTTP errors
+              lastError = new Error(`HTTP_${response.status}`);
+              break; // Try next proxy
+              
+            } catch (error) {
+              lastError = error;
+              
+              // Retry on timeout or network errors
+              if (attempt < maxRetries && (
+                error.message === 'Timeout' || 
+                error.message.includes('NetworkError') ||
+                error.message.includes('Failed to fetch')
+              )) {
+                const delay = 1000 * (attempt + 1);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                continue;
+              } else {
+                break; // Try next proxy
+              }
             }
-          }),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout')), timeout)
-          )
-        ]);
+          }
+        }
+        
+        // Add metadata about proxy failures for user feedback
+        const error = lastError || new Error('All proxies failed');
+        error.proxiesAttempted = proxiesAttempted;
+        error.endpoint = apiEndpoint;
+        throw error;
       };
       
       // Robust server reachability check that tries to distinguish DNS failures from CORS blocks
       const checkServerStatus = async () => {
-        console.log(`Checking server status for: ${cleanUrl}`);
-        
         // Try multiple approaches to determine if server is reachable
         const tests = [];
         
@@ -1147,29 +1351,24 @@
         );
         
         const results = await Promise.all(tests);
-        console.log(`${cleanUrl}: Reachability test results:`, results);
         
         // If any test succeeded, server is reachable
         if (results.some(r => r.success)) {
-          console.log(`${cleanUrl}: Server is reachable (at least one test succeeded)`);
           return { reachable: true, corsBlocked: false };
         }
         
         // If any test shows clear DNS errors, server is offline
         if (results.some(r => r.isDnsError)) {
-          console.log(`${cleanUrl}: DNS error detected - server is offline`);
           return { reachable: false, corsBlocked: false };
         }
         
         // All tests failed but no clear DNS errors - likely CORS or online but inaccessible
-        console.log(`${cleanUrl}: All tests failed without DNS errors - assuming server is online but CORS-blocked`);
         return { reachable: false, corsBlocked: true };
       };
       
       return Promise.all([
-        fetchWithTimeout(versionUrl)
+        fetchWithTimeout('/api/version')
           .then(res => {
-            console.log(`Version API response for ${cleanUrl}:`, res.status, res.statusText);
             if (res.ok) {
               return res.json();
             } else {
@@ -1181,16 +1380,20 @@
             }
           })
           .then(versionJson => {
-            console.log(`Version API JSON for ${cleanUrl}:`, versionJson);
             return versionJson;
           })
           .catch(err => {
-            console.log(`Version API error for ${cleanUrl}:`, err.message);
-            return { error: err.message, type: 'version' };
+            // Track proxy issues for user feedback
+            const hasProxyIssues = err.proxiesAttempted > 1 || err.message.includes('PROXY_BLOCKED') || err.message.includes('RATE_LIMITED');
+            return { 
+              error: err.message, 
+              type: 'version',
+              proxiesAttempted: err.proxiesAttempted,
+              hasProxyIssues: hasProxyIssues
+            };
           }),
-        fetchWithTimeout(toolsUrl)
+        fetchWithTimeout('/api/tools?all=true&in_panel=false')
           .then(res => {
-            console.log(`Tools API response for ${cleanUrl}:`, res.status, res.statusText);
             if (res.ok) {
               return res.json();
             } else {
@@ -1202,20 +1405,31 @@
             }
           })
           .then(toolsJson => {
-            console.log(`Tools API JSON for ${cleanUrl} (type: ${typeof toolsJson}, isArray: ${Array.isArray(toolsJson)}):`, toolsJson);
-            // Log the structure to help debug
-            if (Array.isArray(toolsJson) && toolsJson.length > 0) {
-              console.log(`${cleanUrl}: First section structure:`, toolsJson[0]);
-            }
             return toolsJson;
           })
           .catch(err => {
-            console.log(`Tools API error for ${cleanUrl}:`, err.message);
-            return { error: err.message, type: 'tools' };
+            // Try fallback API endpoint if main one fails
+            return fetchWithTimeout('/api/tools')
+              .then(res => {
+                return res.ok ? res.json() : Promise.reject(new Error(`HTTP_${res.status}`));
+              })
+              .then(toolsJson => {
+                return toolsJson;
+              })
+              .catch(fallbackErr => {
+                const hasProxyIssues = err.proxiesAttempted > 1 || fallbackErr.proxiesAttempted > 1 || 
+                                      err.message.includes('PROXY_BLOCKED') || err.message.includes('RATE_LIMITED') ||
+                                      fallbackErr.message.includes('PROXY_BLOCKED') || fallbackErr.message.includes('RATE_LIMITED');
+                return { 
+                  error: err.message, 
+                  type: 'tools',
+                  proxiesAttempted: Math.max(err.proxiesAttempted || 0, fallbackErr.proxiesAttempted || 0),
+                  hasProxyIssues: hasProxyIssues
+                };
+              });
           }),
-        fetchWithTimeout(configUrl)
+        fetchWithTimeout('/api/configuration')
           .then(res => {
-            console.log(`Config API response for ${cleanUrl}:`, res.status, res.statusText);
             if (res.ok) {
               return res.json();
             } else {
@@ -1223,16 +1437,19 @@
             }
           })
           .then(configJson => {
-            console.log(`Config API JSON for ${cleanUrl}:`, configJson);
             return configJson;
           })
           .catch(err => {
-            console.log(`Config API error for ${cleanUrl}:`, err.message);
-            return { error: err.message, type: 'config' };
+            const hasProxyIssues = err.proxiesAttempted > 1 || err.message.includes('PROXY_BLOCKED') || err.message.includes('RATE_LIMITED');
+            return { 
+              error: err.message, 
+              type: 'config',
+              proxiesAttempted: err.proxiesAttempted,
+              hasProxyIssues: hasProxyIssues
+            };
           }),
-        fetchWithTimeout(genomesUrl)
+        fetchWithTimeout('/api/genomes')
           .then(res => {
-            console.log(`Genomes API response for ${cleanUrl}:`, res.status, res.statusText);
             if (res.ok) {
               return res.json();
             } else {
@@ -1240,16 +1457,29 @@
             }
           })
           .then(genomesJson => {
-            console.log(`Genomes API JSON for ${cleanUrl}:`, genomesJson);
             return genomesJson;
           })
           .catch(err => {
-            console.log(`Genomes API error for ${cleanUrl}:`, err.message);
-            return { error: err.message, type: 'genomes' };
+            const hasProxyIssues = err.proxiesAttempted > 1 || err.message.includes('PROXY_BLOCKED') || err.message.includes('RATE_LIMITED');
+            return { 
+              error: err.message, 
+              type: 'genomes',
+              proxiesAttempted: err.proxiesAttempted,
+              hasProxyIssues: hasProxyIssues
+            };
           }),
         checkServerStatus()
       ]).then(async ([versionData, toolsData, configData, genomesData, serverStatus]) => {
-        console.log(`Galaxy info for ${cleanUrl}:`, { versionData, toolsData, configData, genomesData, serverStatus });
+        // Track proxy issues for user feedback and table display
+        const hasProxyIssues = [versionData, toolsData, configData, genomesData]
+          .some(data => data?.hasProxyIssues || (data?.proxiesAttempted && data.proxiesAttempted > 1));
+        
+        const totalProxiesAttempted = Math.max(
+          versionData?.proxiesAttempted || 0,
+          toolsData?.proxiesAttempted || 0,
+          configData?.proxiesAttempted || 0,
+          genomesData?.proxiesAttempted || 0
+        );
         
         // Check for server unreachable errors from the CORS proxy
         const versionError = versionData?.error || '';
@@ -1267,20 +1497,30 @@
         
         const hasTimeoutError = versionError === 'Timeout' || toolsError === 'Timeout';
         
+        let result;
+        
         // Primary check: Look for server unreachable errors from CORS proxy or DNS errors
         if (hasServerError) {
-          console.log(`${cleanUrl}: Server unreachable via CORS proxy - server is offline`);
-          return { version: 'Offline', toolCount: 'Offline', configData: {} };
+          result = { 
+            version: 'Offline', 
+            toolCount: 'Offline', 
+            configData: {},
+            hasProxyIssues: false,
+            proxiesAttempted: totalProxiesAttempted
+          };
         }
-        
         // If timeout errors occur and static file tests also indicate unreachable, likely offline
-        if (hasTimeoutError && !serverStatus.reachable && !serverStatus.corsBlocked) {
-          console.log(`${cleanUrl}: Timeout errors and server tests indicate unreachable - server is offline`);
-          return { version: 'Offline', toolCount: 'Offline', configData: {} };
+        else if (hasTimeoutError && !serverStatus.reachable && !serverStatus.corsBlocked) {
+          result = { 
+            version: 'Offline', 
+            toolCount: 'Offline', 
+            configData: {},
+            hasProxyIssues: false,
+            proxiesAttempted: totalProxiesAttempted
+          };
         }
-        
         // If we have successful API data from CORS proxy, server is definitely online
-        if (versionData && !versionData.error) {
+        else if (versionData && !versionData.error) {
           // Extract version - try different possible fields
           let version = 'Unknown';
           if (versionData.version_major && versionData.version_minor) {
@@ -1304,6 +1544,7 @@
           }
           
           // Get comprehensive tool count using multiple endpoints
+          const corsProxy = corsProxies[0]; // Use the first proxy for additional calls
           const toolCount = await getComprehensiveToolCount(cleanUrl, toolsData, configData, corsProxy);
           
           // Get genome count
@@ -1312,29 +1553,24 @@
           // Combine tool and genome counts
           const combinedCount = formatToolsAndGenomes(toolCount, genomeCount);
           
-          const result = {
+          result = {
             version: versionWithDate,
             toolCount: combinedCount,
-            configData: configData && !configData.error ? configData : {}
+            configData: configData && !configData.error ? configData : {},
+            hasProxyIssues: hasProxyIssues,
+            proxiesAttempted: totalProxiesAttempted
           };
-          console.log(`${cleanUrl}: Successfully got Galaxy info via CORS proxy:`, result);
-          return result;
         }
-        
         // If static file tests indicate server is unreachable without CORS issues, it's offline
-        if (!serverStatus.reachable && !serverStatus.corsBlocked) {
-          console.log(`${cleanUrl}: Server tests indicate unreachable - server is offline`);
-          return { version: 'Offline', toolCount: 'Offline', configData: {} };
+        else if (!serverStatus.reachable && !serverStatus.corsBlocked) {
+          result = { version: 'Offline', toolCount: 'Offline', configData: {} };
         }
-        
         // If we get here, we have mixed results - server might be online but with API issues
-        if (serverStatus.reachable || serverStatus.corsBlocked) {
-          console.log(`${cleanUrl}: Server appears reachable but API calls failed - treating as API error`);
-          
+        else if (serverStatus.reachable || serverStatus.corsBlocked) {
           // Try to get tool count even with partial data
           let toolCount = 'API Error';
           if (Array.isArray(toolsData)) {
-            toolCount = toolsData.length;
+            toolCount = extractToolCountFromData(cleanUrl, toolsData, 'tools');
           } else if (toolsData?.length) {
             toolCount = toolsData.length;
           } else if (toolsData?.error) {
@@ -1347,17 +1583,31 @@
           const genomeCount = extractGenomeCount(cleanUrl, genomesData);
           const combinedCount = formatToolsAndGenomes(toolCount, genomeCount);
           
-          const result = {
+          result = {
             version: versionData?.version || (versionData?.error ? 'API Error' : 'Unknown'),
             toolCount: combinedCount,
-            configData: configData && !configData.error ? configData : {}
+            configData: configData && !configData.error ? configData : {},
+            hasProxyIssues: hasProxyIssues,
+            proxiesAttempted: totalProxiesAttempted
           };
-          return result;
+        }
+        // Default case: unable to determine conclusively
+        else {
+          result = { 
+            version: 'Unknown', 
+            toolCount: 'Unknown', 
+            configData: {},
+            hasProxyIssues: hasProxyIssues,
+            proxiesAttempted: totalProxiesAttempted
+          };
         }
         
-        // Default case: unable to determine conclusively
-        console.log(`${cleanUrl}: Unable to determine status conclusively - treating as unknown`);
-        return { version: 'Unknown', toolCount: 'Unknown', configData: {} };
+        // Save successful results to cache (don't cache errors or offline status)
+        if (result.version !== 'Offline' && result.version !== 'Error' && result.version !== 'Unknown') {
+          saveToCache(cleanUrl, result);
+        }
+        
+        return result;
       });
     }
 
@@ -1374,7 +1624,6 @@
         return;
       }
 
-      console.log('Rendering table with data:', data);
       updateStatus(`Found ${data.length} server(s) in the spreadsheet. Loading Galaxy API data...`);
       
       // Store data globally for sorting and filtering
@@ -1392,7 +1641,7 @@
       updateSummaryStats();
       
       // Fetch Galaxy info for all servers ONCE
-      fetchAllGalaxyInfo(data).then(() => {
+      fetchAllGalaxyInfo(data, false).then(() => {
         // After all API calls are done, render the table again with updated data
         renderTableRows(filteredData.length > 0 ? filteredData : currentData);
         updateStatus(`Loaded ${data.length} server(s). Galaxy API data fetched successfully.`);
@@ -1400,11 +1649,15 @@
       });
     }
 
-    async function fetchAllGalaxyInfo(data) {
+    async function fetchAllGalaxyInfo(data, forceRefresh = false) {
       let completedCount = 0;
       const totalCount = data.length;
       
-      console.log(`Starting fetchAllGalaxyInfo for ${totalCount} servers`);
+      // Log cache stats at start
+      if (!forceRefresh) {
+        const cacheStats = getCacheStats();
+        console.log(`Starting Galaxy API fetch. Cache status: ${cacheStats.validEntries} valid, ${cacheStats.expiredEntries} expired entries`);
+      }
       
       const updateProgress = () => {
         completedCount++;
@@ -1417,30 +1670,36 @@
       
       const promises = data.map(async (row, index) => {
         const url = row['URL'] || row['url'] || '';
-        console.log(`Processing server ${index + 1}/${totalCount}: ${row['Name']} - ${url}`);
         
         if (url && url.trim()) {
           try {
-            const info = await fetchGalaxyInfo(url.trim());
+            const info = await fetchGalaxyInfo(url.trim(), forceRefresh);
             // Store the API results directly in the data object
             row['Version'] = info.version;
             row['Tool Count'] = info.toolCount;
             row['ConfigData'] = info.configData || {};
-            console.log(`Galaxy API completed for ${url.trim()}:`, info);
+            
+            // Log server status once for debugging/monitoring
+            console.log(`${row['Name']}: ${info.version === 'Offline' ? 'OFFLINE' : 
+                        info.version === 'Error' || info.version === 'API Error' ? 'ERROR' : 
+                        info.version === 'Unknown' ? 'UNKNOWN' : 'ONLINE'} (${info.version})`);
           } catch (error) {
             console.error(`Error fetching Galaxy info for ${url.trim()}:`, error);
             row['Version'] = 'Error';
             row['Tool Count'] = 'Error';
             row['ConfigData'] = {};
+            
+            // Log server status for error case
+            console.log(`${row['Name']}: ERROR (API fetch failed)`);
           }
         } else {
-          console.log(`No URL provided for server: ${row['Name']}`);
           row['Version'] = 'N/A';
           row['Tool Count'] = 'N/A';
           row['ConfigData'] = {};
+          
+          // Log server status for no URL case
+          console.log(`${row['Name']}: NO_URL (No URL provided)`);
         }
-        
-        console.log(`Final status for ${row['Name']}: Version=${row['Version']}, ToolCount=${row['Tool Count']}`);
         
         // Update progress and re-render after each completion
         updateProgress();
@@ -1448,8 +1707,12 @@
 
       // Wait for all API calls to complete
       await Promise.all(promises);
-      console.log('All Galaxy API calls completed');
-      console.log('Final data state:', currentData.map(row => ({ name: row['Name'], version: row['Version'], toolCount: row['Tool Count'] })));
+      
+      // Log final cache stats
+      if (forceRefresh) {
+        const finalCacheStats = getCacheStats();
+        console.log(`Refresh completed. Cache now has ${finalCacheStats.validEntries} entries`);
+      }
     }
 
     function renderTableRows(data) {
@@ -1514,7 +1777,7 @@
           if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
             cleanUrl = 'https://' + cleanUrl;
           }
-          faviconHtml = `<img src="${cleanUrl}/favicon.ico" alt="" class="server-favicon" onerror="this.style.display='none';">`;
+          faviconHtml = `<img src="${cleanUrl}/favicon.ico" alt="" class="server-favicon" onerror="this.src='https://usegalaxy.org/favicon.ico';">`;
           
           // Make server name a hyperlink
           nameContent = `<a href="${cleanUrl}" target="_blank" style="color: inherit; text-decoration: none; font-weight: 500;">${serverName}</a>`;
@@ -1598,6 +1861,13 @@
           linksHtml += `<span class="contact-icon" title="Quotas Disabled" style="color: #999;"><i class="fas fa-chart-pie"></i></span>`;
         }
         
+        // Beacon integration icon based on enable_beacon_integration
+        if (configData.enable_beacon_integration === true) {
+          linksHtml += `<span class="contact-icon" title="Beacon Integration Enabled" style="color: #9c27b0;"><i class="fas fa-broadcast-tower"></i></span>`;
+        } else if (configData.enable_beacon_integration === false) {
+          linksHtml += `<span class="contact-icon" title="Beacon Integration Disabled" style="color: #999;"><i class="fas fa-broadcast-tower"></i></span>`;
+        }
+        
         linksHtml += '</div>';
         tdContact.innerHTML = linksHtml;
         tdContact.style.width = '100px';
@@ -1631,21 +1901,35 @@
         // Apply color coding based on version status
         if (version === 'Offline') {
           tdVersion.style.color = '#f44336';
-          tdToolCount.style.color = '#f44336';
+          // Only color resources if it's an error message, not actual tool/genome counts
+          if (toolCount === 'Loading...' || toolCount === 'Offline' || typeof toolCount === 'string') {
+            tdToolCount.style.color = '#f44336';
+          }
         } else if (version === 'CORS Blocked') {
           tdVersion.style.color = '#ff9800';
-          tdToolCount.style.color = '#ff9800';
+          // Only color resources if it's an error message, not actual tool/genome counts
+          if (toolCount === 'Loading...' || toolCount === 'CORS Blocked' || typeof toolCount === 'string') {
+            tdToolCount.style.color = '#ff9800';
+          }
           tdVersion.title = 'Server appears online but API calls blocked by browser CORS policy. Will work when deployed to GitHub Pages.';
-          tdToolCount.title = 'Server appears online but API calls blocked by browser CORS policy. Will work when deployed to GitHub Pages.';
+          if (toolCount === 'CORS Blocked') {
+            tdToolCount.title = 'Server appears online but API calls blocked by browser CORS policy. Will work when deployed to GitHub Pages.';
+          }
         } else if (version === 'Unknown' || version === 'API Error' || version === 'Error') {
           tdVersion.style.color = '#ff9800';
-          tdToolCount.style.color = '#ff9800';
+          // Only color resources if it's an error message, not actual tool/genome counts
+          if (toolCount === 'Loading...' || toolCount === 'Unknown' || toolCount === 'API Error' || toolCount === 'Error' || typeof toolCount === 'string') {
+            tdToolCount.style.color = '#ff9800';
+          }
         } else if (version === 'Loading...' || version === 'N/A') {
           tdVersion.style.color = '#999';
-          tdToolCount.style.color = '#999';
+          // Only color resources if it's loading or N/A
+          if (toolCount === 'Loading...' || toolCount === 'N/A') {
+            tdToolCount.style.color = '#999';
+          }
         } else {
           tdVersion.style.color = '#4caf50';
-          tdToolCount.style.color = '#4caf50';
+          // Don't override colors for resources when they contain formatted tool/genome counts
         }
         
         // Add loading class for progressive update effect
