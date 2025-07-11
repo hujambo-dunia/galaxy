@@ -460,6 +460,8 @@
     <div>📊 <a href="https://docs.google.com/spreadsheets/d/1HSpJ7vOxfnYSjfFm1vs528eydh1gVU40rKR6-1TCeCo/edit#gid=0" target="_blank" style="color: inherit; text-decoration: none;">Source Spreadsheet</a></div>
     <div> | </div>
     <div>🔗 <a href="https://github.com/mschatz/gxyservers" target="_blank" style="color: inherit; text-decoration: none;">GitHub Repository</a></div>
+    <div> | </div>
+    <div>🌌 <a href="https://gxy.io/kui" target="_blank" style="color: inherit; text-decoration: none;">Galaxy KUI</a></div>
   </div>
 
   <script>
@@ -575,11 +577,43 @@
       if (!serverStartTime) return '';
       
       try {
-        // Parse the server start time (usually in ISO format or timestamp)
-        const date = new Date(serverStartTime);
+        let date;
         
-        // Check if the date is valid
-        if (isNaN(date.getTime())) return '';
+        // Handle different timestamp formats
+        if (typeof serverStartTime === 'string') {
+          // Try to parse as ISO string first
+          date = new Date(serverStartTime);
+          
+          // If that fails and it looks like a numeric string, try parsing as number
+          if (isNaN(date.getTime()) && /^\d+(\.\d+)?$/.test(serverStartTime)) {
+            const numericTime = parseFloat(serverStartTime);
+            // If it's a small number, it's likely in seconds (Unix timestamp)
+            // If it's a large number, it's likely in milliseconds
+            if (numericTime < 1e10) {
+              date = new Date(numericTime * 1000); // Convert seconds to milliseconds
+            } else {
+              date = new Date(numericTime); // Already in milliseconds
+            }
+          }
+        } else if (typeof serverStartTime === 'number') {
+          // Handle numeric timestamps
+          if (serverStartTime < 1e10) {
+            // Likely in seconds (Unix timestamp)
+            date = new Date(serverStartTime * 1000);
+          } else {
+            // Likely in milliseconds
+            date = new Date(serverStartTime);
+          }
+        } else {
+          // Try direct conversion
+          date = new Date(serverStartTime);
+        }
+        
+        // Check if the date is valid and reasonable (after 1990, before 2050)
+        if (isNaN(date.getTime()) || date.getFullYear() < 1990 || date.getFullYear() > 2050) {
+          console.log('Invalid or unreasonable server start time:', serverStartTime, 'parsed as:', date);
+          return '';
+        }
         
         // Format as a readable date
         return date.toLocaleDateString('en-US', {
@@ -588,7 +622,7 @@
           day: 'numeric'
         });
       } catch (error) {
-        console.log('Error parsing server start time:', error);
+        console.log('Error parsing server start time:', serverStartTime, error);
         return '';
       }
     }
@@ -1794,8 +1828,20 @@
           // Extract version - try different possible fields and formats
           let version = 'Unknown';
           
-          // Standard modern Galaxy API version fields
-          if (versionData.version_major && versionData.version_minor) {
+          // Handle version_major as a complete version string (like TreeGenes "20.01")
+          if (versionData.version_major) {
+            version = versionData.version_major;
+            // If version_minor also exists as a separate field, append it
+            if (versionData.version_minor && typeof versionData.version_minor === 'number') {
+              version += `.${versionData.version_minor}`;
+            }
+            // If version_micro also exists, append it
+            if (versionData.version_micro) {
+              version += `.${versionData.version_micro}`;
+            }
+          } 
+          // Standard modern Galaxy API version fields (both major and minor as numbers)
+          else if (versionData.version_major && versionData.version_minor) {
             version = `${versionData.version_major}.${versionData.version_minor}`;
             if (versionData.version_micro) {
               version += `.${versionData.version_micro}`;
@@ -1848,8 +1894,11 @@
           
           // Add server start time from config data if available
           let versionWithDate = version;
-          if (configData && !configData.error && configData.server_starttime) {
-            const startDate = formatServerStartTime(configData.server_starttime);
+          if (configData && !configData.error && (configData.server_starttime || configData.server_startttime)) {
+            const startTime = configData.server_starttime || configData.server_startttime;
+            console.log(`[${cleanUrl}] Raw server start time:`, startTime, `(type: ${typeof startTime})`);
+            const startDate = formatServerStartTime(startTime);
+            console.log(`[${cleanUrl}] Formatted server start time:`, startDate);
             if (startDate) {
               versionWithDate = `${version}<br><small style="color: #666; font-size: 0.85em;">Started: ${startDate}</small>`;
             }
@@ -1878,7 +1927,20 @@
           let version = 'Unknown';
           
           // Try to extract version from config data (older Galaxy servers)
-          if (configData.version_major && configData.version_minor) {
+          // Handle version_major as a complete version string (like TreeGenes)
+          if (configData.version_major) {
+            version = configData.version_major;
+            // If version_minor also exists as a separate field, append it
+            if (configData.version_minor && typeof configData.version_minor === 'number') {
+              version += `.${configData.version_minor}`;
+            }
+            // If version_micro also exists, append it
+            if (configData.version_micro) {
+              version += `.${configData.version_micro}`;
+            }
+          }
+          // Standard format with both major and minor as numbers
+          else if (configData.version_major && configData.version_minor) {
             version = `${configData.version_major}.${configData.version_minor}`;
             if (configData.version_micro) {
               version += `.${configData.version_micro}`;
@@ -1891,8 +1953,11 @@
           
           // Add server start time from config data if available
           let versionWithDate = version;
-          if (configData.server_starttime) {
-            const startDate = formatServerStartTime(configData.server_starttime);
+          if (configData.server_starttime || configData.server_startttime) {
+            const startTime = configData.server_starttime || configData.server_startttime;
+            console.log(`[Fallback - ${cleanUrl}] Raw server start time:`, startTime, `(type: ${typeof startTime})`);
+            const startDate = formatServerStartTime(startTime);
+            console.log(`[Fallback - ${cleanUrl}] Formatted server start time:`, startDate);
             if (startDate) {
               versionWithDate = `${version}<br><small style="color: #666; font-size: 0.85em;">Started: ${startDate}</small>`;
             }
@@ -2494,190 +2559,215 @@
       console.log(`${passed}/${testCases.length} tests passed`);
     };
     
-    // Debug function to check URL protocol handling (call from browser console)
-    window.debugUrlProtocols = function() {
-      console.log('=== URL Protocol Debug ===');
-      if (!currentData || currentData.length === 0) {
-        console.log('No data available');
-        return;
-      }
+    // Debug function to verify version extraction logic with various response formats
+    window.testVersionExtraction = function() {
+      console.log('=== Testing Version Extraction Logic ===');
       
-      currentData.forEach((row, index) => {
-        const originalUrl = row['URL'] || row['url'] || '';
-        
-        if (originalUrl && originalUrl.trim()) {
-          // Simulate the URL cleaning logic
-          let cleanUrl = originalUrl.trim();
-          cleanUrl = cleanUrl.replace(/\/$/, '');
-          
-          const hadProtocol = cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://');
-          const protocol = cleanUrl.startsWith('http://') ? 'HTTP' : 
-                          cleanUrl.startsWith('https://') ? 'HTTPS' : 'NONE';
-          
-          if (!hadProtocol) {
-            cleanUrl = 'https://' + cleanUrl;
-          }
-          
-          console.log(`${index + 1}. ${row['Name']}:`);
-          console.log(`   Original URL: "${originalUrl}"`);
-          console.log(`   Protocol: ${protocol}`);
-          console.log(`   Final URL: "${cleanUrl}"`);
-          console.log(`   Protocol Preserved: ${hadProtocol ? '✅' : '❌ (added HTTPS)'}`);
-          console.log('');
+      const testCases = [
+        {
+          name: 'TreeGenes format',
+          data: {"version_major": "20.01", "extra": {}},
+          expected: '20.01'
+        },
+        {
+          name: 'Standard numeric format',
+          data: {"version_major": 21, "version_minor": 5, "version_micro": 0},
+          expected: '21.5.0'
+        },
+        {
+          name: 'Modern Galaxy format',
+          data: {"version_major": 22, "version_minor": 1},
+          expected: '22.1'
+        },
+        {
+          name: 'Direct version field',
+          data: {"version": "23.0.1"},
+          expected: '23.0.1'
+        },
+        {
+          name: 'Galaxy version field',
+          data: {"galaxy_version": "20.09"},
+          expected: '20.09'
+        },
+        {
+          name: 'Nested data structure',
+          data: {"data": {"version": "19.05"}},
+          expected: '19.05'
+        },
+        {
+          name: 'Mixed format (string major + numeric minor)',
+          data: {"version_major": "21.01", "version_minor": 2},
+          expected: '21.01.2'
         }
-      });
-      
-      // Show HTTP servers specifically
-      const httpServers = currentData.filter(row => {
-        const url = row['URL'] || row['url'] || '';
-        return url && url.trim().startsWith('http://');
-      });
-      
-      console.log(`=== HTTP Servers Found: ${httpServers.length} ===`);
-      httpServers.forEach(row => {
-        console.log(`- ${row['Name']}: ${row['URL'] || row['url']}`);
-      });
-    };
-
-    // Debug function specifically for testing HTTP-only servers like APOSTL
-    window.testHttpServer = async function(url = 'http://apostl.moffitt.org') {
-      console.log(`=== Testing HTTP Server: ${url} ===`);
-      
-      const corsProxies = [
-        'https://corsproxy.io/?url=',
-        'https://api.codetabs.com/v1/proxy?quest=',
-        'https://cors.bridged.cc/',
-        'https://api.allorigins.win/raw?url='
       ];
       
-      // Test multiple endpoints that might exist on older Galaxy servers
-      const endpoints = [
-        '/api/version',
-        '/api/configuration', 
-        '/api',
-        '/api/whoami',
-        '/api/tools',
-        '/toolbox',
-        '/history/current_history_json',
-        '/'  // Main page (might contain version info)
-      ];
-      
-      for (const endpoint of endpoints) {
-        console.log(`\nTesting endpoint: ${endpoint}`);
+      testCases.forEach((testCase, index) => {
+        console.log(`\n${index + 1}. Testing: ${testCase.name}`);
+        console.log(`   Input:`, testCase.data);
         
-        for (let proxyIndex = 0; proxyIndex < corsProxies.length; proxyIndex++) {
-          const corsProxy = corsProxies[proxyIndex];
-          const testUrl = `${corsProxy}${encodeURIComponent(url + endpoint)}`;
-          
-          try {
-            console.log(`  Trying proxy ${proxyIndex + 1}: ${corsProxy.replace('https://', '')}`);
-            
-            const response = await fetch(testUrl, {
-              method: 'GET',
-              headers: {
-                'Accept': 'application/json, text/html, */*',
-                'User-Agent': 'Galaxy-Server-Tracker/1.0'
-              },
-              timeout: 10000
-            });
-            
-            console.log(`    Status: ${response.status} ${response.statusText}`);
-            console.log(`    Content-Type: ${response.headers.get('content-type')}`);
-            
-            if (response.ok) {
-              const contentType = response.headers.get('content-type') || '';
-              
-              if (contentType.includes('application/json')) {
-                try {
-                  const data = await response.json();
-                  console.log(`    ✅ JSON Response:`, data);
-                  
-                  // Try to extract version info
-                  if (data.version || data.galaxy_version || data.version_major) {
-                    console.log(`    🎯 FOUND VERSION DATA!`);
-                  }
-                } catch (jsonError) {
-                  console.log(`    ❌ JSON Parse Error:`, jsonError.message);
-                }
-              } else {
-                const text = await response.text();
-                const preview = text.substring(0, 200);
-                console.log(`    📄 Text Response (${text.length} chars):`, preview);
-                
-                // Check if it's HTML that might contain Galaxy info
-                if (text.includes('Galaxy') || text.includes('galaxy')) {
-                  console.log(`    🎯 FOUND GALAXY REFERENCES IN HTML!`);
-                }
-              }
-              
-              // If we got a successful response, we can stop trying more proxies for this endpoint
-              break;
-            } else if (response.status === 404) {
-              console.log(`    ⚠️  Endpoint not found (404)`);
-              // Try next proxy in case this one has issues
-              continue;
-            } else {
-              console.log(`    ❌ HTTP Error: ${response.status}`);
-            }
-            
-          } catch (error) {
-            console.log(`    ❌ Network Error:`, error.message);
+        // Simulate the version extraction logic
+        let version = 'Unknown';
+        const versionData = testCase.data;
+        
+        // Handle version_major as a complete version string (like TreeGenes "20.01")
+        if (versionData.version_major) {
+          version = versionData.version_major;
+          // If version_minor also exists as a separate field, append it
+          if (versionData.version_minor && typeof versionData.version_minor === 'number') {
+            version += `.${versionData.version_minor}`;
           }
+          // If version_micro also exists, append it
+          if (versionData.version_micro) {
+            version += `.${versionData.version_micro}`;
+          }
+        } 
+        // Standard modern Galaxy API version fields (both major and minor as numbers)
+        else if (versionData.version_major && versionData.version_minor) {
+          version = `${versionData.version_major}.${versionData.version_minor}`;
+          if (versionData.version_micro) {
+            version += `.${versionData.version_micro}`;
+          }
+        } 
+        // Direct version field
+        else if (versionData.version) {
+          version = versionData.version;
+        } 
+        // Galaxy-specific version field
+        else if (versionData.galaxy_version) {
+          version = versionData.galaxy_version;
         }
-      }
+        // Check for version in nested data structures
+        else if (versionData.data && versionData.data.version) {
+          version = versionData.data.version;
+        }
+        
+        const isCorrect = version === testCase.expected;
+        console.log(`   Expected: "${testCase.expected}"`);
+        console.log(`   Got: "${version}" ${isCorrect ? '✅' : '❌'}`);
+        
+        if (!isCorrect) {
+          console.warn(`   ⚠️  EXTRACTION FAILED`);
+        }
+      });
       
-      console.log(`\n=== Test Complete for ${url} ===`);
+      console.log('\n=== Version Extraction Test Complete ===');
     };
 
-    // Debug function to test the actual fetchGalaxyInfo call for a specific server
-    window.testSpecificServer = async function(serverName = 'APOSTL') {
-      console.log(`=== Testing Specific Server: ${serverName} ===`);
+    // Test function specifically for TreeGenes Galaxy server
+    window.testTreeGenes = async function() {
+      console.log('=== Testing TreeGenes Galaxy Server ===');
       
-      if (!currentData || currentData.length === 0) {
-        console.log('No data available. Load the page first.');
-        return;
-      }
+      const url = 'https://treegenes.cam.uchc.edu';
+      console.log(`Testing URL: ${url}`);
       
-      const server = currentData.find(row => 
-        row['Name'] && row['Name'].toLowerCase().includes(serverName.toLowerCase())
-      );
-      
-      if (!server) {
-        console.log(`Server "${serverName}" not found. Available servers:`);
-        currentData.forEach(row => console.log(`- ${row['Name']}`));
-        return;
-      }
-      
-      console.log(`Found server: ${server['Name']}`);
-      console.log(`URL: ${server['URL'] || server['url'] || 'No URL'}`);
-      console.log(`Current Version: ${server['Version']}`);
-      console.log(`Current Tool Count: ${server['Tool Count']}`);
-      
-      // Test the fetchGalaxyInfo function directly
-      const url = server['URL'] || server['url'] || '';
-      if (url) {
-        console.log(`\nTesting fetchGalaxyInfo with URL: ${url}`);
+      try {
+        // Test the fetchGalaxyInfo function directly
+        const result = await fetchGalaxyInfo(url, true); // Force refresh
+        console.log('TreeGenes fetchGalaxyInfo result:', result);
         
-        try {
-          const result = await fetchGalaxyInfo(url, true); // Force refresh
-          console.log('fetchGalaxyInfo result:', result);
-          
-          // Update the server data with the new result
-          server['Version'] = result.version;
-          server['Tool Count'] = result.toolCount;
-          server['ConfigData'] = result.configData || {};
-          
-          // Re-render the table to show updated results
-          renderTableRows(filteredData.length > 0 ? filteredData : currentData);
-          
-          console.log(`✅ Updated server data. New version: ${result.version}`);
-          
-        } catch (error) {
-          console.error('fetchGalaxyInfo error:', error);
+        // Check if we got the expected version
+        if (result.version && result.version !== 'Unknown' && result.version !== 'API Error') {
+          console.log(`✅ SUCCESS: Got version "${result.version}"`);
+        } else {
+          console.log(`❌ FAILED: Got version "${result.version}"`);
         }
+        
+        return result;
+        
+      } catch (error) {
+        console.error('TreeGenes test error:', error);
+        return null;
       }
+    };
+
+    // Direct test of TreeGenes configuration data
+    window.testTreeGenesConfig = async function() {
+      console.log('=== Testing TreeGenes Configuration Directly ===');
       
-      console.log(`=== Test Complete ===`);
+      try {
+        const corsProxy = 'https://cors-anywhere.herokuapp.com/';
+        const configUrl = `${corsProxy}https://treegenes.cam.uchc.edu/api/configuration`;
+        
+        console.log(`Fetching: ${configUrl}`);
+        const response = await fetch(configUrl);
+        const configData = await response.json();
+        
+        console.log('Raw config data (server_startttime):', configData.server_startttime);
+        console.log('Type:', typeof configData.server_startttime);
+        
+        // Test our parsing function
+        const startTime = configData.server_startttime;
+        console.log('Testing formatServerStartTime with:', startTime);
+        const formatted = formatServerStartTime(startTime);
+        console.log('Formatted result:', formatted);
+        
+        return { raw: startTime, formatted: formatted };
+        
+      } catch (error) {
+        console.error('TreeGenes config test error:', error);
+        return null;
+      }
+    };
+
+    // Test function for timestamp parsing
+    window.testTimestampParsing = function() {
+      console.log('=== Testing Timestamp Parsing ===');
+      
+      const testCases = [
+        // TreeGenes specific case
+        { input: 1714584014, expected: 'May 1, 2024', note: 'TreeGenes timestamp' },
+        { input: '1714584014', expected: 'May 1, 2024', note: 'TreeGenes timestamp as string' },
+        
+        // ISO string formats
+        { input: '2024-01-15T10:30:00Z', expected: 'Jan 15, 2024' },
+        { input: '2024-01-15T10:30:00.000Z', expected: 'Jan 15, 2024' },
+        { input: '2024-01-15 10:30:00', expected: 'Jan 15, 2024' },
+        
+        // Unix timestamps in seconds
+        { input: 1705315800, expected: 'Jan 15, 2024' }, // seconds
+        { input: '1705315800', expected: 'Jan 15, 2024' }, // seconds as string
+        
+        // Unix timestamps in milliseconds
+        { input: 1705315800000, expected: 'Jan 15, 2024' }, // milliseconds
+        { input: '1705315800000', expected: 'Jan 15, 2024' }, // milliseconds as string
+        
+        // Edge cases
+        { input: 0, expected: '' }, // Should be rejected (too old)
+        { input: '0', expected: '' }, // Should be rejected (too old)
+        { input: null, expected: '' },
+        { input: undefined, expected: '' },
+        { input: '', expected: '' },
+        { input: 'invalid', expected: '' },
+        
+        // Potential problematic values that might cause "1970" dates
+        { input: 946684800, expected: 'Jan 1, 2000' }, // Y2K in seconds
+        { input: 946684800000, expected: 'Jan 1, 2000' }, // Y2K in milliseconds
+      ];
+      
+      testCases.forEach((testCase, index) => {
+        const result = formatServerStartTime(testCase.input);
+        const isCorrect = result === testCase.expected;
+        
+        console.log(`Test ${index + 1}: ${JSON.stringify(testCase.input)} → "${result}"`);
+        console.log(`   Expected: "${testCase.expected}" ${isCorrect ? '✅' : '❌'}`);
+        if (testCase.note) {
+          console.log(`   Note: ${testCase.note}`);
+        }
+        
+        if (!isCorrect) {
+          console.warn(`   ⚠️  TIMESTAMP PARSING FAILED`);
+          
+          // Debug info for failed cases
+          if (typeof testCase.input === 'number' || !isNaN(Number(testCase.input))) {
+            const numValue = Number(testCase.input);
+            console.log(`   Debug: numValue=${numValue}, < 1e10? ${numValue < 1e10}`);
+            console.log(`   Debug: Date(numValue * 1000)=${new Date(numValue * 1000)}`);
+            console.log(`   Debug: Date(numValue)=${new Date(numValue)}`);
+          }
+        }
+      });
+      
+      console.log('\n=== Timestamp Parsing Test Complete ===');
     };
 
     window.addEventListener('DOMContentLoaded', () => {
