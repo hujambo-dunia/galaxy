@@ -270,13 +270,13 @@
       text-decoration: underline;
     }
     
-    .institution-info {
+    .description-info {
       display: flex;
       flex-direction: column;
       gap: 0.1rem;
     }
     
-    .institution-notes {
+    .description-notes {
       font-size: 0.85em;
       color: #666;
       font-style: italic;
@@ -451,7 +451,7 @@
         <th><i class="fas fa-star" title="Tier" style="color: gold;"></i></th>
         <th>Name</th>
         <th>Region</th>
-        <th>Institution</th>
+        <th>Description</th>
         <th style="width: 60px;">Info</th>
         <th>Server</th>
         <th title="Available tools and genomes">Resources</th>
@@ -888,7 +888,7 @@
 
     function initializeTableSorting() {
       const headers = document.querySelectorAll('#galaxy-table th');
-      const columnNames = ['Status', 'Tier', 'Name', 'Region', 'Institution', 'Info', 'Server', 'Resources'];
+      const columnNames = ['Status', 'Tier', 'Name', 'Region', 'Description', 'Info', 'Server', 'Resources'];
       
       headers.forEach((header, index) => {
         header.addEventListener('click', () => {
@@ -914,7 +914,7 @@
 
       // Update header indicators
       const headers = document.querySelectorAll('#galaxy-table th');
-      const columnNames = ['Status', 'Tier', 'Name', 'Region', 'Institution', 'Info', 'Server', 'Resources'];
+      const columnNames = ['Status', 'Tier', 'Name', 'Region', 'Description', 'Info', 'Server', 'Resources'];
       
       headers.forEach((header, index) => {
         header.classList.remove('sort-asc', 'sort-desc');
@@ -1147,7 +1147,7 @@
         errorMessage += 'For GitHub Pages hosting, please ensure: ';
         errorMessage += '1) The Google Spreadsheet is published to the web (File → Share → Publish to web), ';
         errorMessage += '2) Set sharing to "Anyone on the internet with this link can view", ';
-        errorMessage += '3) The spreadsheet has the correct column headers (Tier, Name, URL, Region, Institution, Notes).';
+        errorMessage += '3) The spreadsheet has the correct column headers (Tier, Name, URL, Region, Description, Notes).';
         
         updateStatus(errorMessage, true);
         
@@ -2301,27 +2301,27 @@
         const tdRegion = document.createElement('td');
         tdRegion.textContent = row['Region'] || '';
         
-        // Institution column with markdown link parsing and notes beneath
-        const tdInstitution = document.createElement('td');
-        const institutionText = row['Institution'] || '';
+        // Description column with markdown link parsing and notes beneath
+        const tdDescription = document.createElement('td');
+        const descriptionText = row['Description'] || '';
         const notesText = row['Notes'] || '';
         
-        let institutionContent = parseMarkdownLinks(institutionText);
-        let institutionHtml = '';
+        let descriptionContent = parseMarkdownLinks(descriptionText);
+        let descriptionHtml = '';
         
-        if (institutionContent) {
-          institutionHtml += `<div>${institutionContent}</div>`;
+        if (descriptionContent) {
+          descriptionHtml += `<div>${descriptionContent}</div>`;
         }
         
         if (notesText) {
-          institutionHtml += `<div class="institution-notes">${notesText}</div>`;
+          descriptionHtml += `<div class="description-notes">${notesText}</div>`;
         }
         
-        if (institutionHtml) {
-          tdInstitution.innerHTML = `<div class="institution-info">${institutionHtml}</div>`;
+        if (descriptionHtml) {
+          tdDescription.innerHTML = `<div class="description-info">${descriptionHtml}</div>`;
         }
         
-        // Remove the Notes column - it's now part of the Institution column
+        // Remove the Notes column - it's now part of the Description column
         
         // Info column (replaced contact with icons)
         const tdContact = document.createElement('td');
@@ -2455,7 +2455,7 @@
         tr.appendChild(tdTier);
         tr.appendChild(tdName);
         tr.appendChild(tdRegion);
-        tr.appendChild(tdInstitution);
+        tr.appendChild(tdDescription);
         tr.appendChild(tdContact);
         tr.appendChild(tdVersion);
         tr.appendChild(tdToolCount);
