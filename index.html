@@ -730,6 +730,22 @@
       return { icon: '⏳', tooltip: 'Status unknown' };
     }
     
+    function getStatusPriority(version, toolCount) {
+      const statusInfo = getStatusIcon(version, toolCount);
+      
+      // Return priority values (lower number = higher priority for sorting)
+      switch (statusInfo.icon) {
+        case '🟢': return 1; // Online - highest priority
+        case '🟡': return 2; // Issues/Partial - medium priority  
+        case '🔴': return 3; // Offline - low priority
+        case '⏳': return 4; // Unknown/Loading
+        case '⚫': return 5; // No URL
+        case '🏠': return 6; // Local Mode
+        case '❓': return 7; // Uncertain
+        default: return 8;   // Any other status
+      }
+    }
+    
     function updateSummaryStats() {
       if (!currentData || currentData.length === 0) return;
       
@@ -936,9 +952,9 @@
         
         // Handle special column mappings
         if (columnName === 'Status') {
-          // Sort by Version field for status
-          aVal = a['Version'] || '';
-          bVal = b['Version'] || '';
+          // Sort by status priority (Online → Issues → Offline)
+          aVal = getStatusPriority(a['Version'], a['Tool Count']);
+          bVal = getStatusPriority(b['Version'], b['Tool Count']);
         } else if (columnName === 'Info') {
           // Sort by contact name or email for info column
           aVal = a['Contact Name'] || a['Contact Email'] || '';
@@ -996,8 +1012,8 @@
           }
         }
 
-        // Handle numeric values for Resources and Tier
-        if (columnName === 'Resources' || columnName === 'Tier') {
+        // Handle numeric values for Status (priority), Resources and Tier
+        if (columnName === 'Status' || columnName === 'Resources' || columnName === 'Tier') {
           const aNum = parseInt(aVal);
           const bNum = parseInt(bVal);
           if (!isNaN(aNum) && !isNaN(bNum)) {
