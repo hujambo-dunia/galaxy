@@ -353,6 +353,17 @@
       cursor: not-allowed;
     }
     
+    /* Refresh offline button styling */
+    #refresh-offline-button:hover:not(:disabled) {
+      background: #f57c00;
+      transform: translateY(-1px);
+    }
+    
+    #refresh-offline-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
     .no-results {
       text-align: center;
       font-style: italic;
@@ -438,6 +449,9 @@
           <input type="checkbox" id="hide-offline-checkbox">
           <label for="hide-offline-checkbox" style="font-size: 0.9rem; cursor: pointer;">Hide offline servers</label>
         </div>
+        <button id="refresh-offline-button" style="padding: 0.3rem 0.75rem; background: #ff9800; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
+          <i class="fas fa-redo-alt"></i> Refresh Offline
+        </button>
         <button id="refresh-button" style="padding: 0.3rem 0.75rem; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
           <i class="fas fa-sync-alt"></i> Refresh All
         </button>
@@ -817,6 +831,7 @@
       const searchInput = document.getElementById('search-input');
       const hideOfflineCheckbox = document.getElementById('hide-offline-checkbox');
       const refreshButton = document.getElementById('refresh-button');
+      const refreshOfflineButton = document.getElementById('refresh-offline-button');
       
       const performFilter = () => {
         const searchTerm = searchInput.value.toLowerCase().trim();
@@ -892,9 +907,64 @@
         });
       };
       
+      const performRefreshOffline = () => {
+        // Find all offline servers
+        const offlineServers = currentData.filter(row => {
+          const version = row['Version'] || '';
+          return version === 'Offline' || version === 'Error' || version === 'N/A' || version === 'No URL';
+        });
+        
+        if (offlineServers.length === 0) {
+          updateStatus('No offline servers found to refresh.');
+          return;
+        }
+        
+        // Show refresh indicator
+        refreshOfflineButton.innerHTML = '<i class="fas fa-redo-alt fa-spin"></i> Refreshing...';
+        refreshOfflineButton.disabled = true;
+        
+        updateStatus(`Refreshing ${offlineServers.length} offline server(s)...`);
+        
+        // Reset offline servers to loading state
+        offlineServers.forEach(row => {
+          row['Version'] = 'Loading...';
+          row['Tool Count'] = 'Loading...';
+          row['ConfigData'] = {};
+          
+          // Clear cache for these servers to force fresh fetch
+          const cacheKey = `galaxy_${row['URL']}`;
+          localStorage.removeItem(cacheKey);
+        });
+        
+        // Re-render table to show loading state
+        renderTableRows(filteredData.length > 0 ? filteredData : currentData);
+        updateSummaryStats();
+        
+        // Fetch fresh data for offline servers only
+        fetchAllGalaxyInfo(offlineServers, true).then(() => {
+          // Restore button state
+          refreshOfflineButton.innerHTML = '<i class="fas fa-redo-alt"></i> Refresh Offline';
+          refreshOfflineButton.disabled = false;
+          
+          // Re-render table with updated data
+          renderTableRows(filteredData.length > 0 ? filteredData : currentData);
+          updateStatus(`Refreshed ${offlineServers.length} offline server(s). Check status for improvements.`);
+          updateSummaryStats();
+          
+          // Log results
+          const stillOffline = offlineServers.filter(row => {
+            const version = row['Version'] || '';
+            return version === 'Offline' || version === 'Error' || version === 'N/A' || version === 'No URL';
+          }).length;
+          const nowOnline = offlineServers.length - stillOffline;
+          console.log(`Offline refresh complete. ${nowOnline} servers came online, ${stillOffline} remain offline.`);
+        });
+      };
+      
       searchInput.addEventListener('input', performFilter);
       hideOfflineCheckbox.addEventListener('change', performFilter);
       refreshButton.addEventListener('click', performRefresh);
+      refreshOfflineButton.addEventListener('click', performRefreshOffline);
     }
     
     function showNoResults() {
@@ -2840,10 +2910,6 @@
       
       console.log('\n=== Timestamp Parsing Test Complete ===');
     };
-
-    window.addEventListener('DOMContentLoaded', () => {
-      loadSpreadsheetData();
-    });
   </script>
 </body>
 </html>
