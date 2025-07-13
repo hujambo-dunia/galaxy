@@ -678,7 +678,7 @@
       }
     }
     
-    function getStatusIcon(version, toolCount) {
+    function getStatusIcon(version, toolCount, tier = null, serverReachable = null) {
       // Handle null, undefined, or empty version
       if (!version || version === '' || version === null || version === undefined) {
         return { icon: '⏳', tooltip: 'Status unknown - loading or no data available' };
@@ -687,6 +687,27 @@
       // Convert to string and trim for consistent comparison
       const versionStr = String(version).trim();
       const toolCountStr = String(toolCount || '').trim();
+      const tierStr = String(tier || '').trim();
+      
+      // Special handling for Tier 5 (Integrated Deployment) servers
+      // For Tier 5, if the site is reachable but API doesn't respond, consider it online
+      if (tierStr === '5') {
+        // If the server is reachable (website responds) even with API errors, it's online
+        if (serverReachable === true) {
+          // Check if we have API errors but the site itself is reachable
+          if (versionStr === 'API Error' || versionStr === 'Unknown' || versionStr === 'Error' ||
+              versionStr === 'CORS Blocked' || toolCountStr === 'API Error') {
+            return { icon: '🟢', tooltip: 'Integrated deployment is online (Galaxy API may not be directly accessible)' };
+          }
+        }
+        
+        // If explicitly marked as unreachable or has DNS/network errors, it's offline
+        if (versionStr.includes('ERR_NAME_NOT_RESOLVED') || versionStr.includes('ENOTFOUND') || 
+            versionStr.includes('SERVER_UNREACHABLE') || versionStr === 'DNS Error' || 
+            versionStr === 'Offline') {
+          return { icon: '🔴', tooltip: 'Integrated deployment is offline or unreachable' };
+        }
+      }
       
       // Handle specific status values that indicate the server is completely offline/unreachable
       if (versionStr === 'Offline') {
@@ -773,8 +794,8 @@
       return { icon: '⏳', tooltip: 'Status unknown' };
     }
     
-    function getStatusPriority(version, toolCount) {
-      const statusInfo = getStatusIcon(version, toolCount);
+    function getStatusPriority(version, toolCount, tier = null, serverReachable = null) {
+      const statusInfo = getStatusIcon(version, toolCount, tier, serverReachable);
       
       // Return priority values (lower number = higher priority for sorting)
       switch (statusInfo.icon) {
@@ -797,8 +818,22 @@
       const online = currentData.filter(row => {
         const version = row['Version'] || '';
         const toolCount = row['Tool Count'] || '';
+        const tier = row['Tier'] || '';
+        const serverReachable = row['ServerReachable'];
         const versionStr = String(version).trim();
         const toolCountStr = String(toolCount).trim();
+        const tierStr = String(tier).trim();
+        
+        // Special handling for Tier 5 servers - if reachable, consider online even with API issues
+        if (tierStr === '5' && serverReachable === true) {
+          // Only consider offline if explicitly unreachable or has DNS/network errors
+          if (versionStr.includes('ERR_NAME_NOT_RESOLVED') || versionStr.includes('ENOTFOUND') || 
+              versionStr.includes('SERVER_UNREACHABLE') || versionStr === 'DNS Error' || 
+              versionStr === 'Offline') {
+            return false;
+          }
+          return true; // Tier 5 server is reachable = online
+        }
         
         // Server is offline only if it's explicitly marked as such or completely unreachable
         if (versionStr === 'Offline' || versionStr === 'No URL' || versionStr === 'Local Mode') {
@@ -882,7 +917,12 @@
         if (hideOffline) {
           filtered = filtered.filter(row => {
             const version = row['Version'] || '';
-            return version !== 'Offline' && version !== 'Error' && version !== 'N/A' && version !== 'No URL';
+            const toolCount = row['Tool Count'] || '';
+            const tier = row['Tier'] || '';
+            const serverReachable = row['ServerReachable'];
+            const statusInfo = getStatusIcon(version, toolCount, tier, serverReachable);
+            // Hide servers that are marked as offline (red icon)
+            return statusInfo.icon !== '🔴';
           });
         }
         
@@ -914,6 +954,7 @@
           row['Version'] = 'Loading...';
           row['Tool Count'] = 'Loading...';
           row['ConfigData'] = {};
+          row['ServerReachable'] = null;
         });
         
         // Re-render table to show loading state
@@ -942,7 +983,12 @@
         const dataSource = filteredData.length > 0 ? filteredData : currentData;
         const offlineServers = dataSource.filter(row => {
           const version = row['Version'] || '';
-          return version === 'Offline' || version === 'Error' || version === 'N/A' || version === 'No URL';
+          const toolCount = row['Tool Count'] || '';
+          const tier = row['Tier'] || '';
+          const serverReachable = row['ServerReachable'];
+          const statusInfo = getStatusIcon(version, toolCount, tier, serverReachable);
+          // Consider servers with red (offline) status as needing refresh
+          return statusInfo.icon === '🔴';
         });
 
         if (offlineServers.length === 0) {
@@ -961,6 +1007,7 @@
           row['Version'] = 'Loading...';
           row['Tool Count'] = 'Loading...';
           row['ConfigData'] = {};
+          row['ServerReachable'] = null;
 
           // Also update the corresponding row in currentData (in case dataSource is filteredData)
           const idx = currentData.findIndex(r => r.URL === row.URL);
@@ -968,6 +1015,7 @@
             currentData[idx]['Version'] = 'Loading...';
             currentData[idx]['Tool Count'] = 'Loading...';
             currentData[idx]['ConfigData'] = {};
+            currentData[idx]['ServerReachable'] = null;
           }
 
           // Clear cache for these servers to force fresh fetch
@@ -1007,7 +1055,11 @@
           // Log results
           const stillOffline = offlineServers.filter(row => {
             const version = row['Version'] || '';
-            return version === 'Offline' || version === 'Error' || version === 'N/A' || version === 'No URL';
+            const toolCount = row['Tool Count'] || '';
+            const tier = row['Tier'] || '';
+            const serverReachable = row['ServerReachable'];
+            const statusInfo = getStatusIcon(version, toolCount, tier, serverReachable);
+            return statusInfo.icon === '🔴';
           }).length;
           const nowOnline = offlineServers.length - stillOffline;
           console.log(`Offline refresh complete. ${nowOnline} servers came online, ${stillOffline} remain offline.`);
@@ -1031,7 +1083,7 @@
       // Get all unique column headers from the spreadsheet and live fields
       const spreadsheetHeaders = Object.keys(dataToExport[0] || {});
       // Add live fields if not present
-      const liveFields = ['Version', 'Tool Count', 'ConfigData'];
+      const liveFields = ['Version', 'Tool Count', 'ConfigData', 'ServerReachable'];
       let allHeaders = [...spreadsheetHeaders];
       liveFields.forEach(field => {
         if (!allHeaders.includes(field)) allHeaders.push(field);
@@ -1151,8 +1203,12 @@
         // Handle special column mappings
         if (columnName === 'Status') {
           // Sort by status priority (Online → Issues → Offline)
-          aVal = getStatusPriority(a['Version'], a['Tool Count']);
-          bVal = getStatusPriority(b['Version'], b['Tool Count']);
+          const aTier = a['Tier'] || '';
+          const bTier = b['Tier'] || '';
+          const aReachable = a['ServerReachable'];
+          const bReachable = b['ServerReachable'];
+          aVal = getStatusPriority(a['Version'], a['Tool Count'], aTier, aReachable);
+          bVal = getStatusPriority(b['Version'], b['Tool Count'], bTier, bReachable);
         } else if (columnName === 'Info') {
           // Sort by contact name or email for info column
           aVal = a['Contact Name'] || a['Contact Email'] || '';
@@ -2066,7 +2122,8 @@
             toolCount: 'Requires Authentication',
             configData: {},
             hasProxyIssues: hasProxyIssues,
-            proxiesAttempted: totalProxiesAttempted
+            proxiesAttempted: totalProxiesAttempted,
+            serverReachable: true  // Server is reachable if auth is required
           };
         }
         // Primary check: Look for server unreachable errors from CORS proxy or DNS errors
@@ -2076,7 +2133,8 @@
             toolCount: 'Offline', 
             configData: {},
             hasProxyIssues: false,
-            proxiesAttempted: totalProxiesAttempted
+            proxiesAttempted: totalProxiesAttempted,
+            serverReachable: false
           };
         }
         // If timeout errors occur and static file tests also indicate unreachable, likely offline
@@ -2086,7 +2144,8 @@
             toolCount: 'Offline', 
             configData: {},
             hasProxyIssues: false,
-            proxiesAttempted: totalProxiesAttempted
+            proxiesAttempted: totalProxiesAttempted,
+            serverReachable: false
           };
         }
         // If we have successful API data from CORS proxy, server is definitely online
@@ -2185,7 +2244,8 @@
             toolCount: combinedCount,
             configData: configData && !configData.error ? configData : {},
             hasProxyIssues: hasProxyIssues,
-            proxiesAttempted: totalProxiesAttempted
+            proxiesAttempted: totalProxiesAttempted,
+            serverReachable: true  // API responded successfully
           };
         }
         // Fallback for older Galaxy servers: if /api/version failed but we have config data, try to extract version from config
@@ -2244,12 +2304,18 @@
             toolCount: combinedCount,
             configData: configData,
             hasProxyIssues: hasProxyIssues,
-            proxiesAttempted: totalProxiesAttempted
+            proxiesAttempted: totalProxiesAttempted,
+            serverReachable: true  // Config API responded successfully  
           };
         }
         // If static file tests indicate server is unreachable without CORS issues, it's offline
         else if (!serverStatus.reachable && !serverStatus.corsBlocked) {
-          result = { version: 'Offline', toolCount: 'Offline', configData: {} };
+          result = { 
+            version: 'Offline', 
+            toolCount: 'Offline', 
+            configData: {},
+            serverReachable: false
+          };
         }
         // If we get here, we have mixed results - server might be online but with API issues
         else if (serverStatus.reachable || serverStatus.corsBlocked) {
@@ -2274,7 +2340,8 @@
             toolCount: combinedCount,
             configData: configData && !configData.error ? configData : {},
             hasProxyIssues: hasProxyIssues,
-            proxiesAttempted: totalProxiesAttempted
+            proxiesAttempted: totalProxiesAttempted,
+            serverReachable: serverStatus.reachable || serverStatus.corsBlocked
           };
         }
         // Default case: unable to determine conclusively
@@ -2284,7 +2351,8 @@
             toolCount: 'Unknown', 
             configData: {},
             hasProxyIssues: hasProxyIssues,
-            proxiesAttempted: totalProxiesAttempted
+            proxiesAttempted: totalProxiesAttempted,
+            serverReachable: null  // Unknown reachability
           };
         }
         
@@ -2375,6 +2443,8 @@
             row['Version'] = info.version;
             row['Tool Count'] = info.toolCount;
             row['ConfigData'] = info.configData || {};
+            // Store server reachability for Tier 5 status determination
+            row['ServerReachable'] = info.serverReachable;
             
             // Log server status once for debugging/monitoring
             const statusSummary = info.version === 'Offline' ? 'OFFLINE' : 
@@ -2395,6 +2465,7 @@
             row['Version'] = 'Error';
             row['Tool Count'] = 'Error';
             row['ConfigData'] = {};
+            row['ServerReachable'] = null;
             
             // Log server status for error case
             console.log(`${row['Name']}: ERROR (API fetch failed)`);
@@ -2403,6 +2474,7 @@
           row['Version'] = 'N/A';
           row['Tool Count'] = 'N/A';
           row['ConfigData'] = {};
+          row['ServerReachable'] = null;
           
           // Log server status for no URL case
           console.log(`${row['Name']}: NO_URL (No URL provided)`);
@@ -2446,7 +2518,9 @@
         const tdStatus = document.createElement('td');
         const version = row['Version'] || 'Loading...';
         const toolCountForStatus = row['Tool Count'] || '';
-        const statusInfo = getStatusIcon(version, toolCountForStatus);
+        const tier = row['Tier'] || '';
+        const serverReachable = row['ServerReachable'];
+        const statusInfo = getStatusIcon(version, toolCountForStatus, tier, serverReachable);
         
         // Ensure we always have valid icon and tooltip
         const safeIcon = statusInfo?.icon || '⏳';
