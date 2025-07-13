@@ -396,6 +396,99 @@
       padding: 2rem !important;
     }
     
+    /* Tiers filter popup styling */
+    .tiers-filter-container {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .tiers-popup {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      padding: 1rem;
+      min-width: 250px;
+      z-index: 1000;
+      margin-top: 0.25rem;
+    }
+    
+    .tiers-popup.show {
+      display: block;
+    }
+    
+    .tiers-popup h4 {
+      margin: 0 0 0.75rem 0;
+      font-size: 0.95rem;
+      color: #333;
+      font-weight: 600;
+    }
+    
+    .tier-checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      padding: 0.25rem 0;
+    }
+    
+    .tier-checkbox-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .tier-checkbox-item input[type="checkbox"] {
+      margin: 0;
+    }
+    
+    .tier-checkbox-item label {
+      font-size: 0.85rem;
+      cursor: pointer;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    
+    .tier-checkbox-item .tier-icon {
+      font-size: 0.9rem;
+    }
+    
+    .tiers-popup-actions {
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #eee;
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+    }
+    
+    .tiers-popup-actions button {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 3px;
+      cursor: pointer;
+      color: #666;
+    }
+    
+    .tiers-popup-actions button:hover {
+      background: #f5f5f5;
+      color: #333;
+    }
+    
+    #tiers-button {
+      position: relative;
+    }
+    
+    #tiers-button.active {
+      background: #1976d2;
+    }
+    
     /* Improved responsive design */
     @media (max-width: 768px) {
       .header-title {
@@ -473,6 +566,53 @@
         <div style="display: flex; align-items: center; gap: 0.5rem;">
           <input type="checkbox" id="hide-offline-checkbox">
           <label for="hide-offline-checkbox" style="font-size: 0.9rem; cursor: pointer;">Hide offline servers</label>
+        </div>
+        <div class="tiers-filter-container">
+          <button id="tiers-button" style="padding: 0.3rem 0.75rem; background: #673ab7; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
+            <i class="fas fa-layer-group"></i> Tiers
+          </button>
+          <div id="tiers-popup" class="tiers-popup">
+            <h4>Filter by Server Tier</h4>
+            <div class="tier-checkbox-item">
+              <input type="checkbox" id="tier-1-checkbox" checked>
+              <label for="tier-1-checkbox">
+                <i class="fas fa-globe tier-icon" style="color: #4caf50;"></i>
+                Tier 1 - Global Server
+              </label>
+            </div>
+            <div class="tier-checkbox-item">
+              <input type="checkbox" id="tier-2-checkbox" checked>
+              <label for="tier-2-checkbox">
+                <i class="fas fa-university tier-icon" style="color: #ff9800;"></i>
+                Tier 2 - National Server
+              </label>
+            </div>
+            <div class="tier-checkbox-item">
+              <input type="checkbox" id="tier-3-checkbox" checked>
+              <label for="tier-3-checkbox">
+                <i class="fas fa-map-marker-alt tier-icon" style="color: #2196f3;"></i>
+                Tier 3 - EU Subdomain
+              </label>
+            </div>
+            <div class="tier-checkbox-item">
+              <input type="checkbox" id="tier-4-checkbox" checked>
+              <label for="tier-4-checkbox">
+                <i class="fas fa-flask tier-icon" style="color: #9c27b0;"></i>
+                Tier 4 - Institutional Deployment
+              </label>
+            </div>
+            <div class="tier-checkbox-item">
+              <input type="checkbox" id="tier-5-checkbox" checked>
+              <label for="tier-5-checkbox">
+                <i class="fas fa-code-branch tier-icon" style="color: #607d8b;"></i>
+                Tier 5 - Integrated Platform
+              </label>
+            </div>
+            <div class="tiers-popup-actions">
+              <button id="tiers-select-all">Select All</button>
+              <button id="tiers-select-none">Select None</button>
+            </div>
+          </div>
         </div>
         <button id="refresh-offline-button" style="padding: 0.3rem 0.75rem; background: #ff9800; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
           <i class="fas fa-redo-alt"></i> Refresh Offline
@@ -697,7 +837,7 @@
           // Check if we have API errors but the site itself is reachable
           if (versionStr === 'API Error' || versionStr === 'Unknown' || versionStr === 'Error' ||
               versionStr === 'CORS Blocked' || toolCountStr === 'API Error') {
-            return { icon: '🟢', tooltip: 'Integrated deployment is online (Galaxy API may not be directly accessible)' };
+            return { icon: '🟢', tooltip: 'Integrated platform is online (Galaxy API may not be directly accessible)' };
           }
         }
         
@@ -705,7 +845,7 @@
         if (versionStr.includes('ERR_NAME_NOT_RESOLVED') || versionStr.includes('ENOTFOUND') || 
             versionStr.includes('SERVER_UNREACHABLE') || versionStr === 'DNS Error' || 
             versionStr === 'Offline') {
-          return { icon: '🔴', tooltip: 'Integrated deployment is offline or unreachable' };
+          return { icon: '🔴', tooltip: 'Integrated platform is offline or unreachable' };
         }
       }
       
@@ -891,16 +1031,146 @@
       document.getElementById('summary-stats').style.display = 'flex';
     }
     
+    // Tier filter management functions
+    const TIER_PREFS_KEY = 'galaxyTierPreferences';
+    
+    function getTierPreferences() {
+      try {
+        const prefs = localStorage.getItem(TIER_PREFS_KEY);
+        if (prefs) {
+          const parsed = JSON.parse(prefs);
+          // Ensure all tiers are represented (default to true if not present)
+          return {
+            '1': parsed['1'] !== false,
+            '2': parsed['2'] !== false,
+            '3': parsed['3'] !== false,
+            '4': parsed['4'] !== false,
+            '5': parsed['5'] !== false
+          };
+        }
+      } catch (error) {
+        console.log('Error reading tier preferences:', error);
+      }
+      // Default: all tiers enabled
+      return { '1': true, '2': true, '3': true, '4': true, '5': true };
+    }
+    
+    function saveTierPreferences(prefs) {
+      try {
+        localStorage.setItem(TIER_PREFS_KEY, JSON.stringify(prefs));
+      } catch (error) {
+        console.log('Error saving tier preferences:', error);
+      }
+    }
+    
+    function applyTierPreferences() {
+      const prefs = getTierPreferences();
+      document.getElementById('tier-1-checkbox').checked = prefs['1'];
+      document.getElementById('tier-2-checkbox').checked = prefs['2'];
+      document.getElementById('tier-3-checkbox').checked = prefs['3'];
+      document.getElementById('tier-4-checkbox').checked = prefs['4'];
+      document.getElementById('tier-5-checkbox').checked = prefs['5'];
+    }
+    
+    // Export displayed data (filteredData if present, else currentData) to CSV
+    function exportDisplayedDataToCSV() {
+      // Use filteredData if any filter is applied, else currentData
+      const dataToExport = (filteredData && filteredData.length > 0) ? filteredData : currentData;
+      if (!dataToExport || dataToExport.length === 0) {
+        alert('No data to export.');
+        return;
+      }
+
+      // Get all unique column headers from the spreadsheet and live fields
+      const spreadsheetHeaders = Object.keys(dataToExport[0] || {});
+      // Add live fields if not present
+      const liveFields = ['Version', 'Tool Count', 'ConfigData', 'ServerReachable'];
+      let allHeaders = [...spreadsheetHeaders];
+      liveFields.forEach(field => {
+        if (!allHeaders.includes(field)) allHeaders.push(field);
+      });
+
+      // Expand ConfigData fields (flatten)
+      // Find all unique keys in ConfigData
+      let configKeys = new Set();
+      dataToExport.forEach(row => {
+        if (row.ConfigData && typeof row.ConfigData === 'object') {
+          Object.keys(row.ConfigData).forEach(k => configKeys.add(k));
+        }
+      });
+      configKeys = Array.from(configKeys);
+
+      // Remove ConfigData from headers, add its keys instead
+      allHeaders = allHeaders.filter(h => h !== 'ConfigData');
+      allHeaders = allHeaders.concat(configKeys);
+
+      // Prepare CSV rows
+      const csvRows = [];
+      csvRows.push(allHeaders.join(','));
+
+      dataToExport.forEach(row => {
+        const rowArr = allHeaders.map(h => {
+          if (h in row) {
+            // Escape quotes and commas
+            let val = row[h];
+            if (typeof val === 'object' && val !== null) val = JSON.stringify(val);
+            if (val === undefined || val === null) val = '';
+            return '"' + String(val).replace(/"/g, '""') + '"';
+          } else if (row.ConfigData && h in row.ConfigData) {
+            let val = row.ConfigData[h];
+            if (val === undefined || val === null) val = '';
+            return '"' + String(val).replace(/"/g, '""') + '"';
+          } else {
+            return '';
+          }
+        });
+        csvRows.push(rowArr.join(','));
+      });
+
+      // Create and download CSV file
+      const csvContent = csvRows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      // Add timestamp in YYYYMMDD_HHMMSS format
+      const now = new Date();
+      const pad = n => n.toString().padStart(2, '0');
+      const timestamp = now.getFullYear().toString() +
+        pad(now.getMonth() + 1) +
+        pad(now.getDate()) + '_'
+        + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
+      a.download = 'galaxy_servers_export_' + timestamp + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    
     function setupSearchFilter() {
       const searchInput = document.getElementById('search-input');
       const hideOfflineCheckbox = document.getElementById('hide-offline-checkbox');
       const refreshButton = document.getElementById('refresh-button');
       const refreshOfflineButton = document.getElementById('refresh-offline-button');
       const exportCsvButton = document.getElementById('export-csv-button');
+      const tiersButton = document.getElementById('tiers-button');
+      const tiersPopup = document.getElementById('tiers-popup');
+      
+      // Apply saved tier preferences
+      applyTierPreferences();
       
       const performFilter = () => {
         const searchTerm = searchInput.value.toLowerCase().trim();
         const hideOffline = hideOfflineCheckbox.checked;
+        
+        // Get current tier preferences
+        const tierPrefs = {
+          '1': document.getElementById('tier-1-checkbox').checked,
+          '2': document.getElementById('tier-2-checkbox').checked,
+          '3': document.getElementById('tier-3-checkbox').checked,
+          '4': document.getElementById('tier-4-checkbox').checked,
+          '5': document.getElementById('tier-5-checkbox').checked
+        };
         
         let filtered = [...currentData];
         
@@ -912,6 +1182,17 @@
             );
           });
         }
+        
+        // Apply tier filter
+        filtered = filtered.filter(row => {
+          const tier = row['Tier'] || '';
+          // If tier is empty or not in our preferences, show it (default behavior)
+          // Only hide if the tier is explicitly set to false in preferences
+          if (tier === '' || !tierPrefs.hasOwnProperty(tier)) {
+            return true; // Show servers with no tier or unknown tiers
+          }
+          return tierPrefs[tier] === true;
+        });
         
         // Apply offline filter
         if (hideOffline) {
@@ -936,7 +1217,9 @@
         }
         
         // Show "no results" message if needed
-        if (filteredData.length === 0 && (searchTerm !== '' || hideOffline)) {
+        const hasActiveFilters = searchTerm !== '' || hideOffline || 
+                                !Object.values(tierPrefs).every(v => v);
+        if (filteredData.length === 0 && hasActiveFilters) {
           showNoResults();
         }
       };
@@ -1071,80 +1354,57 @@
       refreshButton.addEventListener('click', performRefresh);
       refreshOfflineButton.addEventListener('click', performRefreshOffline);
       exportCsvButton.addEventListener('click', exportDisplayedDataToCSV);
-    // Export displayed data (filteredData if present, else currentData) to CSV
-    function exportDisplayedDataToCSV() {
-      // Use filteredData if any filter is applied, else currentData
-      const dataToExport = (filteredData && filteredData.length > 0) ? filteredData : currentData;
-      if (!dataToExport || dataToExport.length === 0) {
-        alert('No data to export.');
-        return;
-      }
-
-      // Get all unique column headers from the spreadsheet and live fields
-      const spreadsheetHeaders = Object.keys(dataToExport[0] || {});
-      // Add live fields if not present
-      const liveFields = ['Version', 'Tool Count', 'ConfigData', 'ServerReachable'];
-      let allHeaders = [...spreadsheetHeaders];
-      liveFields.forEach(field => {
-        if (!allHeaders.includes(field)) allHeaders.push(field);
+      
+      // Tiers filter popup functionality
+      tiersButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        tiersPopup.classList.toggle('show');
+        tiersButton.classList.toggle('active');
       });
-
-      // Expand ConfigData fields (flatten)
-      // Find all unique keys in ConfigData
-      let configKeys = new Set();
-      dataToExport.forEach(row => {
-        if (row.ConfigData && typeof row.ConfigData === 'object') {
-          Object.keys(row.ConfigData).forEach(k => configKeys.add(k));
+      
+      // Close popup when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!tiersButton.contains(e.target) && !tiersPopup.contains(e.target)) {
+          tiersPopup.classList.remove('show');
+          tiersButton.classList.remove('active');
         }
       });
-      configKeys = Array.from(configKeys);
-
-      // Remove ConfigData from headers, add its keys instead
-      allHeaders = allHeaders.filter(h => h !== 'ConfigData');
-      allHeaders = allHeaders.concat(configKeys);
-
-      // Prepare CSV rows
-      const csvRows = [];
-      csvRows.push(allHeaders.join(','));
-
-      dataToExport.forEach(row => {
-        const rowArr = allHeaders.map(h => {
-          if (h in row) {
-            // Escape quotes and commas
-            let val = row[h];
-            if (typeof val === 'object' && val !== null) val = JSON.stringify(val);
-            if (val === undefined || val === null) val = '';
-            return '"' + String(val).replace(/"/g, '""') + '"';
-          } else if (row.ConfigData && h in row.ConfigData) {
-            let val = row.ConfigData[h];
-            if (val === undefined || val === null) val = '';
-            return '"' + String(val).replace(/"/g, '""') + '"';
-          } else {
-            return '';
-          }
+      
+      // Tier checkbox event listeners
+      const tierCheckboxes = ['tier-1-checkbox', 'tier-2-checkbox', 'tier-3-checkbox', 'tier-4-checkbox', 'tier-5-checkbox'];
+      tierCheckboxes.forEach(checkboxId => {
+        document.getElementById(checkboxId).addEventListener('change', () => {
+          // Save preferences and apply filter
+          const tierPrefs = {
+            '1': document.getElementById('tier-1-checkbox').checked,
+            '2': document.getElementById('tier-2-checkbox').checked,
+            '3': document.getElementById('tier-3-checkbox').checked,
+            '4': document.getElementById('tier-4-checkbox').checked,
+            '5': document.getElementById('tier-5-checkbox').checked
+          };
+          saveTierPreferences(tierPrefs);
+          performFilter();
         });
-        csvRows.push(rowArr.join(','));
       });
-
-      // Create and download CSV file
-      const csvContent = csvRows.join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      // Add timestamp in YYYYMMDD_HHMMSS format
-      const now = new Date();
-      const pad = n => n.toString().padStart(2, '0');
-      const timestamp = now.getFullYear().toString() +
-        pad(now.getMonth() + 1) +
-        pad(now.getDate()) + '_'
-        + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
-      a.download = 'galaxy_servers_export_' + timestamp + '.csv';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
+      
+      // Select all/none buttons
+      document.getElementById('tiers-select-all').addEventListener('click', () => {
+        tierCheckboxes.forEach(checkboxId => {
+          document.getElementById(checkboxId).checked = true;
+        });
+        const tierPrefs = { '1': true, '2': true, '3': true, '4': true, '5': true };
+        saveTierPreferences(tierPrefs);
+        performFilter();
+      });
+      
+      document.getElementById('tiers-select-none').addEventListener('click', () => {
+        tierCheckboxes.forEach(checkboxId => {
+          document.getElementById(checkboxId).checked = false;
+        });
+        const tierPrefs = { '1': false, '2': false, '3': false, '4': false, '5': false };
+        saveTierPreferences(tierPrefs);
+        performFilter();
+      });
     }
     
     function showNoResults() {
@@ -2542,20 +2802,20 @@
         
         // Display tier icons based on tier value
         if (tierValue === '1') {
-          tierIcon = '<i class="fas fa-globe" title="Tier 1 - Global/Major Server" style="color: #4caf50;"></i>';
-          tierTooltip = 'Tier 1 - Global/Major Server';
+          tierIcon = '<i class="fas fa-globe" title="Tier 1 - Global Server" style="color: #4caf50;"></i>';
+          tierTooltip = 'Tier 1 - Global Server';
         } else if (tierValue === '2') {
-          tierIcon = '<i class="fas fa-university" title="Tier 2 - Institutional Server" style="color: #ff9800;"></i>';
-          tierTooltip = 'Tier 2 - Institutional Server';
+          tierIcon = '<i class="fas fa-university" title="Tier 2 - National Server" style="color: #ff9800;"></i>';
+          tierTooltip = 'Tier 2 - National Server';
         } else if (tierValue === '3') {
-          tierIcon = '<i class="fas fa-map-marker-alt" title="Tier 3 - Local Server" style="color: #2196f3;"></i>';
-          tierTooltip = 'Tier 3 - Local Server';
+          tierIcon = '<i class="fas fa-map-marker-alt" title="Tier 3 - EU Subdomain" style="color: #2196f3;"></i>';
+          tierTooltip = 'Tier 3 - EU Subdomain';
         } else if (tierValue === '4') {
-          tierIcon = '<i class="fas fa-flask" title="Tier 4 - Development/Testing Server" style="color: #9c27b0;"></i>';
-          tierTooltip = 'Tier 4 - Development/Testing Server';
+          tierIcon = '<i class="fas fa-flask" title="Tier 4 - Institutional Deployment" style="color: #9c27b0;"></i>';
+          tierTooltip = 'Tier 4 - Institutional Deployment';
         } else if (tierValue === '5') {
-          tierIcon = '<i class="fas fa-code-branch" title="Tier 5 - Integrated Deployment" style="color: #607d8b;"></i>';
-          tierTooltip = 'Tier 5 - Integrated Deployment (Galaxy not directly accessible)';
+          tierIcon = '<i class="fas fa-code-branch" title="Tier 5 - Integrated Platform" style="color: #607d8b;"></i>';
+          tierTooltip = 'Tier 5 - Integrated Platform (Galaxy not directly accessible)';
         } else if (tierValue) {
           // Fallback for other tier values
           tierIcon = tierValue;
