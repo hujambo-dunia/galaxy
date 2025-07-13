@@ -455,6 +455,9 @@
         <button id="refresh-button" style="padding: 0.3rem 0.75rem; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
           <i class="fas fa-sync-alt"></i> Refresh All
         </button>
+        <button id="export-csv-button" style="padding: 0.3rem 0.75rem; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
+          <i class="fas fa-file-csv"></i> Export to CSV
+        </button>
       </div>
     </div>
   </div>
@@ -832,6 +835,7 @@
       const hideOfflineCheckbox = document.getElementById('hide-offline-checkbox');
       const refreshButton = document.getElementById('refresh-button');
       const refreshOfflineButton = document.getElementById('refresh-offline-button');
+      const exportCsvButton = document.getElementById('export-csv-button');
       
       const performFilter = () => {
         const searchTerm = searchInput.value.toLowerCase().trim();
@@ -908,49 +912,72 @@
       };
       
       const performRefreshOffline = () => {
-        // Find all offline servers
-        const offlineServers = currentData.filter(row => {
+        // Find all offline servers (use filteredData if filter is active, else currentData)
+        const dataSource = filteredData.length > 0 ? filteredData : currentData;
+        const offlineServers = dataSource.filter(row => {
           const version = row['Version'] || '';
           return version === 'Offline' || version === 'Error' || version === 'N/A' || version === 'No URL';
         });
-        
+
         if (offlineServers.length === 0) {
           updateStatus('No offline servers found to refresh.');
           return;
         }
-        
+
         // Show refresh indicator
         refreshOfflineButton.innerHTML = '<i class="fas fa-redo-alt fa-spin"></i> Refreshing...';
         refreshOfflineButton.disabled = true;
-        
+
         updateStatus(`Refreshing ${offlineServers.length} offline server(s)...`);
-        
+
         // Reset offline servers to loading state
         offlineServers.forEach(row => {
           row['Version'] = 'Loading...';
           row['Tool Count'] = 'Loading...';
           row['ConfigData'] = {};
-          
+
+          // Also update the corresponding row in currentData (in case dataSource is filteredData)
+          const idx = currentData.findIndex(r => r.URL === row.URL);
+          if (idx !== -1) {
+            currentData[idx]['Version'] = 'Loading...';
+            currentData[idx]['Tool Count'] = 'Loading...';
+            currentData[idx]['ConfigData'] = {};
+          }
+
           // Clear cache for these servers to force fresh fetch
           const cacheKey = `galaxy_${row['URL']}`;
           localStorage.removeItem(cacheKey);
         });
-        
-        // Re-render table to show loading state
+
+        // Re-render table to show loading state (always use filteredData if active, else currentData)
         renderTableRows(filteredData.length > 0 ? filteredData : currentData);
         updateSummaryStats();
-        
+
         // Fetch fresh data for offline servers only
         fetchAllGalaxyInfo(offlineServers, true).then(() => {
+          // After fetching, update the main data structures with new values
+          offlineServers.forEach(updatedRow => {
+            // Find the corresponding row in currentData and update it
+            const idx = currentData.findIndex(r => r.URL === updatedRow.URL);
+            if (idx !== -1) {
+              Object.assign(currentData[idx], updatedRow);
+            }
+            // Also update filteredData if present
+            const fidx = filteredData.findIndex(r => r.URL === updatedRow.URL);
+            if (fidx !== -1) {
+              Object.assign(filteredData[fidx], updatedRow);
+            }
+          });
+
           // Restore button state
           refreshOfflineButton.innerHTML = '<i class="fas fa-redo-alt"></i> Refresh Offline';
           refreshOfflineButton.disabled = false;
-          
+
           // Re-render table with updated data
           renderTableRows(filteredData.length > 0 ? filteredData : currentData);
           updateStatus(`Refreshed ${offlineServers.length} offline server(s). Check status for improvements.`);
           updateSummaryStats();
-          
+
           // Log results
           const stillOffline = offlineServers.filter(row => {
             const version = row['Version'] || '';
@@ -965,6 +992,81 @@
       hideOfflineCheckbox.addEventListener('change', performFilter);
       refreshButton.addEventListener('click', performRefresh);
       refreshOfflineButton.addEventListener('click', performRefreshOffline);
+      exportCsvButton.addEventListener('click', exportDisplayedDataToCSV);
+    // Export displayed data (filteredData if present, else currentData) to CSV
+    function exportDisplayedDataToCSV() {
+      // Use filteredData if any filter is applied, else currentData
+      const dataToExport = (filteredData && filteredData.length > 0) ? filteredData : currentData;
+      if (!dataToExport || dataToExport.length === 0) {
+        alert('No data to export.');
+        return;
+      }
+
+      // Get all unique column headers from the spreadsheet and live fields
+      const spreadsheetHeaders = Object.keys(dataToExport[0] || {});
+      // Add live fields if not present
+      const liveFields = ['Version', 'Tool Count', 'ConfigData'];
+      let allHeaders = [...spreadsheetHeaders];
+      liveFields.forEach(field => {
+        if (!allHeaders.includes(field)) allHeaders.push(field);
+      });
+
+      // Expand ConfigData fields (flatten)
+      // Find all unique keys in ConfigData
+      let configKeys = new Set();
+      dataToExport.forEach(row => {
+        if (row.ConfigData && typeof row.ConfigData === 'object') {
+          Object.keys(row.ConfigData).forEach(k => configKeys.add(k));
+        }
+      });
+      configKeys = Array.from(configKeys);
+
+      // Remove ConfigData from headers, add its keys instead
+      allHeaders = allHeaders.filter(h => h !== 'ConfigData');
+      allHeaders = allHeaders.concat(configKeys);
+
+      // Prepare CSV rows
+      const csvRows = [];
+      csvRows.push(allHeaders.join(','));
+
+      dataToExport.forEach(row => {
+        const rowArr = allHeaders.map(h => {
+          if (h in row) {
+            // Escape quotes and commas
+            let val = row[h];
+            if (typeof val === 'object' && val !== null) val = JSON.stringify(val);
+            if (val === undefined || val === null) val = '';
+            return '"' + String(val).replace(/"/g, '""') + '"';
+          } else if (row.ConfigData && h in row.ConfigData) {
+            let val = row.ConfigData[h];
+            if (val === undefined || val === null) val = '';
+            return '"' + String(val).replace(/"/g, '""') + '"';
+          } else {
+            return '';
+          }
+        });
+        csvRows.push(rowArr.join(','));
+      });
+
+      // Create and download CSV file
+      const csvContent = csvRows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      // Add timestamp in YYYYMMDD_HHMMSS format
+      const now = new Date();
+      const pad = n => n.toString().padStart(2, '0');
+      const timestamp = now.getFullYear().toString() +
+        pad(now.getMonth() + 1) +
+        pad(now.getDate()) + '_'
+        + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
+      a.download = 'galaxy_servers_export_' + timestamp + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
     }
     
     function showNoResults() {
@@ -1178,7 +1280,7 @@
       updateStatus('Loading data from Google Spreadsheet...');
       
       // Check if we're running locally (file:// protocol or localhost)
-      const isLocalFile = window.location.protocol === 'file:';
+      const isLocalFile = window.location.protocol === 'file';
       const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
       
       if (isLocalFile) {
@@ -1250,7 +1352,7 @@
           'Name': 'US Galaxy Main',
           'URL': 'https://usegalaxy.org',
           'Region': 'USA',
-          'Notes': 'Main Galaxy server for the US',
+          'Description': 'Main Galaxy server for the US',
           'Contact Name': 'Galaxy Team',
           'Contact Email': 'outreach@galaxyproject.org',
           'Tier': '1',
