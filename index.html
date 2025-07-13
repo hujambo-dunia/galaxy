@@ -608,6 +608,13 @@
                 Tier 5 - Integrated Platform
               </label>
             </div>
+            <div class="tier-checkbox-item">
+              <input type="checkbox" id="tier-6-checkbox" checked>
+              <label for="tier-6-checkbox">
+                <i class="fas fa-cogs tier-icon" style="color: #795548;"></i>
+                Tier 6 - Development Instance
+              </label>
+            </div>
             <div class="tiers-popup-actions">
               <button id="tiers-select-all">Select All</button>
               <button id="tiers-select-none">Select None</button>
@@ -1045,14 +1052,15 @@
             '2': parsed['2'] !== false,
             '3': parsed['3'] !== false,
             '4': parsed['4'] !== false,
-            '5': parsed['5'] !== false
+            '5': parsed['5'] !== false,
+            '6': parsed['6'] !== false
           };
         }
       } catch (error) {
         console.log('Error reading tier preferences:', error);
       }
       // Default: all tiers enabled
-      return { '1': true, '2': true, '3': true, '4': true, '5': true };
+      return { '1': true, '2': true, '3': true, '4': true, '5': true, '6': true };
     }
     
     function saveTierPreferences(prefs) {
@@ -1070,6 +1078,36 @@
       document.getElementById('tier-3-checkbox').checked = prefs['3'];
       document.getElementById('tier-4-checkbox').checked = prefs['4'];
       document.getElementById('tier-5-checkbox').checked = prefs['5'];
+      document.getElementById('tier-6-checkbox').checked = prefs['6'];
+    }
+    
+    // Offline filter management functions
+    const OFFLINE_PREFS_KEY = 'galaxyOfflinePreferences';
+    
+    function getOfflinePreference() {
+      try {
+        const pref = localStorage.getItem(OFFLINE_PREFS_KEY);
+        if (pref !== null) {
+          return JSON.parse(pref);
+        }
+      } catch (error) {
+        console.log('Error reading offline preference:', error);
+      }
+      // Default: show offline servers (checkbox unchecked)
+      return false;
+    }
+    
+    function saveOfflinePreference(hideOffline) {
+      try {
+        localStorage.setItem(OFFLINE_PREFS_KEY, JSON.stringify(hideOffline));
+      } catch (error) {
+        console.log('Error saving offline preference:', error);
+      }
+    }
+    
+    function applyOfflinePreference() {
+      const hideOffline = getOfflinePreference();
+      document.getElementById('hide-offline-checkbox').checked = hideOffline;
     }
     
     // Function to extract hostname from URL for display purposes
@@ -1210,6 +1248,9 @@
       // Apply saved tier preferences
       applyTierPreferences();
       
+      // Apply saved offline filter preference
+      applyOfflinePreference();
+      
       const performFilter = () => {
         const searchTerm = searchInput.value.toLowerCase().trim();
         const hideOffline = hideOfflineCheckbox.checked;
@@ -1220,7 +1261,8 @@
           '2': document.getElementById('tier-2-checkbox').checked,
           '3': document.getElementById('tier-3-checkbox').checked,
           '4': document.getElementById('tier-4-checkbox').checked,
-          '5': document.getElementById('tier-5-checkbox').checked
+          '5': document.getElementById('tier-5-checkbox').checked,
+          '6': document.getElementById('tier-6-checkbox').checked
         };
         
         let filtered = [...currentData];
@@ -1400,8 +1442,15 @@
         });
       };
       
+      // Apply initial filtering based on saved preferences
+      performFilter();
+      
       searchInput.addEventListener('input', performFilter);
-      hideOfflineCheckbox.addEventListener('change', performFilter);
+      hideOfflineCheckbox.addEventListener('change', () => {
+        // Save preference and apply filter
+        saveOfflinePreference(hideOfflineCheckbox.checked);
+        performFilter();
+      });
       refreshButton.addEventListener('click', performRefresh);
       refreshOfflineButton.addEventListener('click', performRefreshOffline);
       exportCsvButton.addEventListener('click', exportDisplayedDataToCSV);
@@ -1422,7 +1471,7 @@
       });
       
       // Tier checkbox event listeners
-      const tierCheckboxes = ['tier-1-checkbox', 'tier-2-checkbox', 'tier-3-checkbox', 'tier-4-checkbox', 'tier-5-checkbox'];
+      const tierCheckboxes = ['tier-1-checkbox', 'tier-2-checkbox', 'tier-3-checkbox', 'tier-4-checkbox', 'tier-5-checkbox', 'tier-6-checkbox'];
       tierCheckboxes.forEach(checkboxId => {
         document.getElementById(checkboxId).addEventListener('change', () => {
           // Save preferences and apply filter
@@ -1431,7 +1480,8 @@
             '2': document.getElementById('tier-2-checkbox').checked,
             '3': document.getElementById('tier-3-checkbox').checked,
             '4': document.getElementById('tier-4-checkbox').checked,
-            '5': document.getElementById('tier-5-checkbox').checked
+            '5': document.getElementById('tier-5-checkbox').checked,
+            '6': document.getElementById('tier-6-checkbox').checked
           };
           saveTierPreferences(tierPrefs);
           performFilter();
@@ -1443,7 +1493,7 @@
         tierCheckboxes.forEach(checkboxId => {
           document.getElementById(checkboxId).checked = true;
         });
-        const tierPrefs = { '1': true, '2': true, '3': true, '4': true, '5': true };
+        const tierPrefs = { '1': true, '2': true, '3': true, '4': true, '5': true, '6': true };
         saveTierPreferences(tierPrefs);
         performFilter();
       });
@@ -1452,7 +1502,7 @@
         tierCheckboxes.forEach(checkboxId => {
           document.getElementById(checkboxId).checked = false;
         });
-        const tierPrefs = { '1': false, '2': false, '3': false, '4': false, '5': false };
+        const tierPrefs = { '1': false, '2': false, '3': false, '4': false, '5': false, '6': false };
         saveTierPreferences(tierPrefs);
         performFilter();
       });
@@ -2880,6 +2930,9 @@
         } else if (tierValue === '5') {
           tierIcon = '<i class="fas fa-code-branch" title="Tier 5 - Integrated Platform" style="color: #607d8b;"></i>';
           tierTooltip = 'Tier 5 - Integrated Platform (Galaxy not directly accessible)';
+        } else if (tierValue === '6') {
+          tierIcon = '<i class="fas fa-cogs" title="Tier 6 - Development Instance" style="color: #795548;"></i>';
+          tierTooltip = 'Tier 6 - Development Instance';
         } else if (tierValue) {
           // Fallback for other tier values
           tierIcon = tierValue;
