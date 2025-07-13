@@ -1072,6 +1072,57 @@
       document.getElementById('tier-5-checkbox').checked = prefs['5'];
     }
     
+    // Function to extract hostname from URL for display purposes
+    function extractHostnameFromName(name) {
+      if (!name || typeof name !== 'string') {
+        return name || '';
+      }
+      
+      // Check if the name looks like a URL (contains http:// or https:// or starts with common domain patterns)
+      const urlPattern = /^(https?:\/\/|www\.|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/;
+      
+      if (!urlPattern.test(name)) {
+        // Not a URL-like string, return as is
+        return name;
+      }
+      
+      try {
+        // Try to parse as URL
+        let urlToParse = name;
+        
+        // Add protocol if missing
+        if (!name.startsWith('http://') && !name.startsWith('https://')) {
+          urlToParse = 'https://' + name;
+        }
+        
+        const url = new URL(urlToParse);
+        let hostname = url.hostname;
+        
+        // Remove 'www.' prefix if present
+        if (hostname.startsWith('www.')) {
+          hostname = hostname.substring(4);
+        }
+        
+        return hostname;
+      } catch (error) {
+        // If URL parsing fails, try to extract hostname manually
+        let cleanName = name.replace(/^https?:\/\//, '').replace(/^www\./, '');
+        
+        // Remove path and query parameters
+        const slashIndex = cleanName.indexOf('/');
+        if (slashIndex !== -1) {
+          cleanName = cleanName.substring(0, slashIndex);
+        }
+        
+        const questionIndex = cleanName.indexOf('?');
+        if (questionIndex !== -1) {
+          cleanName = cleanName.substring(0, questionIndex);
+        }
+        
+        return cleanName || name;
+      }
+    }
+    
     // Export displayed data (filteredData if present, else currentData) to CSV
     function exportDisplayedDataToCSV() {
       // Use filteredData if any filter is applied, else currentData
@@ -2832,6 +2883,9 @@
         const serverName = row['Name'] || '';
         const url = row['URL'] || row['url'] || '';
         
+        // Extract hostname from server name if it looks like a URL
+        const displayName = extractHostnameFromName(serverName);
+        
         let faviconHtml = '';
         let nameContent = '';
         let urlContent = '';
@@ -2844,17 +2898,32 @@
           }
           faviconHtml = `<img src="${cleanUrl}/favicon.ico" alt="" class="server-favicon" onerror="this.src='https://usegalaxy.org/favicon.ico';">`;
 
-          // Make server name a hyperlink
-          nameContent = `<a href="${cleanUrl}" target="_blank" style="color: inherit; text-decoration: none; font-weight: 500;">${serverName}</a>`;
+          // Make server name a hyperlink - use the cleaned hostname for display
+          nameContent = `<a href="${cleanUrl}" target="_blank" style="color: inherit; text-decoration: none; font-weight: 500;" title="${serverName}">${displayName}</a>`;
 
-          // Format display URL: remove http(s):// and trailing slash
-          let displayUrl = cleanUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+          // Format display URL: extract hostname only (no path)
+          let displayUrl;
+          try {
+            const urlObj = new URL(cleanUrl);
+            displayUrl = urlObj.hostname;
+            // Remove 'www.' prefix if present
+            if (displayUrl.startsWith('www.')) {
+              displayUrl = displayUrl.substring(4);
+            }
+          } catch (error) {
+            // Fallback: remove protocol and extract hostname manually
+            displayUrl = cleanUrl.replace(/^https?:\/\//, '').replace(/^www\./, '');
+            const slashIndex = displayUrl.indexOf('/');
+            if (slashIndex !== -1) {
+              displayUrl = displayUrl.substring(0, slashIndex);
+            }
+          }
 
-          urlContent = `<a href="${cleanUrl}" target="_blank" class="server-url">${displayUrl}</a>`;
+          urlContent = `<a href="${cleanUrl}" target="_blank" class="server-url" title="${cleanUrl}">${displayUrl}</a>`;
 
           tdName.innerHTML = `<div class="server-name-container">${faviconHtml}<div class="server-name-info">${nameContent}${urlContent}</div></div>`;
         } else {
-          nameContent = `<span style="font-weight: 500;">${serverName}</span>`;
+          nameContent = `<span style="font-weight: 500;" title="${serverName}">${displayName}</span>`;
           urlContent = `<span class="server-url" style="color: #999;">No URL provided</span>`;
           tdName.innerHTML = `<div class="server-name-container">${faviconHtml}<div class="server-name-info">${nameContent}${urlContent}</div></div>`;
         }
