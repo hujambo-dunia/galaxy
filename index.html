@@ -133,7 +133,7 @@
       text-align: center;
     }
     
-    th:nth-child(8), td:nth-child(8) { /* Server column */
+    th:nth-child(8), td:nth-child(8) { /* Instance column */
       width: 120px;
       max-width: 120px;
       text-align: center;
@@ -158,12 +158,12 @@
       text-align: center;
     }
     
-    /* Center align Info, Server, and Resources column headers */
+    /* Center align Info, Instance, and Resources column headers */
     th:nth-child(6), th:nth-child(7), th:nth-child(8) {
       text-align: center;
     }
     
-    /* Server column styling for multi-line content */
+    /* Instance column styling for multi-line content */
     td:nth-child(7) {
       line-height: 1.3;
       vertical-align: top;
@@ -555,11 +555,11 @@
       <div id="summary-stats" class="summary-stats" style="display: none;">
         <div class="stat-box">
           <div class="stat-number" id="total-servers">0</div>
-          <div>Total Servers</div>
+          <div>Total Instances</div>
         </div>
         <div class="stat-box online-box">
           <div class="stat-number" id="online-servers">0</div>
-          <div>Online Servers</div>
+          <div>Online Instances</div>
         </div>
         <div class="stat-box offline-box">
           <div class="stat-number" id="offline-servers">0</div>
@@ -569,18 +569,18 @@
     </div>
     
     <div class="search-container">
-      <input type="text" id="search-input" class="search-input" placeholder="🔍 Search servers by name, URL, region, or any other field...">
+      <input type="text" id="search-input" class="search-input" placeholder="🔍 Search instances by name, URL, region, or any other field...">
       <div style="margin-top: 0.75rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
           <input type="checkbox" id="hide-offline-checkbox">
-          <label for="hide-offline-checkbox" style="font-size: 0.9rem; cursor: pointer;">Hide offline servers</label>
+          <label for="hide-offline-checkbox" style="font-size: 0.9rem; cursor: pointer;">Hide offline instances</label>
         </div>
         <div class="tiers-filter-container">
           <button id="tiers-button" style="padding: 0.3rem 0.75rem; background: #673ab7; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
             <i class="fas fa-layer-group"></i> Tiers
           </button>
           <div id="tiers-popup" class="tiers-popup">
-            <h4>Filter by Server Tier</h4>
+            <h4>Filter by Instance Tier</h4>
             <div class="tier-checkbox-item">
               <input type="checkbox" id="tier-1-checkbox" checked>
               <label for="tier-1-checkbox">
@@ -651,7 +651,7 @@
         <th style="width: 100px;">Region</th>
         <th>Description</th>
         <th style="width: 80px;">Info</th>
-        <th style="width: 120px;">Server</th>
+        <th style="width: 120px;">Instance</th>
         <th style="width: 120px;" title="Available tools and genomes">Resources</th>
       </tr>
     </thead>
@@ -844,10 +844,10 @@
       const toolCountStr = String(toolCount || '').trim();
       const tierStr = String(tier || '').trim();
       
-      // Special handling for Tier 5 (Integrated Deployment) servers
+      // Special handling for Tier 5 (Integrated Deployment) instances
       // For Tier 5, if the site is reachable but API doesn't respond, consider it online
       if (tierStr === '5') {
-        // If the server is reachable (website responds) even with API errors, it's online
+        // If the instance is reachable (website responds) even with API errors, it's online
         if (serverReachable === true) {
           // Check if we have API errors but the site itself is reachable
           if (versionStr === 'API Error' || versionStr === 'Unknown' || versionStr === 'Error' ||
@@ -864,29 +864,29 @@
         }
       }
       
-      // Handle specific status values that indicate the server is completely offline/unreachable
+      // Handle specific status values that indicate the instance is completely offline/unreachable
       if (versionStr === 'Offline') {
-        return { icon: '🔴', tooltip: 'Server is offline or unreachable' };
+        return { icon: '🔴', tooltip: 'Instance is offline or unreachable' };
       }
       
       // Check if both version and tools indicate offline/unreachable
       if (toolCountStr === 'Offline' && (versionStr === 'Unknown' || versionStr === 'Error' || versionStr === 'API Error' || versionStr === 'Timeout')) {
-        return { icon: '🔴', tooltip: 'Server is offline or unreachable' };
+        return { icon: '🔴', tooltip: 'Instance is offline or unreachable' };
       }
       
       // Check if both version and tool count show API errors (completely unreachable)
       if (versionStr === 'API Error' && toolCountStr === 'API Error') {
-        return { icon: '🔴', tooltip: 'Server is offline or unreachable (API calls failed)' };
+        return { icon: '🔴', tooltip: 'Instance is offline or unreachable (API calls failed)' };
       }
       
-      // Check for explicit network/DNS errors that indicate server is completely offline
+      // Check for explicit network/DNS errors that indicate instance is completely offline
       if (versionStr.includes('ERR_NAME_NOT_RESOLVED') || versionStr.includes('ENOTFOUND') || 
           versionStr.includes('SERVER_UNREACHABLE') || versionStr === 'DNS Error') {
-        return { icon: '🔴', tooltip: 'Server is offline or unreachable (DNS/network error)' };
+        return { icon: '🔴', tooltip: 'Instance is offline or unreachable (DNS/network error)' };
       }
       
       if (versionStr === 'No URL') {
-        return { icon: '⚫', tooltip: 'No URL provided for this server' };
+        return { icon: '⚫', tooltip: 'No URL provided for this instance' };
       }
       if (versionStr === 'Local Mode') {
         return { icon: '🏠', tooltip: 'Running in local mode - limited functionality' };
@@ -909,24 +909,24 @@
                          toolCountStr !== 'Local Mode' &&
                          (toolCountStr.includes('tools') || toolCountStr.includes('genomes') || /^\d+$/.test(toolCountStr));
       
-      // If we can fetch tools/genomes but version is unknown, server is online with issues
+      // If we can fetch tools/genomes but version is unknown, instance is online with issues
       if ((versionStr === 'Unknown' || versionStr === 'API Error' || versionStr === 'Error') && hasToolData) {
-        return { icon: '🟡', tooltip: 'Server is online but has API issues (version unknown, but tools/genomes accessible)' };
+        return { icon: '🟡', tooltip: 'Instance is online but has API issues (version unknown, but tools/genomes accessible)' };
       }
       
-      // CORS blocked but server appears online
+      // CORS blocked but instance appears online
       if (versionStr === 'CORS Blocked') {
-        return { icon: '🟡', tooltip: 'Server appears online but API calls are blocked by browser CORS policy' };
+        return { icon: '🟡', tooltip: 'Instance appears online but API calls are blocked by browser CORS policy' };
       }
       
-      // Server requires authentication but is online
+      // Instance requires authentication but is online
       if (versionStr.includes('Auth Required') || versionStr.includes('Authentication')) {
-        return { icon: '🟡', tooltip: 'Server is online but requires authentication for API access' };
+        return { icon: '🟡', tooltip: 'Instance is online but requires authentication for API access' };
       }
       
-      // Server has issues but may be partially accessible (only if no tool data)
+      // Instance has issues but may be partially accessible (only if no tool data)
       if ((versionStr === 'Unknown' || versionStr === 'API Error' || versionStr === 'Error') && !hasToolData) {
-        return { icon: '🟡', tooltip: 'Server status unknown due to API errors' };
+        return { icon: '🟡', tooltip: 'Instance status unknown due to API errors' };
       }
       
       // If version contains HTML (like version with start date), check for known patterns
@@ -934,15 +934,15 @@
         // Extract the main version number before any HTML formatting
         const mainVersion = versionStr.split('<br>')[0].split('<small>')[0].trim();
         if (mainVersion && mainVersion !== '' && mainVersion !== 'Unknown' && mainVersion !== 'Error') {
-          return { icon: '🟢', tooltip: 'Server is online and responding' };
+          return { icon: '🟢', tooltip: 'Instance is online and responding' };
         } else {
-          return { icon: '❓', tooltip: 'Server status uncertain' };
+          return { icon: '❓', tooltip: 'Instance status uncertain' };
         }
       }
       
-      // Default case: if we have a meaningful version string that's not an error, server is online
+      // Default case: if we have a meaningful version string that's not an error, instance is online
       if (versionStr && versionStr !== '' && versionStr !== 'Unknown' && versionStr !== 'Error') {
-        return { icon: '🟢', tooltip: 'Server is online and responding' };
+        return { icon: '🟢', tooltip: 'Instance is online and responding' };
       }
       
       // Final fallback for any unhandled cases
@@ -979,7 +979,7 @@
         const toolCountStr = String(toolCount).trim();
         const tierStr = String(tier).trim();
         
-        // Special handling for Tier 5 servers - if reachable, consider online even with API issues
+        // Special handling for Tier 5 instances - if reachable, consider online even with API issues
         if (tierStr === '5' && serverReachable === true) {
           // Only consider offline if explicitly unreachable or has DNS/network errors
           if (versionStr.includes('ERR_NAME_NOT_RESOLVED') || versionStr.includes('ENOTFOUND') || 
@@ -987,10 +987,10 @@
               versionStr === 'Offline') {
             return false;
           }
-          return true; // Tier 5 server is reachable = online
+          return true; // Tier 5 instance is reachable = online
         }
         
-        // Server is offline only if it's explicitly marked as such or completely unreachable
+        // Instance is offline only if it's explicitly marked as such or completely unreachable
         if (versionStr === 'Offline' || versionStr === 'No URL' || versionStr === 'Local Mode') {
           return false;
         }
@@ -1011,12 +1011,12 @@
           return false;
         }
         
-        // Server is loading or no data yet
+        // Instance is loading or no data yet
         if (versionStr === 'Loading...' || versionStr === 'N/A' || versionStr === '' || !versionStr) {
           return false;
         }
         
-        // Check if server is providing data (tools/genomes) even if version is problematic
+        // Check if instance is providing data (tools/genomes) even if version is problematic
         const hasToolData = toolCountStr && 
                            toolCountStr !== 'Loading...' && 
                            toolCountStr !== 'N/A' && 
@@ -1028,13 +1028,13 @@
                            toolCountStr !== 'Local Mode' &&
                            (toolCountStr.includes('tools') || toolCountStr.includes('genomes') || /^\d+$/.test(toolCountStr));
         
-        // If we can fetch tools/genomes OR have a valid version, server is considered online
+        // If we can fetch tools/genomes OR have a valid version, instance is considered online
         const hasValidVersion = versionStr !== 'Unknown' && 
                                versionStr !== 'API Error' && 
                                versionStr !== 'Error' && 
                                versionStr !== 'CORS Blocked';
         
-        // Server is online if it has valid version OR can provide tool/genome data
+        // Instance is online if it has valid version OR can provide tool/genome data
         return hasValidVersion || hasToolData;
       }).length;
       
@@ -1101,7 +1101,7 @@
       } catch (error) {
         console.log('Error reading offline preference:', error);
       }
-      // Default: show offline servers (checkbox unchecked)
+      // Default: show offline instances (checkbox unchecked)
       return false;
     }
     
@@ -1237,7 +1237,7 @@
         pad(now.getMonth() + 1) +
         pad(now.getDate()) + '_'
         + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
-      a.download = 'galaxy_servers_export_' + timestamp + '.csv';
+      a.download = 'galaxy_instances_export_' + timestamp + '.csv';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -1283,7 +1283,7 @@
         // If tier is empty or not in our preferences, show it (default behavior)
         // Only hide if the tier is explicitly set to false in preferences
         if (tier === '' || !tierPrefs.hasOwnProperty(tier)) {
-          return true; // Show servers with no tier or unknown tiers
+          return true; // Show instances with no tier or unknown tiers
         }
         return tierPrefs[tier] === true;
       });
@@ -1296,7 +1296,7 @@
           const tier = row['Tier'] || '';
           const serverReachable = row['ServerReachable'];
           const statusInfo = getStatusIcon(version, toolCount, tier, serverReachable);
-          // Hide servers that are marked as offline (red icon)
+          // Hide instances that are marked as offline (red icon)
           return statusInfo.icon !== '🔴';
         });
       }
@@ -1341,7 +1341,7 @@
         refreshButton.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Refreshing...';
         refreshButton.disabled = true;
         
-        // Reset all server data to loading state
+        // Reset all instance data to loading state
         currentData.forEach(row => {
           row['Version'] = 'Loading...';
           row['Tool Count'] = 'Loading...';
@@ -1353,7 +1353,7 @@
         renderTableRows(filteredData.length > 0 ? filteredData : currentData);
         updateSummaryStats();
         
-        // Fetch fresh data for all servers
+        // Fetch fresh data for all instances
         fetchAllGalaxyInfo(currentData, true).then(() => {
           // Restore button state
           refreshButton.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh All';
@@ -1361,7 +1361,7 @@
           
           // Re-apply all filters with updated data
           performFilter();
-          updateStatus(`Refreshed ${currentData.length} server(s). All data updated from Galaxy APIs.`);
+          updateStatus(`Refreshed ${currentData.length} instance(s). All data updated from Galaxy APIs.`);
           updateSummaryStats();
           
           // Log cache stats
@@ -1371,9 +1371,9 @@
       };
       
       const performRefreshOffline = () => {
-        // Find all offline servers (use filteredData if filter is active, else currentData)
+        // Find all offline instances (use filteredData if filter is active, else currentData)
         const dataSource = filteredData.length > 0 ? filteredData : currentData;
-        const offlineServers = dataSource.filter(row => {
+        const offlineInstances = dataSource.filter(row => {
           const version = row['Version'] || '';
           const toolCount = row['Tool Count'] || '';
           const tier = row['Tier'] || '';
