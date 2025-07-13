@@ -1966,7 +1966,7 @@
       return toolCount;
     }
     
-    async function fetchGalaxyInfo(url, forceRefresh = false) {
+    async function fetchGalaxyInfo(url, forceRefresh = false, tier = null) {
       // Check if we're running locally (file:// protocol)
       const isLocalFile = window.location.protocol === 'file';
       
@@ -2628,6 +2628,18 @@
             serverReachable: false
           };
         }
+        // Special handling for Tier 5 (Integrated Platform) servers
+        // If the website is reachable but Galaxy APIs fail, still consider it online
+        else if (tier === '5' && (serverStatus.reachable || serverStatus.corsBlocked)) {
+          result = {
+            version: 'Integrated Platform',
+            toolCount: 'N/A',
+            configData: {},
+            hasProxyIssues: hasProxyIssues,
+            proxiesAttempted: totalProxiesAttempted,
+            serverReachable: true
+          };
+        }
         // If we get here, we have mixed results - server might be online but with API issues
         else if (serverStatus.reachable || serverStatus.corsBlocked) {
           // Try to get tool count even with partial data
@@ -2749,7 +2761,8 @@
         
         if (url && url.trim()) {
           try {
-            const info = await fetchGalaxyInfo(url.trim(), forceRefresh);
+            const tier = row['Tier'] || '';
+            const info = await fetchGalaxyInfo(url.trim(), forceRefresh, tier);
             // Store the API results directly in the data object
             row['Version'] = info.version;
             row['Tool Count'] = info.toolCount;
