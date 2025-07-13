@@ -1233,9 +1233,83 @@
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
+      URL.revokeObjectURL(url);    }
     
+    // Global filtering function
+    function performFilter() {
+      const searchInput = document.getElementById('search-input');
+      const hideOfflineCheckbox = document.getElementById('hide-offline-checkbox');
+      
+      if (!searchInput || !hideOfflineCheckbox) {
+        // Elements not ready yet, skip filtering
+        return;
+      }
+      
+      const searchTerm = searchInput.value.toLowerCase().trim();
+      const hideOffline = hideOfflineCheckbox.checked;
+      
+      // Get current tier preferences
+      const tierPrefs = {
+        '1': document.getElementById('tier-1-checkbox')?.checked ?? true,
+        '2': document.getElementById('tier-2-checkbox')?.checked ?? true,
+        '3': document.getElementById('tier-3-checkbox')?.checked ?? true,
+        '4': document.getElementById('tier-4-checkbox')?.checked ?? true,
+        '5': document.getElementById('tier-5-checkbox')?.checked ?? true,
+        '6': document.getElementById('tier-6-checkbox')?.checked ?? true
+      };
+      
+      let filtered = [...currentData];
+      
+      // Apply search filter
+      if (searchTerm !== '') {
+        filtered = filtered.filter(row => {
+          return Object.values(row).some(value => 
+            value && value.toString().toLowerCase().includes(searchTerm)
+          );
+        });
+      }
+      
+      // Apply tier filter
+      filtered = filtered.filter(row => {
+        const tier = row['Tier'] || '';
+        // If tier is empty or not in our preferences, show it (default behavior)
+        // Only hide if the tier is explicitly set to false in preferences
+        if (tier === '' || !tierPrefs.hasOwnProperty(tier)) {
+          return true; // Show servers with no tier or unknown tiers
+        }
+        return tierPrefs[tier] === true;
+      });
+      
+      // Apply offline filter
+      if (hideOffline) {
+        filtered = filtered.filter(row => {
+          const version = row['Version'] || '';
+          const toolCount = row['Tool Count'] || '';
+          const tier = row['Tier'] || '';
+          const serverReachable = row['ServerReachable'];
+          const statusInfo = getStatusIcon(version, toolCount, tier, serverReachable);
+          // Hide servers that are marked as offline (red icon)
+          return statusInfo.icon !== '🔴';
+        });
+      }
+      
+      filteredData = filtered;
+      
+      // Re-apply current sort if any
+      if (currentSortColumn) {
+        sortFilteredData(currentSortColumn, currentSortDirection);
+      } else {
+        renderTableRows(filteredData);
+      }
+      
+      // Show "no results" message if needed
+      const hasActiveFilters = searchTerm !== '' || hideOffline || 
+                              !Object.values(tierPrefs).every(v => v);
+      if (filteredData.length === 0 && hasActiveFilters) {
+        showNoResults();
+      }
+    }
+
     function setupSearchFilter() {
       const searchInput = document.getElementById('search-input');
       const hideOfflineCheckbox = document.getElementById('hide-offline-checkbox');
@@ -1250,72 +1324,6 @@
       
       // Apply saved offline filter preference
       applyOfflinePreference();
-      
-      const performFilter = () => {
-        const searchTerm = searchInput.value.toLowerCase().trim();
-        const hideOffline = hideOfflineCheckbox.checked;
-        
-        // Get current tier preferences
-        const tierPrefs = {
-          '1': document.getElementById('tier-1-checkbox').checked,
-          '2': document.getElementById('tier-2-checkbox').checked,
-          '3': document.getElementById('tier-3-checkbox').checked,
-          '4': document.getElementById('tier-4-checkbox').checked,
-          '5': document.getElementById('tier-5-checkbox').checked,
-          '6': document.getElementById('tier-6-checkbox').checked
-        };
-        
-        let filtered = [...currentData];
-        
-        // Apply search filter
-        if (searchTerm !== '') {
-          filtered = filtered.filter(row => {
-            return Object.values(row).some(value => 
-              value && value.toString().toLowerCase().includes(searchTerm)
-            );
-          });
-        }
-        
-        // Apply tier filter
-        filtered = filtered.filter(row => {
-          const tier = row['Tier'] || '';
-          // If tier is empty or not in our preferences, show it (default behavior)
-          // Only hide if the tier is explicitly set to false in preferences
-          if (tier === '' || !tierPrefs.hasOwnProperty(tier)) {
-            return true; // Show servers with no tier or unknown tiers
-          }
-          return tierPrefs[tier] === true;
-        });
-        
-        // Apply offline filter
-        if (hideOffline) {
-          filtered = filtered.filter(row => {
-            const version = row['Version'] || '';
-            const toolCount = row['Tool Count'] || '';
-            const tier = row['Tier'] || '';
-            const serverReachable = row['ServerReachable'];
-            const statusInfo = getStatusIcon(version, toolCount, tier, serverReachable);
-            // Hide servers that are marked as offline (red icon)
-            return statusInfo.icon !== '🔴';
-          });
-        }
-        
-        filteredData = filtered;
-        
-        // Re-apply current sort if any
-        if (currentSortColumn) {
-          sortFilteredData(currentSortColumn, currentSortDirection);
-        } else {
-          renderTableRows(filteredData);
-        }
-        
-        // Show "no results" message if needed
-        const hasActiveFilters = searchTerm !== '' || hideOffline || 
-                                !Object.values(tierPrefs).every(v => v);
-        if (filteredData.length === 0 && hasActiveFilters) {
-          showNoResults();
-        }
-      };
       
       const performRefresh = () => {
         // Clear cache and reload data
@@ -1343,8 +1351,8 @@
           refreshButton.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh All';
           refreshButton.disabled = false;
           
-          // Re-render table with updated data
-          renderTableRows(filteredData.length > 0 ? filteredData : currentData);
+          // Re-apply all filters with updated data
+          performFilter();
           updateStatus(`Refreshed ${currentData.length} server(s). All data updated from Galaxy APIs.`);
           updateSummaryStats();
           
@@ -1423,8 +1431,8 @@
           refreshOfflineButton.innerHTML = '<i class="fas fa-redo-alt"></i> Refresh Offline';
           refreshOfflineButton.disabled = false;
 
-          // Re-render table with updated data
-          renderTableRows(filteredData.length > 0 ? filteredData : currentData);
+          // Re-apply all filters with updated data
+          performFilter();
           updateStatus(`Refreshed ${offlineServers.length} offline server(s). Check status for improvements.`);
           updateSummaryStats();
 
@@ -2586,7 +2594,7 @@
             const startDate = formatServerStartTime(startTime);
             console.log(`[${cleanUrl}] Formatted server start time:`, startDate);
             if (startDate) {
-              versionWithDate = `${version}<br><small style="color: #666; font-size: 0.85em;">Started: ${startDate}</small>`;
+              versionWithDate = `${version}<br><small style="color: #666; font-size: 0.85em;">Up: ${startDate}</small>`;
             }
           }
           
@@ -2646,7 +2654,7 @@
             const startDate = formatServerStartTime(startTime);
             console.log(`[Fallback - ${cleanUrl}] Formatted server start time:`, startDate);
             if (startDate) {
-              versionWithDate = `${version}<br><small style="color: #666; font-size: 0.85em;">Started: ${startDate}</small>`;
+              versionWithDate = `${version}<br><small style="color: #666; font-size: 0.85em;">Up: ${startDate}</small>`;
             }
           }
           
@@ -2780,8 +2788,8 @@
       
       // Fetch Galaxy info for all servers ONCE
       fetchAllGalaxyInfo(data, false).then(() => {
-        // After all API calls are done, render the table again with updated data
-        renderTableRows(filteredData.length > 0 ? filteredData : currentData);
+        // After all API calls are done, re-apply all filters with updated data
+        performFilter();
         updateStatus(`Loaded ${data.length} server(s). Galaxy API data fetched successfully.`);
         updateSummaryStats();
       });
@@ -3095,6 +3103,8 @@
         if (isIntegratedDeployment) {
           tdVersion.innerHTML = 'N/A';
           tdVersion.style.color = '#999';
+          tdVersion.style.textAlign = 'center';
+          tdVersion.style.verticalAlign = 'middle';
           tdVersion.title = 'Integrated deployment - Galaxy server not directly accessible';
         } else if (version === 'Loading...') {
           tdVersion.innerHTML = `<span class="loading-indicator"></span> ${version}`;
@@ -3110,6 +3120,8 @@
         if (isIntegratedDeployment) {
           tdToolCount.innerHTML = 'N/A';
           tdToolCount.style.color = '#999';
+          tdToolCount.style.textAlign = 'center';
+          tdToolCount.style.verticalAlign = 'middle';
           tdToolCount.title = 'Integrated deployment - Galaxy server not directly accessible';
         } else if (toolCount === 'Loading...') {
           tdToolCount.innerHTML = `<span class="loading-indicator"></span> ${toolCount}`;
@@ -3123,38 +3135,46 @@
         tdVersion.style.textAlign = 'center';
         tdToolCount.style.textAlign = 'center';
         
-        // Apply color coding based on version status
-        if (version === 'Offline') {
-          tdVersion.style.color = '#f44336';
-          // Only color resources if it's an error message, not actual tool/genome counts
-          if (toolCount === 'Loading...' || toolCount === 'Offline' || typeof toolCount === 'string') {
-            tdToolCount.style.color = '#f44336';
+        // Apply color coding based on version status (skip for Tier 5 integrated deployments)
+        if (!isIntegratedDeployment) {
+          if (version === 'Offline') {
+            tdVersion.style.color = '#f44336';
+            tdVersion.style.verticalAlign = 'middle';
+            // Only color resources if it's an error message, not actual tool/genome counts
+            if (toolCount === 'Loading...' || toolCount === 'Offline' || typeof toolCount === 'string') {
+              tdToolCount.style.color = '#f44336';
+              tdToolCount.style.verticalAlign = 'middle';
+            }
+          } else if (version === 'CORS Blocked') {
+            tdVersion.style.color = '#ff9800';
+            tdVersion.style.verticalAlign = 'middle';
+            // Only color resources if it's an error message, not actual tool/genome counts
+            if (toolCount === 'Loading...' || toolCount === 'CORS Blocked' || typeof toolCount === 'string') {
+              tdToolCount.style.color = '#ff9800';
+              tdToolCount.style.verticalAlign = 'middle';
+            }
+            tdVersion.title = 'Server appears online but API calls blocked by browser CORS policy. Will work when deployed to GitHub Pages.';
+            if (toolCount === 'CORS Blocked') {
+              tdToolCount.title = 'Server appears online but API calls blocked by browser CORS policy. Will work when deployed to GitHub Pages.';
+            }
+          } else if (version === 'Unknown' || version === 'API Error' || version === 'Error') {
+            tdVersion.style.color = '#ff9800';
+            tdVersion.style.verticalAlign = 'middle';
+            // Only color resources if it's an error message, not actual tool/genome counts
+            if (toolCount === 'Loading...' || toolCount === 'Unknown' || toolCount === 'API Error' || toolCount === 'Error' || typeof toolCount === 'string') {
+              tdToolCount.style.color = '#ff9800';
+              tdToolCount.style.verticalAlign = 'middle';
+            }
+          } else if (version === 'Loading...' || version === 'N/A') {
+            tdVersion.style.color = '#999';
+            // Only color resources if it's loading or N/A
+            if (toolCount === 'Loading...' || toolCount === 'N/A') {
+              tdToolCount.style.color = '#999';
+            }
+          } else {
+            tdVersion.style.color = '#4caf50';
+            // Don't override colors for resources when they contain formatted tool/genome counts
           }
-        } else if (version === 'CORS Blocked') {
-          tdVersion.style.color = '#ff9800';
-          // Only color resources if it's an error message, not actual tool/genome counts
-          if (toolCount === 'Loading...' || toolCount === 'CORS Blocked' || typeof toolCount === 'string') {
-            tdToolCount.style.color = '#ff9800';
-          }
-          tdVersion.title = 'Server appears online but API calls blocked by browser CORS policy. Will work when deployed to GitHub Pages.';
-          if (toolCount === 'CORS Blocked') {
-            tdToolCount.title = 'Server appears online but API calls blocked by browser CORS policy. Will work when deployed to GitHub Pages.';
-          }
-        } else if (version === 'Unknown' || version === 'API Error' || version === 'Error') {
-          tdVersion.style.color = '#ff9800';
-          // Only color resources if it's an error message, not actual tool/genome counts
-          if (toolCount === 'Loading...' || toolCount === 'Unknown' || toolCount === 'API Error' || toolCount === 'Error' || typeof toolCount === 'string') {
-            tdToolCount.style.color = '#ff9800';
-          }
-        } else if (version === 'Loading...' || version === 'N/A') {
-          tdVersion.style.color = '#999';
-          // Only color resources if it's loading or N/A
-          if (toolCount === 'Loading...' || toolCount === 'N/A') {
-            tdToolCount.style.color = '#999';
-          }
-        } else {
-          tdVersion.style.color = '#4caf50';
-          // Don't override colors for resources when they contain formatted tool/genome counts
         }
         
         // Add loading class for progressive update effect
