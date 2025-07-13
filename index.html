@@ -108,6 +108,14 @@
     th:nth-child(4), td:nth-child(4) { /* Name column */
       width: 200px;
       max-width: 200px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      white-space: normal;
+    }
+    
+    /* Force URL-like strings to break more aggressively in name column */
+    td:nth-child(4) .server-url {
+      word-break: break-all;
     }
     
     th:nth-child(5), td:nth-child(5) { /* Region column */
@@ -2973,7 +2981,10 @@
           faviconHtml = `<img src="${cleanUrl}/favicon.ico" alt="" class="server-favicon" onerror="this.src='https://usegalaxy.org/favicon.ico';">`;
 
           // Make server name a hyperlink - use the cleaned hostname for display
-          nameContent = `<a href="${cleanUrl}" target="_blank" style="color: inherit; text-decoration: none; font-weight: 500;" title="${serverName}">${displayName}</a>`;
+          // Add server-url class if the display name looks like a URL
+          const isUrlLikeName = displayName.includes('.') && (displayName.includes('.org') || displayName.includes('.com') || displayName.includes('.edu') || displayName.includes('.gov') || displayName.includes('.net') || displayName.includes('.fr') || displayName.includes('.uk') || displayName.includes('.de') || displayName.includes('.au'));
+          const nameClass = isUrlLikeName ? 'server-url' : '';
+          nameContent = `<a href="${cleanUrl}" target="_blank" class="${nameClass}" style="color: inherit; text-decoration: none; font-weight: 500;" title="${serverName}">${displayName}</a>`;
 
           // Format display URL: extract hostname only (no path)
           let displayUrl;
