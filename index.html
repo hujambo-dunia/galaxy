@@ -87,29 +87,54 @@
     }
     
     /* Set column widths */
-    th:nth-child(1), td:nth-child(1) { /* Status column */
-      width: 50px;
-      max-width: 50px;
+    th:nth-child(1), td:nth-child(1) { /* Row number column */
+      width: 30px;
+      max-width: 30px;
+      text-align: center;
     }
     
-    th:nth-child(2), td:nth-child(2) { /* Tier column */
-      width: 50px;
-      max-width: 50px;
+    th:nth-child(2), td:nth-child(2) { /* Status column */
+      width: 35px;
+      max-width: 35px;
+      text-align: center;
     }
     
-    th:nth-child(3), td:nth-child(3) { /* Name column */
-      width: 240px;
-      max-width: 240px;
+    th:nth-child(3), td:nth-child(3) { /* Tier column */
+      width: 35px;
+      max-width: 35px;
+      text-align: center;
     }
     
-    th:nth-child(4), td:nth-child(4) { /* Region column */
+    th:nth-child(4), td:nth-child(4) { /* Name column */
+      width: 200px;
+      max-width: 200px;
+    }
+    
+    th:nth-child(5), td:nth-child(5) { /* Region column */
       width: 100px;
       max-width: 100px;
     }
     
-    th:nth-child(6), td:nth-child(6) { /* Info column - narrower with rowspan */
-      width: 75px;
-      max-width: 75px;
+    th:nth-child(6), td:nth-child(6) { /* Description column - flexible width */
+      min-width: 300px;
+    }
+    
+    th:nth-child(7), td:nth-child(7) { /* Info column */
+      width: 80px;
+      max-width: 80px;
+      text-align: center;
+    }
+    
+    th:nth-child(8), td:nth-child(8) { /* Server column */
+      width: 120px;
+      max-width: 120px;
+      text-align: center;
+    }
+    
+    th:nth-child(9), td:nth-child(9) { /* Resources column */
+      width: 120px;
+      max-width: 120px;
+      text-align: center;
     }
     
     th {
@@ -464,14 +489,15 @@
   <table id="galaxy-table">
     <thead>
       <tr>
-        <th><i class="fas fa-signal" title="Status" style="color: green;"></i></th>
-        <th><i class="fas fa-star" title="Tier" style="color: gold;"></i></th>
-        <th>Name</th>
-        <th>Region</th>
+        <th style="width: 30px;">#</th>
+        <th style="width: 35px;"><i class="fas fa-signal" title="Status" style="color: green;"></i></th>
+        <th style="width: 35px;"><i class="fas fa-star" title="Tier" style="color: gold;"></i></th>
+        <th style="width: 200px;">Name</th>
+        <th style="width: 100px;">Region</th>
         <th>Description</th>
-        <th style="width: 60px;">Info</th>
-        <th>Server</th>
-        <th title="Available tools and genomes">Resources</th>
+        <th style="width: 80px;">Info</th>
+        <th style="width: 120px;">Server</th>
+        <th style="width: 120px;" title="Available tools and genomes">Resources</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -1071,18 +1097,18 @@
     
     function showNoResults() {
       const tbody = document.querySelector('#galaxy-table tbody');
-      tbody.innerHTML = '<tr><td colspan="8" class="no-results">No servers match your search criteria.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" class="no-results">No servers match your search criteria.</td></tr>';
     }
 
     function initializeTableSorting() {
       const headers = document.querySelectorAll('#galaxy-table th');
-      const columnNames = ['Status', 'Tier', 'Name', 'Region', 'Description', 'Info', 'Server', 'Resources'];
+      const columnNames = ['#', 'Status', 'Tier', 'Name', 'Region', 'Description', 'Info', 'Server', 'Resources'];
       
       headers.forEach((header, index) => {
         header.addEventListener('click', () => {
           // Use the predefined column name based on the header index
           const columnName = columnNames[index];
-          if (columnName) {
+          if (columnName && columnName !== '#') {
             sortTable(columnName);
           }
         });
@@ -1102,7 +1128,7 @@
 
       // Update header indicators
       const headers = document.querySelectorAll('#galaxy-table th');
-      const columnNames = ['Status', 'Tier', 'Name', 'Region', 'Description', 'Info', 'Server', 'Resources'];
+      const columnNames = ['#', 'Status', 'Tier', 'Name', 'Region', 'Description', 'Info', 'Server', 'Resources'];
       
       headers.forEach((header, index) => {
         header.classList.remove('sort-asc', 'sort-desc');
@@ -2408,6 +2434,14 @@
       data.forEach((row, index) => {
         const tr = document.createElement('tr');
         
+        // Row number column
+        const tdRowNumber = document.createElement('td');
+        tdRowNumber.textContent = index + 1;
+        tdRowNumber.style.textAlign = 'center';
+        tdRowNumber.style.fontWeight = '500';
+        tdRowNumber.style.color = '#666';
+        tdRowNumber.style.fontSize = '0.9em';
+        
         // Status column with icon and tooltip
         const tdStatus = document.createElement('td');
         const version = row['Version'] || 'Loading...';
@@ -2445,6 +2479,9 @@
         } else if (tierValue === '4') {
           tierIcon = '<i class="fas fa-flask" title="Tier 4 - Development/Testing Server" style="color: #9c27b0;"></i>';
           tierTooltip = 'Tier 4 - Development/Testing Server';
+        } else if (tierValue === '5') {
+          tierIcon = '<i class="fas fa-code-branch" title="Tier 5 - Integrated Deployment" style="color: #607d8b;"></i>';
+          tierTooltip = 'Tier 5 - Integrated Deployment (Galaxy not directly accessible)';
         } else if (tierValue) {
           // Fallback for other tier values
           tierIcon = tierValue;
@@ -2454,7 +2491,7 @@
         tdTier.innerHTML = tierIcon;
         tdTier.title = tierTooltip;
         tdTier.style.textAlign = 'center';
-        tdTier.style.width = '50px';
+        tdTier.style.width = '35px';
         
         // Name column with favicon, hyperlink, and URL beneath
         const tdName = document.createElement('td');
@@ -2577,12 +2614,20 @@
         
         linksHtml += '</div>';
         tdContact.innerHTML = linksHtml;
-        tdContact.style.width = '100px';
+        tdContact.style.width = '80px';
         tdContact.style.textAlign = 'center';
         
         // Server column (without status icon since it's now separate)
         const tdVersion = document.createElement('td');
-        if (version === 'Loading...') {
+        
+        // Check if this is a Tier 5 (integrated deployment) server
+        const isIntegratedDeployment = tierValue === '5';
+        
+        if (isIntegratedDeployment) {
+          tdVersion.innerHTML = 'N/A';
+          tdVersion.style.color = '#999';
+          tdVersion.title = 'Integrated deployment - Galaxy server not directly accessible';
+        } else if (version === 'Loading...') {
           tdVersion.innerHTML = `<span class="loading-indicator"></span> ${version}`;
         } else {
           // Use innerHTML to support the formatted version with start date
@@ -2593,7 +2638,11 @@
         const tdToolCount = document.createElement('td');
         const toolCount = row['Tool Count'] || 'Loading...';
         
-        if (toolCount === 'Loading...') {
+        if (isIntegratedDeployment) {
+          tdToolCount.innerHTML = 'N/A';
+          tdToolCount.style.color = '#999';
+          tdToolCount.title = 'Integrated deployment - Galaxy server not directly accessible';
+        } else if (toolCount === 'Loading...') {
           tdToolCount.innerHTML = `<span class="loading-indicator"></span> ${toolCount}`;
         } else {
           // Use innerHTML to support multi-line display
@@ -2644,6 +2693,7 @@
           tr.classList.add('loading-row');
         }
         
+        tr.appendChild(tdRowNumber);
         tr.appendChild(tdStatus);
         tr.appendChild(tdTier);
         tr.appendChild(tdName);
