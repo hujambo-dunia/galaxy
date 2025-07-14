@@ -460,49 +460,12 @@
     }
 
     .map-marker {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      border: 2px solid white;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
       cursor: pointer;
       transition: all 0.2s;
-      stroke-width: 2;
-      stroke: white;
     }
 
     .map-marker:hover {
-      transform: scale(1.5);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-    }
-
-    .map-marker.tier-1 {
-      fill: #4caf50; /* Global Instance */
-    }
-
-    .map-marker.tier-2 {
-      fill: #ff9800; /* National Instance */
-    }
-
-    .map-marker.tier-3 {
-      fill: #2196f3; /* Subdomain */
-    }
-
-    .map-marker.tier-4 {
-      fill: #9c27b0; /* Institutional */
-    }
-
-    .map-marker.tier-5 {
-      fill: #607d8b; /* Integrated Platform */
-    }
-
-    .map-marker.tier-6 {
-      fill: #795548; /* Development Instance */
-    }
-
-    .map-marker.tier-0,
-    .map-marker.tier-unknown {
-      fill: #999; /* Unknown tier */
+      filter: brightness(1.1);
     }
 
     .marker-cluster {
@@ -925,7 +888,46 @@
 
     // Function to guess location from hostname patterns
     function guessLocationFromHostname(hostname) {
-      // Check for specific university/institution patterns first
+      // Check for national subdomains first (e.g., india.usegalaxy.eu, africa.usegalaxy.eu)
+      const nationalPatterns = {
+        'india.usegalaxy.eu': { country: 'India', countryCode: 'IN', flag: '🇮🇳', lat: 20.5937, lng: 78.9629, city: 'New Delhi' },
+        'africa.usegalaxy.eu': { country: 'South Africa', countryCode: 'ZA', flag: '🇿🇦', lat: -30.5595, lng: 22.9375, city: 'Cape Town' },
+        'covid19.usegalaxy.eu': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 48.0, lng: 7.8, city: 'Freiburg' },
+        'annotation.usegalaxy.eu': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 48.0, lng: 7.8, city: 'Freiburg' },
+        'climate.usegalaxy.eu': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 48.0, lng: 7.8, city: 'Freiburg' },
+        'metagenomics.usegalaxy.eu': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 48.0, lng: 7.8, city: 'Freiburg' },
+        'plants.usegalaxy.eu': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 48.0, lng: 7.8, city: 'Freiburg' },
+        'live.usegalaxy.eu': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 48.0, lng: 7.8, city: 'Freiburg' },
+        'ml.usegalaxy.eu': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 48.0, lng: 7.8, city: 'Freiburg' },
+        'imaging.usegalaxy.eu': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 48.0, lng: 7.8, city: 'Freiburg' },
+        'proteomics.usegalaxy.eu': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 48.0, lng: 7.8, city: 'Freiburg' },
+        'ecology.usegalaxy.eu': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 48.0, lng: 7.8, city: 'Freiburg' },
+        'metabolomics.usegalaxy.eu': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 48.0, lng: 7.8, city: 'Freiburg' },
+        'microbiome.usegalaxy.eu': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 48.0, lng: 7.8, city: 'Freiburg' },
+        // Add other potential national instances
+        'canada.usegalaxy.org': { country: 'Canada', countryCode: 'CA', flag: '🇨🇦', lat: 45.4215, lng: -75.6972, city: 'Ottawa' },
+        'brazil.usegalaxy.org': { country: 'Brazil', countryCode: 'BR', flag: '🇧🇷', lat: -15.7942, lng: -47.8822, city: 'Brasília' },
+        'mexico.usegalaxy.org': { country: 'Mexico', countryCode: 'MX', flag: '🇲🇽', lat: 19.4326, lng: -99.1332, city: 'Mexico City' },
+        'japan.usegalaxy.org': { country: 'Japan', countryCode: 'JP', flag: '🇯🇵', lat: 35.6762, lng: 139.6503, city: 'Tokyo' },
+        'korea.usegalaxy.org': { country: 'South Korea', countryCode: 'KR', flag: '🇰🇷', lat: 37.5665, lng: 126.9780, city: 'Seoul' },
+        'china.usegalaxy.org': { country: 'China', countryCode: 'CN', flag: '🇨🇳', lat: 39.9042, lng: 116.4074, city: 'Beijing' }
+      };
+
+      // Check for national patterns first
+      for (const [pattern, location] of Object.entries(nationalPatterns)) {
+        if (hostname.includes(pattern)) {
+          return {
+            country: location.country,
+            city: location.city,
+            latitude: location.lat,
+            longitude: location.lng,
+            flag: location.flag,
+            countryCode: location.countryCode
+          };
+        }
+      }
+
+      // Check for specific university/institution patterns
       const institutionPatterns = {
         'pasteur.fr': { country: 'France', countryCode: 'FR', flag: '🇫🇷', lat: 48.8566, lng: 2.3522, city: 'Paris' },
         'inrae.fr': { country: 'France', countryCode: 'FR', flag: '🇫🇷', lat: 48.8566, lng: 2.3522, city: 'Paris' },
@@ -937,7 +939,7 @@
         'genome.edu.au': { country: 'Australia', countryCode: 'AU', flag: '🇦🇺', lat: -37.8136, lng: 144.9631, city: 'Melbourne' }
       };
 
-      // Check for specific institution patterns first
+      // Check for specific institution patterns
       for (const [pattern, location] of Object.entries(institutionPatterns)) {
         if (hostname.includes(pattern)) {
           return {
@@ -1399,6 +1401,44 @@
           
           // Apply transform to the entire group
           mapGroup.attr("transform", event.transform);
+          
+          // Scale markers to maintain good visibility at all zoom levels
+          const zoomScale = event.transform.k;
+          // More aggressive scaling that makes markers smaller when zoomed in
+          // but still keeps them visible and clickable
+          const markerScale = Math.max(0.3, 1 / (zoomScale * 0.8));
+          
+          // Update single markers with better scaling
+          mapGroup.selectAll(".map-marker")
+            .attr("r", 4 * markerScale)
+            .attr("stroke-width", Math.max(0.3, 1 * markerScale));
+          
+          // Update single marker hit areas
+          mapGroup.selectAll(".single-marker-hit-area")
+            .attr("r", 8 * markerScale);
+          
+          // Update cluster markers and their stored radius data
+          mapGroup.selectAll(".marker-cluster").each(function(d) {
+            const clusterElement = d3.select(this);
+            const parentGroup = d3.select(this.parentNode);
+            const groupData = parentGroup.datum();
+            
+            if (groupData && groupData.radius) {
+              // Scale the cluster based on original radius
+              const scaledRadius = groupData.radius * markerScale;
+              clusterElement
+                .attr("r", scaledRadius)
+                .attr("stroke-width", Math.max(0.3, 2 * markerScale));
+              
+              // Update hit area for clusters
+              parentGroup.select(".cluster-hit-area")
+                .attr("r", (groupData.radius + 5) * markerScale);
+            }
+          });
+          
+          // Update cluster text size
+          mapGroup.selectAll(".cluster-text")
+            .style("font-size", (10 * markerScale) + "px");
         });
 
       svg.call(zoom);
@@ -1502,8 +1542,23 @@
       console.log('Fallback map rendered');
     }
 
+    // Haversine formula to calculate distance between two lat/lng points in kilometers
+    function calculateDistance(lat1, lng1, lat2, lng2) {
+      const R = 6371; // Earth's radius in kilometers
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLng/2) * Math.sin(dLng/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
     // Render the map with server markers
-    function renderMap() {
+    function renderMap(data = null) {
+      // Use provided data or fall back to global filteredData
+      const dataToRender = data || filteredData;
+      
       // Initialize map if not already done
       if (!svg) {
         initializeMap();
@@ -1523,10 +1578,10 @@
       
       let markersAdded = 0;
       
-      // Group instances by location (lat/lng with some tolerance for clustering)
+      // Group instances by location (lat/lng with geographic distance tolerance for clustering)
       const locationGroups = new Map();
       
-      filteredData.forEach((row, index) => {
+      dataToRender.forEach((row, index) => {
         const geoData = row['GeoLocation'];
         
         console.log(`Processing server ${row['Name']}: `, geoData);
@@ -1538,24 +1593,47 @@
           const coords = projection([parseFloat(geoData.longitude), parseFloat(geoData.latitude)]);
           
           if (coords && coords[0] >= 0 && coords[0] <= width && coords[1] >= 0 && coords[1] <= height) {
-            // Round coordinates to cluster nearby instances (within ~20px)
-            const clusterX = Math.round(coords[0] / 20) * 20;
-            const clusterY = Math.round(coords[1] / 20) * 20;
-            const clusterKey = `${clusterX},${clusterY}`;
+            const lat = parseFloat(geoData.latitude);
+            const lng = parseFloat(geoData.longitude);
             
-            if (!locationGroups.has(clusterKey)) {
+            // Check if this location should be clustered with an existing group
+            let clusteredWith = null;
+            
+            for (const [key, group] of locationGroups) {
+              // Get the first instance's coordinates from this group
+              const firstInstance = group.instances[0];
+              const groupLat = parseFloat(firstInstance['GeoLocation'].latitude);
+              const groupLng = parseFloat(firstInstance['GeoLocation'].longitude);
+              
+              // Calculate geographic distance in kilometers using Haversine formula
+              const distance = calculateDistance(lat, lng, groupLat, groupLng);
+              
+              // Only cluster if within 50km (same city/metro area)
+              if (distance < 50) {
+                clusteredWith = key;
+                break;
+              }
+            }
+            
+            if (clusteredWith) {
+              // Add to existing cluster
+              locationGroups.get(clusteredWith).instances.push({
+                ...row,
+                originalCoords: coords
+              });
+            } else {
+              // Create new cluster
+              const clusterKey = `${lat.toFixed(4)},${lng.toFixed(4)}`;
               locationGroups.set(clusterKey, {
-                x: clusterX,
-                y: clusterY,
-                instances: [],
+                x: coords[0],
+                y: coords[1],
+                instances: [{
+                  ...row,
+                  originalCoords: coords
+                }],
                 coords: coords // Keep original coords for first instance
               });
             }
-            
-            locationGroups.get(clusterKey).instances.push({
-              ...row,
-              originalCoords: coords
-            });
           } else {
             console.log(`Invalid coordinates for ${row['Name']}: `, coords);
           }
@@ -1572,7 +1650,9 @@
         if (instances.length === 1) {
           // Single instance - create regular marker with hit area
           const row = instances[0];
-          const tier = row['Tier'] || '0';
+          const tier = row['Tier'] || '1'; // Default to tier 1 instead of 0
+          
+          console.log(`Creating single marker for ${row['Name']} with tier: ${tier}`);
           
           // Create a group for the single marker to handle events properly
           const singleMarkerGroup = mapGroup.append("g")
@@ -1594,14 +1674,17 @@
             .style("pointer-events", "all");
           
           // Create the visual marker (non-interactive)
+          const tierColor = getMarkerColorByTier(tier);
+          console.log(`Creating single marker for ${row['Name']}: tier=${tier}, color=${tierColor}`);
+          
           const singleMarker = singleMarkerGroup.append("circle")
             .attr("class", `map-marker tier-${tier}`)
             .attr("cx", coords[0])
             .attr("cy", coords[1])
             .attr("r", 4)
-            .attr("fill", getMarkerColorByTier(tier))
+            .attr("fill", tierColor)
             .attr("stroke", "white")
-            .attr("stroke-width", 2)
+            .attr("stroke-width", 1) // Further reduced stroke width 
             .style("pointer-events", "none"); // Make visual marker non-interactive
           
           // Store timeout references for debouncing and tooltip state
@@ -1651,10 +1734,16 @@
                 const markerElement = d3.select(this).select(".map-marker");
                 
                 console.log('Starting D3 transition...');
+                
+                // Get current zoom scale for proper hover sizing
+                const currentTransform = d3.zoomTransform(this);
+                const zoomScale = currentTransform.k;
+                const markerScale = Math.max(0.3, 1 / (zoomScale * 0.8));
+                
                 markerElement
                   .transition().duration(100)
-                  .attr("r", 6)
-                  .attr("stroke-width", 3)
+                  .attr("r", 6 * markerScale) // Scale hover size with zoom
+                  .attr("stroke-width", Math.max(0.3, 3 * markerScale)) // Scale stroke with zoom
                   .attr("cx", fixedX)  // Force to exact fixed position
                   .attr("cy", fixedY); // Force to exact fixed position
                 
@@ -1707,10 +1796,16 @@
                 const markerElement = d3.select(this).select(".map-marker");
                 
                 console.log('Starting D3 transition to restore original size...');
+                
+                // Get current zoom scale for proper restoration
+                const currentTransform = d3.zoomTransform(this);
+                const zoomScale = currentTransform.k;
+                const markerScale = Math.max(0.3, 1 / (zoomScale * 0.8));
+                
                 markerElement
                   .transition().duration(100)
-                  .attr("r", 4)
-                  .attr("stroke-width", 2)
+                  .attr("r", 4 * markerScale) // Restore zoom-scaled size
+                  .attr("stroke-width", Math.max(0.3, 1 * markerScale)) // Restore zoom-scaled stroke
                   .attr("cx", fixedX)  // Force to exact fixed position
                   .attr("cy", fixedY); // Force to exact fixed position
                 
@@ -1814,10 +1909,16 @@
                 });
                 
                 console.log('Starting D3 transition...');
+                
+                // Get current zoom scale for proper hover sizing
+                const currentTransform = d3.zoomTransform(this);
+                const zoomScale = currentTransform.k;
+                const markerScale = Math.max(0.3, 1 / (zoomScale * 0.8));
+                
                 clusterElement
                   .transition().duration(100)
-                  .attr("r", d.radius + 2)
-                  .attr("stroke-width", 4)
+                  .attr("r", (d.radius + 2) * markerScale) // Scale hover size with zoom
+                  .attr("stroke-width", Math.max(0.3, 4 * markerScale)) // Scale stroke with zoom
                   .attr("cx", fixedX)  // Force to exact fixed position
                   .attr("cy", fixedY); // Force to exact fixed position
                 
@@ -1878,10 +1979,16 @@
                 const clusterElement = d3.select(this).select(".marker-cluster");
                 
                 console.log('Starting D3 transition to restore original size...');
+                
+                // Get current zoom scale for proper restoration  
+                const currentTransform = d3.zoomTransform(this);
+                const zoomScale = currentTransform.k;
+                const markerScale = Math.max(0.3, 1 / (zoomScale * 0.8));
+                
                 clusterElement
                   .transition().duration(100)
-                  .attr("r", d.radius)
-                  .attr("stroke-width", 3)
+                  .attr("r", d.radius * markerScale) // Restore zoom-scaled size
+                  .attr("stroke-width", Math.max(0.3, 2 * markerScale)) // Restore zoom-scaled stroke
                   .attr("cx", fixedX)  // Force to exact fixed position
                   .attr("cy", fixedY); // Force to exact fixed position
                 
@@ -1912,7 +2019,7 @@
             .attr("r", radius)
             .attr("fill", getMarkerColorByTier(dominantTier))
             .attr("stroke", "white")
-            .attr("stroke-width", 3)
+            .attr("stroke-width", 2) // Reduced stroke width
             .attr("opacity", 0.8)
             .style("pointer-events", "none"); // Make visual circle non-interactive
           
@@ -1935,7 +2042,7 @@
         }
       });
       
-      console.log(`Total markers added to map: ${markersAdded} out of ${filteredData.length} servers in ${locationGroups.size} location groups`);
+      console.log(`Total markers added to map: ${markersAdded} out of ${dataToRender.length} servers in ${locationGroups.size} location groups`);
       
       // Add a legend
       addMapLegend();
@@ -1964,7 +2071,12 @@
         '5': '#607d8b',    // Integrated Platform - Blue Grey
         '6': '#795548'     // Development Instance - Brown
       };
-      return tierColors[tier] || '#999'; // Default grey for unknown tiers
+      
+      // Ensure we have a valid tier string
+      const tierStr = String(tier || '1').trim();
+      console.log(`Getting color for tier: "${tierStr}"`);
+      
+      return tierColors[tierStr] || '#4caf50'; // Default to green (tier 1) for unknown tiers
     }
 
     // Helper function to get marker color by status (keeping for reference)
@@ -2030,7 +2142,11 @@
       const country = geoData.country || 'Unknown Country';
       const flag = geoData.flag || '🏳️';
       
-      title.textContent = `${flag} ${city}, ${country} (${instances.length} instance${instances.length > 1 ? 's' : ''})`;
+      const locationDisplay = city && city !== 'Unknown' && city !== 'Unknown City' ? 
+        `${city}, ${country}` : 
+        country;
+      
+      title.textContent = `${flag} ${locationDisplay} (${instances.length} instance${instances.length > 1 ? 's' : ''})`;
       
       // Clear existing content
       content.innerHTML = '';
@@ -2055,13 +2171,12 @@
       const thead = document.createElement('thead');
       thead.innerHTML = `
         <tr>
-          <th>Instance Name</th>
+          <th>Instance</th>
           <th>Tier</th>
           <th>Region</th>
           <th>Description</th>
           <th>Location</th>
           <th>Coordinates</th>
-          <th>URL</th>
         </tr>
       `;
       table.appendChild(thead);
@@ -2076,12 +2191,11 @@
         
         const row = document.createElement('tr');
         
-        // Format URL for display
+        // Get URL for linking
         const url = instance['URL'] || 'No URL';
-        const urlDisplay = url.length > 40 ? url.substring(0, 37) + '...' : url;
-        const urlCell = url === 'No URL' ? 
-          '<span style="color: #6c757d; font-style: italic;">No URL</span>' :
-          `<a href="${url}" target="_blank" class="url-link" title="${url}">${urlDisplay}</a>`;
+        
+        // Strip protocol for display
+        const displayUrl = url !== 'No URL' ? url.replace(/^https?:\/\//, '') : 'No URL';
         
         // Parse description and notes
         const descriptionText = instance['Description'] || '';
@@ -2100,11 +2214,16 @@
         
         row.innerHTML = `
           <td style="font-weight: 600;">
-            ${instance['Name'] || 'Unknown Instance'}
+            ${url !== 'No URL' ? 
+              `<a href="${url}" target="_blank" class="server-url" style="font-weight: 600; color: #007bff; text-decoration: none;">${instance['Name'] || 'Unknown Instance'}</a>
+               <div style="font-size: 0.85em; color: #6c757d; margin-top: 2px;">${displayUrl}</div>` :
+              `<div style="font-weight: 600;">${instance['Name'] || 'Unknown Instance'}</div>
+               <div style="font-size: 0.85em; color: #6c757d; margin-top: 2px; font-style: italic;">No URL</div>`
+            }
           </td>
           <td>
             <span class="tier-badge tier-${tier}" title="${tierInfo.name}">
-              ${tierInfo.icon} Tier ${tier}
+              ${tierInfo.icon} ${tierInfo.name}
             </span>
           </td>
           <td>${instance['Region'] || 'Unknown'}</td>
@@ -2116,7 +2235,10 @@
           <td>
             <div class="location-info">
               <span class="country-flag">${geoData.flag || '🏳️'}</span>
-              ${geoData.city || 'Unknown'}, ${geoData.country || 'Unknown'}
+              ${geoData.city && geoData.city !== 'Unknown' && geoData.city !== 'Unknown City' ? 
+                `${geoData.city}, ${geoData.country || 'Unknown'}` : 
+                `${geoData.country || 'Unknown'}`
+              }
             </div>
           </td>
           <td>
@@ -2125,7 +2247,6 @@
               '<span style="color: #999;">Unknown</span>'
             }
           </td>
-          <td>${urlCell}</td>
         `;
         
         tbody.appendChild(row);
@@ -2250,9 +2371,13 @@
       const country = geoData.country || 'Unknown Country';
       const flag = geoData.flag || '🏳️';
       
+      const locationDisplay = city && city !== 'Unknown' && city !== 'Unknown City' ? 
+        `${city}, ${country}` : 
+        country;
+      
       let content = `
         <div style="font-weight: bold; margin-bottom: 8px;">
-          ${flag} ${city}, ${country}
+          ${flag} ${locationDisplay}
         </div>
         <div style="margin-bottom: 8px; color: #ccc;">
           ${instances.length} Galaxy Instance${instances.length > 1 ? 's' : ''}
@@ -2382,22 +2507,22 @@
         top: ${tooltipY - 10}px;
         background: rgba(0, 0, 0, 0.9);
         color: white;
-        padding: 8px 12px;
+        padding: 10px 14px;
         border-radius: 6px;
         font-size: 12px;
         font-family: Arial, sans-serif;
-        pointer-events: none;
+        pointer-events: auto;
         z-index: 10000;
-        max-width: 250px;
-        white-space: nowrap;
+        max-width: 300px;
+        white-space: normal;
         box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         border: 1px solid rgba(255,255,255,0.1);
+        line-height: 1.4;
       `;
       
       console.log('Final tooltip CSS position:', { left: tooltipX + 15, top: tooltipY - 10 });
       
       const geoData = row['GeoLocation'] || {};
-      const status = getStatusIcon(row['Version'] || '', row['Tool Count'] || '', row['Tier'] || '');
       const tierInfo = getTierInfo(row['Tier'] || '');
       
       const serverName = row['Name'] || row['Server Name'] || 'Unknown Instance';
@@ -2405,11 +2530,37 @@
       const country = geoData.country || 'Unknown Country';
       const flag = geoData.flag || '🏳️';
       
+      const locationDisplay = city && city !== 'Unknown' && city !== 'Unknown City' ? 
+        `${city}, ${country}` : 
+        country;
+      
+      // Get URL, description, and notes
+      const url = row['URL'] || 'No URL';
+      const description = row['Description'] || '';
+      const notes = row['Notes'] || '';
+      
+      // Parse markdown links in description
+      const parsedDescription = parseMarkdownLinks(description);
+      
+      // Format URL for display (truncate if too long)
+      const urlDisplay = url.length > 50 ? url.substring(0, 47) + '...' : url;
+      
       tooltip.innerHTML = `
         <div style="font-weight: bold; margin-bottom: 4px;">${serverName}</div>
-        <div style="margin-bottom: 2px;">${flag} ${city}, ${country}</div>
-        <div style="margin-bottom: 2px;">${tierInfo.icon} ${tierInfo.name}</div>
-        <div>${status.icon} ${status.tooltip}</div>
+        <div style="margin-bottom: 4px;">${flag} ${locationDisplay}</div>
+        <div style="margin-bottom: 4px;">${tierInfo.icon} ${tierInfo.name}</div>
+        ${url !== 'No URL' ? `<div style="margin-bottom: 4px;">
+          <a href="${url}" target="_blank" rel="noopener noreferrer" 
+             style="color: #4da6ff; text-decoration: underline; pointer-events: auto;">
+            ${urlDisplay}
+          </a>
+        </div>` : ''}
+        ${parsedDescription ? `<div style="margin-bottom: 4px; font-style: italic; color: #cccccc;">
+          ${parsedDescription}
+        </div>` : ''}
+        ${notes ? `<div style="color: #ffcc99; font-size: 11px;">
+          ${notes.length > 80 ? notes.substring(0, 77) + '...' : notes}
+        </div>` : ''}
       `;
       
       document.body.appendChild(tooltip);
@@ -2448,7 +2599,7 @@
       tbody.innerHTML = '';
       
       if (filteredData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="no-results">No instances match your search criteria.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="no-results">No instances match your search criteria.</td></tr>';
         return;
       }
       
@@ -2463,6 +2614,9 @@
         const descriptionText = row['Description'] || '';
         const notesText = row['Notes'] || '';
         
+        // Strip protocol for display
+        const displayUrl = row['URL'] ? row['URL'].replace(/^https?:\/\//, '') : '';
+        
         let descriptionContent = parseMarkdownLinks(descriptionText);
         let descriptionHtml = '';
         
@@ -2476,8 +2630,12 @@
         
         tr.innerHTML = `
           <td>
-            <div class="server-name">${row['Name'] || 'Unknown'}</div>
-            ${row['URL'] ? `<a href="${row['URL']}" target="_blank" class="server-url">${row['URL']}</a>` : ''}
+            ${row['URL'] ? 
+              `<a href="${row['URL']}" target="_blank" class="server-url" style="font-weight: 600; color: #007bff; text-decoration: none;">${row['Name'] || 'Unknown'}</a>
+               <div style="font-size: 0.85em; color: #6c757d; margin-top: 2px;">${displayUrl}</div>` :
+              `<div style="font-weight: 600;">${row['Name'] || 'Unknown'}</div>
+               <div style="font-size: 0.85em; color: #6c757d; margin-top: 2px; font-style: italic;">No URL</div>`
+            }
           </td>
           <td>
             <span class="tier-icon" style="color: ${tierInfo.color}">${tierInfo.icon}</span>
@@ -2493,7 +2651,10 @@
             <div class="location-info">
               <div>
                 <span class="country-flag">${geoData.flag || '🏳️'}</span>
-                ${geoData.city || 'Unknown'}, ${geoData.country || 'Unknown'}
+                ${geoData.city && geoData.city !== 'Unknown' && geoData.city !== 'Unknown City' ? 
+                  `${geoData.city}, ${geoData.country || 'Unknown'}` : 
+                  `${geoData.country || 'Unknown'}`
+                }
               </div>
             </div>
           </td>
@@ -2666,7 +2827,7 @@
           cleanUrl = 'https://' + cleanUrl;
         }
         
-        return `<a href="${cleanUrl}" target="_blank" style="color: #2196f3; text-decoration: none;">${linkText.trim()}</a>`;
+        return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" style="color: #4da6ff; text-decoration: underline; pointer-events: auto;">${linkText.trim()}</a>`;
       });
     }
   </script>
