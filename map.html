@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Galaxy Instance Map - Geographic Distribution</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://d3js.org/topojson.v3.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .header-section {
+      background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+      color: white;
+      padding: 2rem;
+    }
+
+    .header-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+
+    .title-section {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .galaxy-logo {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: white;
+      padding: 8px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin: 0;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      margin-top: 0.5rem;
+      opacity: 0.9;
+      font-weight: 300;
+    }
+
+    .summary-stats {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .stat-box {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+      min-width: 120px;
+      backdrop-filter: blur(10px);
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-box div:last-child {
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+
+    .search-container {
+      margin-top: 1.5rem;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      font-size: 1rem;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      backdrop-filter: blur(10px);
+    }
+
+    .search-input::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .controls-section {
+      padding: 1.5rem 2rem;
+      background: #f8f9fa;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .view-toggle {
+      display: flex;
+      background: white;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .view-toggle button {
+      padding: 0.5rem 1rem;
+      border: none;
+      background: white;
+      color: #666;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .view-toggle button.active {
+      background: #2196f3;
+      color: white;
+    }
+
+    .view-toggle button:hover:not(.active) {
+      background: #f5f5f5;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .refresh-btn {
+      background: #2196f3;
+      color: white;
+    }
+
+    .export-btn {
+      background: #4caf50;
+      color: white;
+    }
+
+    .map-container {
+      position: relative;
+      height: 600px;
+      background: #f0f8ff;
+      margin: 2rem;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    #world-map {
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+    }
+
+    #world-map:active {
+      cursor: grabbing;
+    }
+
+    .country {
+      fill: #e8f5e8;
+      stroke: #b8d8b8;
+      stroke-width: 0.5px;
+      cursor: pointer;
+      transition: fill 0.2s;
+    }
+
+    .country:hover {
+      fill: #d4f1d4 !important;
+      stroke: #4caf50;
+      stroke-width: 1px;
+    }
+
+    .ocean {
+      fill: #e3f2fd;
+      opacity: 0.6;
+    }
+
+    .table-container {
+      margin: 2rem;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .table-header {
+      background: #2c3e50;
+      color: white;
+      padding: 1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #2c3e50;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    tr:hover {
+      background: #f8f9fa;
+    }
+
+    .status-icon {
+      font-size: 1.2rem;
+      margin-right: 0.5rem;
+    }
+
+    .tier-icon {
+      font-size: 1rem;
+      margin-right: 0.5rem;
+    }
+
+    .server-name {
+      font-weight: 500;
+      color: #2c3e50;
+    }
+
+    .server-url {
+      font-size: 0.85rem;
+      color: #666;
+      text-decoration: none;
+    }
+
+    .server-url:hover {
+      color: #2196f3;
+    }
+
+    .location-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .country-flag {
+      font-size: 1.2rem;
+      margin-right: 0.5rem;
+    }
+
+    .coordinates {
+      font-size: 0.8rem;
+      color: #666;
+      font-family: monospace;
+    }
+
+    .loading-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #2196f3;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 0.5rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .status-indicator {
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .status-online {
+      background: #e8f5e8;
+      color: #2e7d32;
+    }
+
+    .status-issues {
+      background: #fff3e0;
+      color: #f57c00;
+    }
+
+    .status-offline {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 2rem;
+      color: #666;
+      font-style: italic;
+    }
+
+    #status {
+      margin: 2rem;
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    .status-loading {
+      background: #e3f2fd;
+      border: 1px solid #2196f3;
+      color: #1976d2;
+    }
+
+    .status-error {
+      background: #ffebee;
+      border: 1px solid #f44336;
+      color: #c62828;
+    }
+
+    .status-success {
+      background: #e8f5e8;
+      border: 1px solid #4caf50;
+      color: #2e7d32;
+    }
+
+    .navigation-links {
+      margin: 2rem;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .navigation-links a {
+      color: #2196f3;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .navigation-links a:hover {
+      color: #1976d2;
+    }
+
+    .map-marker {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+      cursor: pointer;
+      transition: all 0.2s;
+      stroke-width: 2;
+      stroke: white;
+    }
+
+    .map-marker:hover {
+      transform: scale(1.5);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+    }
+
+    .map-marker.online {
+      fill: #4caf50;
+    }
+
+    .map-marker.issues {
+      fill: #ff9800;
+    }
+
+    .map-marker.offline {
+      fill: #f44336;
+    }
+
+    .map-marker.unknown {
+      fill: #999;
+    }
+
+    .country {
+      cursor: pointer;
+      transition: fill 0.2s;
+    }
+
+    .country:hover {
+      fill: #d4f1d4 !important;
+      stroke: #4caf50;
+      stroke-width: 1;
+    }
+
+    .marker-tooltip {
+      position: absolute;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      pointer-events: none;
+      z-index: 1000;
+      max-width: 200px;
+    }
+
+    @media (max-width: 768px) {
+      .header-title {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .summary-stats {
+        flex-wrap: wrap;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      .controls-section {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .map-container {
+        height: 400px;
+        margin: 1rem;
+      }
+
+      .table-container {
+        margin: 1rem;
+      }
+
+      .navigation-links {
+        flex-direction: column;
+        gap: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-section">
+      <div class="header-title">
+        <div class="title-section">
+          <img src="https://galaxyproject.org/images/galaxy-logos/galaxy_project_logo_square_no_text_trans.png" alt="Galaxy Project Logo" class="galaxy-logo">
+          <div>
+            <h1>Galaxy Instance Map</h1>
+            <div class="subtitle">Geographic distribution of Galaxy instances worldwide</div>
+          </div>
+        </div>
+        
+        <div id="summary-stats" class="summary-stats" style="display: none;">
+          <div class="stat-box">
+            <div class="stat-number" id="total-servers">0</div>
+            <div>Total Instances</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number" id="countries-count">0</div>
+            <div>Countries</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number" id="online-servers">0</div>
+            <div>Online</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="search-container">
+        <input type="text" id="search-input" class="search-input" placeholder="🔍 Search instances by name, region, or country...">
+      </div>
+    </div>
+
+    <div class="controls-section">
+      <div class="view-toggle">
+        <button id="map-view" class="active">
+          <i class="fas fa-map"></i> Map View
+        </button>
+        <button id="table-view">
+          <i class="fas fa-table"></i> Table View
+        </button>
+      </div>
+      
+      <button id="refresh-button" class="refresh-btn">
+        <i class="fas fa-sync-alt"></i> Refresh Data
+      </button>
+      
+      <button id="export-button" class="export-btn">
+        <i class="fas fa-file-csv"></i> Export CSV
+      </button>
+      
+      <button id="geolocate-button" class="refresh-btn">
+        <i class="fas fa-map-marked-alt"></i> Refresh Locations
+      </button>
+    </div>
+
+    <div id="map-container" class="map-container">
+      <svg id="world-map"></svg>
+    </div>
+
+    <div id="table-container" class="table-container" style="display: none;">
+      <div class="table-header">
+        <i class="fas fa-globe"></i>
+        Galaxy Instances by Location
+      </div>
+      <div style="overflow-x: auto; max-height: 600px; overflow-y: auto;">
+        <table id="location-table">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Tier</th>
+              <th>Instance</th>
+              <th>Region</th>
+              <th>Location</th>
+              <th>Coordinates</th>
+              <th>Server Info</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="status" class="status-loading">
+      Loading Galaxy instance data...
+    </div>
+
+    <div class="navigation-links">
+      <a href="index.html">
+        <i class="fas fa-table"></i> Main Instance Tracker
+      </a>
+      <a href="https://docs.google.com/spreadsheets/d/1HSpJ7vOxfnYSjfFm1vs528eydh1gVU40rKR6-1TCeCo/edit#gid=0" target="_blank">
+        <i class="fas fa-file-spreadsheet"></i> Source Spreadsheet
+      </a>
+      <a href="https://github.com/mschatz/gxyservers" target="_blank">
+        <i class="fab fa-github"></i> GitHub Repository
+      </a>
+      <a href="https://gxy.io/kui" target="_blank">
+        <i class="fas fa-rocket"></i> Galaxy KUI
+      </a>
+    </div>
+  </div>
+
+  <script>
+    // Same Google Sheets configuration as index.html
+    const sheetId = '1HSpJ7vOxfnYSjfFm1vs528eydh1gVU40rKR6-1TCeCo';
+    const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`;
+
+    // Global variables
+    let currentData = [];
+    let filteredData = [];
+    let currentView = 'map';
+    let svg, projection, path, worldData, zoom;
+
+    // D3.js map variables
+    const width = 1000;
+    const height = 600;
+
+    // Geolocation cache for servers
+    const GEO_CACHE_KEY = 'galaxyServerGeoCache';
+    const GEO_CACHE_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+    // Geolocation functions
+    function saveGeoToCache(serverUrl, geoData) {
+      try {
+        const cache = getGeoCache();
+        cache[serverUrl] = {
+          data: geoData,
+          timestamp: Date.now()
+        };
+        localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(cache));
+      } catch (error) {
+        console.log('Error saving geolocation to cache:', error);
+      }
+    }
+
+    function getGeoFromCache(serverUrl) {
+      try {
+        const cache = getGeoCache();
+        const cached = cache[serverUrl];
+        
+        if (cached && (Date.now() - cached.timestamp < GEO_CACHE_DURATION)) {
+          return cached.data;
+        }
+        
+        // Remove expired cache entry
+        if (cached) {
+          delete cache[serverUrl];
+          localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(cache));
+        }
+        
+        return null;
+      } catch (error) {
+        console.log('Error reading geolocation from cache:', error);
+        return null;
+      }
+    }
+
+    function getGeoCache() {
+      try {
+        const cache = localStorage.getItem(GEO_CACHE_KEY);
+        return cache ? JSON.parse(cache) : {};
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function clearGeoCache() {
+      try {
+        localStorage.removeItem(GEO_CACHE_KEY);
+        console.log('Geolocation cache cleared');
+      } catch (error) {
+        console.log('Error clearing geolocation cache:', error);
+      }
+    }
+
+    // Function to get geolocation data for a server URL
+    async function getServerGeolocation(url, forceRefresh = false) {
+      if (!url || url.trim() === '') {
+        return { 
+          country: 'Unknown', 
+          city: 'Unknown', 
+          latitude: null, 
+          longitude: null, 
+          flag: '🏳️' 
+        };
+      }
+
+      // Clean URL for consistency
+      let cleanUrl = url.trim();
+      if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+        cleanUrl = 'https://' + cleanUrl;
+      }
+
+      try {
+        const urlObj = new URL(cleanUrl);
+        const hostname = urlObj.hostname;
+
+        // Check cache first
+        if (!forceRefresh) {
+          const cachedData = getGeoFromCache(hostname);
+          if (cachedData) {
+            return cachedData;
+          }
+        }
+
+        // Try multiple geolocation APIs
+        const geoApis = [
+          `https://ipapi.co/${hostname}/json/`,
+          `https://api.ipgeolocation.io/ipgeo?apiKey=free&hostname=${hostname}`,
+          `https://freegeoip.app/json/${hostname}`
+        ];
+        
+        for (const apiUrl of geoApis) {
+          try {
+            console.log(`Trying geolocation API for ${hostname}: ${apiUrl}`);
+            const response = await fetch(apiUrl);
+            
+            if (response.ok) {
+              const geoData = await response.json();
+              console.log(`API response for ${hostname}:`, geoData);
+              
+              // Handle different API response formats
+              let result = null;
+              
+              // ipapi.co format
+              if (geoData && !geoData.error && geoData.country_name) {
+                result = {
+                  country: geoData.country_name,
+                  city: geoData.city || geoData.region || 'Unknown',
+                  latitude: parseFloat(geoData.latitude),
+                  longitude: parseFloat(geoData.longitude),
+                  flag: getCountryFlag(geoData.country_code),
+                  countryCode: geoData.country_code
+                };
+              }
+              // ipgeolocation.io format
+              else if (geoData && geoData.country_name) {
+                result = {
+                  country: geoData.country_name,
+                  city: geoData.city || geoData.state_prov || 'Unknown',
+                  latitude: parseFloat(geoData.latitude),
+                  longitude: parseFloat(geoData.longitude),
+                  flag: getCountryFlag(geoData.country_code2),
+                  countryCode: geoData.country_code2
+                };
+              }
+              // freegeoip.app format
+              else if (geoData && geoData.country_name) {
+                result = {
+                  country: geoData.country_name,
+                  city: geoData.city || geoData.region_name || 'Unknown',
+                  latitude: parseFloat(geoData.latitude),
+                  longitude: parseFloat(geoData.longitude),
+                  flag: getCountryFlag(geoData.country_code),
+                  countryCode: geoData.country_code
+                };
+              }
+              
+              if (result && result.latitude && result.longitude && !isNaN(result.latitude) && !isNaN(result.longitude)) {
+                console.log(`Successfully geolocated ${hostname}:`, result);
+                saveGeoToCache(hostname, result);
+                return result;
+              }
+            }
+          } catch (error) {
+            console.log(`Geolocation API ${apiUrl} failed for ${hostname}:`, error);
+            continue;
+          }
+        }
+
+        // All APIs failed, try hostname-based guessing
+        console.log(`All geolocation APIs failed for ${hostname}, falling back to hostname patterns`);
+        const locationGuess = guessLocationFromHostname(hostname);
+        saveGeoToCache(hostname, locationGuess);
+        return locationGuess;
+        return locationGuess;
+
+      } catch (error) {
+        console.log(`Error processing URL ${url}:`, error);
+        return { 
+          country: 'Unknown', 
+          city: 'Unknown', 
+          latitude: null, 
+          longitude: null, 
+          flag: '🏳️' 
+        };
+      }
+    }
+
+    // Function to guess location from hostname patterns
+    function guessLocationFromHostname(hostname) {
+      const patterns = {
+        '.au': { country: 'Australia', countryCode: 'AU', flag: '🇦🇺', lat: -25.2744, lng: 133.7751 },
+        '.uk': { country: 'United Kingdom', countryCode: 'GB', flag: '🇬🇧', lat: 55.3781, lng: -3.4360 },
+        '.ca': { country: 'Canada', countryCode: 'CA', flag: '🇨🇦', lat: 56.1304, lng: -106.3468 },
+        '.de': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 51.1657, lng: 10.4515 },
+        '.fr': { country: 'France', countryCode: 'FR', flag: '🇫🇷', lat: 46.2276, lng: 2.2137 },
+        '.it': { country: 'Italy', countryCode: 'IT', flag: '🇮🇹', lat: 41.8719, lng: 12.5674 },
+        '.es': { country: 'Spain', countryCode: 'ES', flag: '🇪🇸', lat: 40.4637, lng: -3.7492 },
+        '.nl': { country: 'Netherlands', countryCode: 'NL', flag: '🇳🇱', lat: 52.1326, lng: 5.2913 },
+        '.be': { country: 'Belgium', countryCode: 'BE', flag: '🇧🇪', lat: 50.5039, lng: 4.4699 },
+        '.se': { country: 'Sweden', countryCode: 'SE', flag: '🇸🇪', lat: 60.1282, lng: 18.6435 },
+        '.no': { country: 'Norway', countryCode: 'NO', flag: '🇳🇴', lat: 60.4720, lng: 8.4689 },
+        '.dk': { country: 'Denmark', countryCode: 'DK', flag: '🇩🇰', lat: 56.2639, lng: 9.5018 },
+        '.fi': { country: 'Finland', countryCode: 'FI', flag: '🇫🇮', lat: 61.9241, lng: 25.7482 },
+        '.ch': { country: 'Switzerland', countryCode: 'CH', flag: '🇨🇭', lat: 46.8182, lng: 8.2275 },
+        '.at': { country: 'Austria', countryCode: 'AT', flag: '🇦🇹', lat: 47.5162, lng: 14.5501 },
+        '.cz': { country: 'Czech Republic', countryCode: 'CZ', flag: '🇨🇿', lat: 49.8175, lng: 15.4730 },
+        '.pl': { country: 'Poland', countryCode: 'PL', flag: '🇵🇱', lat: 51.9194, lng: 19.1451 },
+        '.in': { country: 'India', countryCode: 'IN', flag: '🇮🇳', lat: 20.5937, lng: 78.9629 },
+        '.jp': { country: 'Japan', countryCode: 'JP', flag: '🇯🇵', lat: 36.2048, lng: 138.2529 },
+        '.kr': { country: 'South Korea', countryCode: 'KR', flag: '🇰🇷', lat: 35.9078, lng: 127.7669 },
+        '.cn': { country: 'China', countryCode: 'CN', flag: '🇨🇳', lat: 35.8617, lng: 104.1954 },
+        '.br': { country: 'Brazil', countryCode: 'BR', flag: '🇧🇷', lat: -14.2350, lng: -51.9253 },
+        '.mx': { country: 'Mexico', countryCode: 'MX', flag: '🇲🇽', lat: 23.6345, lng: -102.5528 },
+        '.ar': { country: 'Argentina', countryCode: 'AR', flag: '🇦🇷', lat: -38.4161, lng: -63.6167 },
+        '.za': { country: 'South Africa', countryCode: 'ZA', flag: '🇿🇦', lat: -30.5595, lng: 22.9375 },
+        '.edu': { country: 'United States', countryCode: 'US', flag: '🇺🇸', lat: 39.8283, lng: -98.5795 },
+        '.gov': { country: 'United States', countryCode: 'US', flag: '🇺🇸', lat: 39.8283, lng: -98.5795 },
+        '.org': { country: 'United States', countryCode: 'US', flag: '🇺🇸', lat: 39.8283, lng: -98.5795 },
+        '.com': { country: 'United States', countryCode: 'US', flag: '🇺🇸', lat: 39.8283, lng: -98.5795 }
+      };
+
+      // Check for specific university/institution patterns
+      const institutionPatterns = {
+        'pasteur.fr': { country: 'France', countryCode: 'FR', flag: '🇫🇷', lat: 48.8566, lng: 2.3522, city: 'Paris' },
+        'inrae.fr': { country: 'France', countryCode: 'FR', flag: '🇫🇷', lat: 48.8566, lng: 2.3522, city: 'Paris' },
+        'uni-freiburg.de': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 48.0, lng: 7.8, city: 'Freiburg' },
+        'usegalaxy.org': { country: 'United States', countryCode: 'US', flag: '🇺🇸', lat: 39.9526, lng: -75.1652, city: 'Pennsylvania' },
+        'usegalaxy.eu': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 48.0, lng: 7.8, city: 'Freiburg' },
+        'usegalaxy.org.au': { country: 'Australia', countryCode: 'AU', flag: '🇦🇺', lat: -37.8136, lng: 144.9631, city: 'Melbourne' },
+        'galaxyproject.org': { country: 'United States', countryCode: 'US', flag: '🇺🇸', lat: 39.9526, lng: -75.1652, city: 'Pennsylvania' },
+        'genome.edu.au': { country: 'Australia', countryCode: 'AU', flag: '🇦🇺', lat: -37.8136, lng: 144.9631, city: 'Melbourne' }
+      };
+
+      // Check for specific institution patterns first
+      for (const [pattern, location] of Object.entries(institutionPatterns)) {
+        if (hostname.includes(pattern)) {
+          return {
+            country: location.country,
+            city: location.city || 'Unknown',
+            latitude: location.lat,
+            longitude: location.lng,
+            flag: location.flag,
+            countryCode: location.countryCode
+          };
+        }
+      }
+
+      // Check TLD patterns
+      for (const [tld, location] of Object.entries(patterns)) {
+        if (hostname.endsWith(tld)) {
+          return {
+            country: location.country,
+            city: 'Unknown',
+            latitude: location.lat,
+            longitude: location.lng,
+            flag: location.flag,
+            countryCode: location.countryCode
+          };
+        }
+      }
+
+      // Default to US for unknown domains
+      return {
+        country: 'United States',
+        city: 'Unknown',
+        latitude: 39.8283,
+        longitude: -98.5795,
+        flag: '🇺🇸',
+        countryCode: 'US'
+      };
+    }
+
+    // Function to get country flag emoji from country code
+    function getCountryFlag(countryCode) {
+      if (!countryCode || countryCode.length !== 2) return '🏳️';
+      
+      const flagMap = {
+        'AU': '🇦🇺', 'UK': '🇬🇧', 'GB': '🇬🇧', 'CA': '🇨🇦', 'DE': '🇩🇪',
+        'FR': '🇫🇷', 'IT': '🇮🇹', 'ES': '🇪🇸', 'NL': '🇳🇱', 'BE': '🇧🇪',
+        'SE': '🇸🇪', 'NO': '🇳🇴', 'DK': '🇩🇰', 'FI': '🇫🇮', 'CH': '🇨🇭',
+        'AT': '🇦🇹', 'CZ': '🇨🇿', 'PL': '🇵🇱', 'IN': '🇮🇳', 'JP': '🇯🇵',
+        'KR': '🇰🇷', 'CN': '🇨🇳', 'BR': '🇧🇷', 'MX': '🇲🇽', 'AR': '🇦🇷',
+        'ZA': '🇿🇦', 'US': '🇺🇸'
+      };
+      
+      return flagMap[countryCode.toUpperCase()] || '🏳️';
+    }
+
+    // Function to get status icon (simplified version from index.html)
+    function getStatusIcon(version, toolCount) {
+      if (!version || version === '' || version === 'Loading...') {
+        return { icon: '⏳', class: 'unknown', tooltip: 'Status unknown' };
+      }
+      
+      const versionStr = String(version).trim();
+      
+      if (versionStr === 'Offline' || versionStr.includes('ERR_NAME_NOT_RESOLVED')) {
+        return { icon: '🔴', class: 'offline', tooltip: 'Instance is offline' };
+      }
+      
+      if (versionStr === 'Unknown' || versionStr === 'API Error' || versionStr === 'CORS Blocked') {
+        return { icon: '🟡', class: 'issues', tooltip: 'Instance has issues' };
+      }
+      
+      if (versionStr && versionStr !== 'Unknown' && versionStr !== 'Error') {
+        return { icon: '🟢', class: 'online', tooltip: 'Instance is online' };
+      }
+      
+      return { icon: '⏳', class: 'unknown', tooltip: 'Status unknown' };
+    }
+
+    // Function to get tier icon and info
+    function getTierInfo(tier) {
+      const tierMap = {
+        '1': { icon: '🌍', name: 'Global Instance', color: '#4caf50' },
+        '2': { icon: '🏛️', name: 'National Instance', color: '#ff9800' },
+        '3': { icon: '📍', name: 'Subdomain', color: '#2196f3' },
+        '4': { icon: '🧪', name: 'Institutional', color: '#9c27b0' },
+        '5': { icon: '🔗', name: 'Integrated Platform', color: '#607d8b' },
+        '6': { icon: '⚙️', name: 'Development Instance', color: '#795548' }
+      };
+      
+      return tierMap[tier] || { icon: '❓', name: 'Unknown Tier', color: '#999' };
+    }
+
+    // CSV parsing function (same as index.html)
+    function parseCSV(text) {
+      const lines = text.split('\n').filter(line => line.trim());
+      if (lines.length === 0) return [];
+      
+      function parseCSVLine(line) {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          if (char === '"') {
+            if (inQuotes && line[i + 1] === '"') {
+              current += '"';
+              i++;
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        result.push(current.trim());
+        return result;
+      }
+      
+      const headers = parseCSVLine(lines[0]);
+      const data = [];
+      
+      for (let i = 1; i < lines.length; i++) {
+        const values = parseCSVLine(lines[i]);
+        
+        const hasNonEmptyValue = values.some(value => value && value.trim() !== '');
+        if (!hasNonEmptyValue) continue;
+        
+        const row = {};
+        headers.forEach((header, index) => {
+          row[header] = values[index] || '';
+        });
+        
+        if (row['Tier'] === '###') break;
+        if (row['Tier'] && row['Tier'].startsWith('#')) continue;
+        
+        data.push(row);
+      }
+      
+      return data;
+    }
+
+    // Load spreadsheet data
+    async function loadSpreadsheetData() {
+      updateStatus('Loading Galaxy instance data...', 'loading');
+      
+      try {
+        const response = await fetch(sheetUrl);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const csvText = await response.text();
+        const data = parseCSV(csvText);
+        
+        if (data.length === 0) {
+          throw new Error('No data found in spreadsheet');
+        }
+        
+        console.log(`Loaded ${data.length} servers from spreadsheet`);
+        currentData = data;
+        filteredData = [...data];
+        
+        updateStatus(`Loaded ${data.length} instances. Getting server locations...`, 'loading');
+        
+        // Get geolocation data for all servers
+        await geolocateAllServers();
+        
+        // Debug: Count how many servers have coordinates
+        const serversWithCoords = currentData.filter(row => {
+          const geo = row['GeoLocation'];
+          return geo && geo.latitude !== null && geo.longitude !== null && 
+                 !isNaN(geo.latitude) && !isNaN(geo.longitude);
+        }).length;
+        
+        console.log(`${serversWithCoords} out of ${currentData.length} servers have valid coordinates`);
+        
+        updateSummaryStats();
+        renderCurrentView();
+        updateStatus(`Successfully loaded ${data.length} Galaxy instances with location data. ${serversWithCoords} servers mapped.`, 'success');
+        
+      } catch (error) {
+        console.error('Error loading spreadsheet:', error);
+        updateStatus(`Error loading data: ${error.message}`, 'error');
+      }
+    }
+
+    // Geolocate all servers
+    async function geolocateAllServers(forceRefresh = false) {
+      let completedCount = 0;
+      const totalCount = currentData.length;
+      
+      const promises = currentData.map(async (row, index) => {
+        const url = row['URL'] || row['url'] || '';
+        
+        if (url && url.trim()) {
+          try {
+            const geoData = await getServerGeolocation(url.trim(), forceRefresh);
+            row['GeoLocation'] = geoData;
+          } catch (error) {
+            console.error(`Error geolocating ${url}:`, error);
+            row['GeoLocation'] = { 
+              country: 'Unknown', 
+              city: 'Unknown', 
+              latitude: null, 
+              longitude: null, 
+              flag: '🏳️' 
+            };
+          }
+        } else {
+          row['GeoLocation'] = { 
+            country: 'Unknown', 
+            city: 'Unknown', 
+            latitude: null, 
+            longitude: null, 
+            flag: '🏳️' 
+          };
+        }
+        
+        completedCount++;
+        if (completedCount % 5 === 0 || completedCount === totalCount) {
+          updateStatus(`Getting locations... (${completedCount}/${totalCount} completed)`, 'loading');
+        }
+      });
+      
+      await Promise.all(promises);
+    }
+
+    // Update status message
+    function updateStatus(message, type = 'loading') {
+      const statusDiv = document.getElementById('status');
+      statusDiv.textContent = message;
+      statusDiv.className = `status-${type}`;
+    }
+
+    // Update summary statistics
+    function updateSummaryStats() {
+      const total = currentData.length;
+      const countries = new Set(currentData.map(row => row['GeoLocation']?.country).filter(Boolean)).size;
+      const online = currentData.filter(row => {
+        const status = getStatusIcon(row['Version']);
+        return status.class === 'online';
+      }).length;
+      
+      document.getElementById('total-servers').textContent = total;
+      document.getElementById('countries-count').textContent = countries;
+      document.getElementById('online-servers').textContent = online;
+      document.getElementById('summary-stats').style.display = 'flex';
+    }
+
+    // Render the current view (map or table)
+    function renderCurrentView() {
+      if (currentView === 'map') {
+        document.getElementById('map-container').style.display = 'block';
+        document.getElementById('table-container').style.display = 'none';
+        
+        // Initialize map if first time showing
+        if (!svg) {
+          initializeMap();
+        } else {
+          renderMap();
+        }
+      } else {
+        document.getElementById('map-container').style.display = 'none';
+        document.getElementById('table-container').style.display = 'block';
+        renderTable();
+      }
+    }
+
+    // Initialize D3 map
+    function initializeMap() {
+      svg = d3.select("#world-map")
+        .attr("width", width)
+        .attr("height", height);
+
+      // Set up projection (Natural Earth projection for better world view)
+      projection = d3.geoNaturalEarth1()
+        .scale(150)
+        .translate([width / 2, height / 2]);
+
+      path = d3.geoPath().projection(projection);
+
+      // Add zoom behavior
+      zoom = d3.zoom()
+        .scaleExtent([0.5, 8])
+        .on("zoom", (event) => {
+          svg.selectAll("path")
+            .attr("transform", event.transform);
+          svg.selectAll(".map-marker")
+            .attr("transform", event.transform);
+        });
+
+      svg.call(zoom);
+
+      // Load world data from Natural Earth
+      loadWorldData();
+    }
+
+    // Load Natural Earth world data
+    async function loadWorldData() {
+      try {
+        updateStatus('Loading world map data...', 'loading');
+        
+        // Use Natural Earth data via CDN
+        const world = await d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+        worldData = world;
+        
+        // Add ocean background first
+        svg.insert("path", ":first-child")
+          .datum({type: "Sphere"})
+          .attr("class", "ocean")
+          .attr("d", path);
+        
+        // Draw countries
+        svg.append("g")
+          .attr("class", "countries")
+          .selectAll("path")
+          .data(topojson.feature(world, world.objects.countries).features)
+          .enter().append("path")
+          .attr("class", "country")
+          .attr("d", path)
+          .attr("fill", "#e8f5e8")
+          .attr("stroke", "#b8d8b8")
+          .attr("stroke-width", 0.5);
+
+        console.log('World map loaded successfully');
+        
+        // Now render the markers if we have data
+        if (currentData.length > 0) {
+          renderMap();
+        }
+        
+      } catch (error) {
+        console.error('Error loading world data:', error);
+        updateStatus('Error loading world map. Using fallback...', 'error');
+        renderFallbackMap();
+        
+        // Still try to render markers with fallback map
+        if (currentData.length > 0) {
+          renderMap();
+        }
+      }
+    }
+
+    // Fallback map if Natural Earth data fails to load
+    function renderFallbackMap() {
+      svg.append("rect")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("fill", "#e3f2fd")
+        .attr("opacity", 0.3);
+        
+      // Simple continent outlines as fallback
+      const continents = [
+        // North America
+        "M120,120 L300,100 L350,150 L320,200 L280,220 L200,210 L150,180 Z",
+        // South America  
+        "M250,250 L320,240 L350,300 L340,380 L300,400 L270,380 L240,320 Z",
+        // Europe
+        "M450,100 L520,95 L550,130 L530,150 L480,145 Z",
+        // Africa
+        "M480,180 L550,175 L570,250 L560,320 L520,340 L490,320 L470,250 Z",
+        // Asia
+        "M550,90 L750,85 L800,140 L780,200 L720,220 L650,200 L580,150 Z",
+        // Australia
+        "M720,300 L800,295 L820,320 L800,340 L740,335 Z"
+      ];
+      
+      svg.append("g")
+        .attr("class", "continents")
+        .selectAll("path")
+        .data(continents)
+        .enter().append("path")
+        .attr("d", d => d)
+        .attr("fill", "#e8f5e8")
+        .attr("stroke", "#b8d8b8")
+        .attr("stroke-width", 1);
+    // Render the map with server markers
+    function renderMap() {
+      // Initialize map if not already done
+      if (!svg) {
+        initializeMap();
+        return; // Map will be rendered after world data loads
+      }
+      
+      // Clear existing markers
+      svg.selectAll(".map-marker").remove();
+      
+      let markersAdded = 0;
+      
+      // Add markers for each server with known coordinates
+      filteredData.forEach((row, index) => {
+        const geoData = row['GeoLocation'];
+        
+        console.log(`Processing server ${row['Name']}: `, geoData);
+        
+        if (geoData && geoData.latitude !== null && geoData.longitude !== null && 
+            !isNaN(geoData.latitude) && !isNaN(geoData.longitude)) {
+          
+          // Project lat/lng to screen coordinates using D3 projection
+          const coords = projection([parseFloat(geoData.longitude), parseFloat(geoData.latitude)]);
+          
+          if (coords && coords[0] >= 0 && coords[0] <= width && coords[1] >= 0 && coords[1] <= height) {
+            const status = getStatusIcon(row['Version'], row['Tool Count']);
+            
+            // Create marker using D3
+            svg.append("circle")
+              .attr("class", `map-marker ${status.class}`)
+              .attr("cx", coords[0])
+              .attr("cy", coords[1])
+              .attr("r", 4)
+              .attr("fill", getMarkerColor(status.class))
+              .attr("stroke", "white")
+              .attr("stroke-width", 2)
+              .style("cursor", "pointer")
+              .on("mouseenter", function(event) {
+                // Scale up marker on hover
+                d3.select(this).transition().duration(200).attr("r", 6);
+                showTooltip(event, row);
+              })
+              .on("mouseleave", function() {
+                // Scale down marker
+                d3.select(this).transition().duration(200).attr("r", 4);
+                hideTooltip();
+              });
+            
+            markersAdded++;
+            console.log(`Added marker for ${row['Name']} at (${coords[0].toFixed(2)}, ${coords[1].toFixed(2)})`);
+          } else {
+            console.log(`Invalid coordinates for ${row['Name']}: `, coords);
+          }
+        } else {
+          console.log(`No valid coordinates for ${row['Name']}: `, geoData);
+        }
+      });
+      
+      console.log(`Total markers added to map: ${markersAdded} out of ${filteredData.length} servers`);
+      
+      // Add a legend
+      addMapLegend();
+    }
+    
+    // Helper function to get marker color
+    function getMarkerColor(statusClass) {
+      const colors = {
+        'online': '#4caf50',
+        'issues': '#ff9800', 
+        'offline': '#f44336',
+        'unknown': '#999'
+      };
+      return colors[statusClass] || '#999';
+    }
+    
+    // Add legend to the map
+    function addMapLegend() {
+      const mapContainer = document.getElementById('map-container');
+      
+      // Remove existing legend
+      const existingLegend = mapContainer.querySelector('.map-legend');
+      if (existingLegend) {
+        existingLegend.remove();
+      }
+      
+      const legend = document.createElement('div');
+      legend.className = 'map-legend';
+      legend.style.cssText = `
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 10px;
+        border-radius: 6px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        font-size: 12px;
+        z-index: 100;
+      `;
+      
+      legend.innerHTML = `
+        <div style="font-weight: bold; margin-bottom: 5px;">Instance Status</div>
+        <div style="margin: 3px 0;"><span style="color: #4caf50;">●</span> Online</div>
+        <div style="margin: 3px 0;"><span style="color: #ff9800;">●</span> Issues</div>
+        <div style="margin: 3px 0;"><span style="color: #f44336;">●</span> Offline</div>
+        <div style="margin: 3px 0;"><span style="color: #999;">●</span> Unknown</div>
+      `;
+      
+      mapContainer.appendChild(legend);
+    }
+
+    // Show tooltip for map markers
+    function showTooltip(event, row) {
+      // Remove any existing tooltips
+      hideTooltip();
+      
+      const tooltip = document.createElement('div');
+      tooltip.className = 'marker-tooltip';
+      tooltip.style.position = 'absolute';
+      tooltip.style.left = event.pageX + 10 + 'px';
+      tooltip.style.top = event.pageY - 10 + 'px';
+      tooltip.style.background = 'rgba(0, 0, 0, 0.8)';
+      tooltip.style.color = 'white';
+      tooltip.style.padding = '0.5rem';
+      tooltip.style.borderRadius = '4px';
+      tooltip.style.fontSize = '0.8rem';
+      tooltip.style.pointerEvents = 'none';
+      tooltip.style.zIndex = '1000';
+      tooltip.style.maxWidth = '200px';
+      
+      const geoData = row['GeoLocation'];
+      const status = getStatusIcon(row['Version'], row['Tool Count']);
+      const tierInfo = getTierInfo(row['Tier']);
+      
+      tooltip.innerHTML = `
+        <strong>${row['Name'] || 'Unknown'}</strong><br>
+        ${geoData.flag} ${geoData.city}, ${geoData.country}<br>
+        ${status.icon} ${status.tooltip}<br>
+        ${tierInfo.icon} ${tierInfo.name}
+      `;
+      
+      document.body.appendChild(tooltip);
+    }
+
+    // Hide tooltip
+    function hideTooltip() {
+      const tooltips = document.querySelectorAll('.marker-tooltip');
+      tooltips.forEach(tooltip => {
+        if (tooltip.parentNode) {
+          tooltip.parentNode.removeChild(tooltip);
+        }
+      });
+    }
+
+    // Render the location table
+    function renderTable() {
+      const tbody = document.querySelector('#location-table tbody');
+      tbody.innerHTML = '';
+      
+      if (filteredData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="no-results">No instances match your search criteria.</td></tr>';
+        return;
+      }
+      
+      filteredData.forEach(row => {
+        const tr = document.createElement('tr');
+        
+        const geoData = row['GeoLocation'] || {};
+        const status = getStatusIcon(row['Version'], row['Tool Count']);
+        const tierInfo = getTierInfo(row['Tier']);
+        
+        tr.innerHTML = `
+          <td>
+            <div class="status-indicator status-${status.class}">
+              <span class="status-icon">${status.icon}</span>
+              ${status.tooltip}
+            </div>
+          </td>
+          <td>
+            <span class="tier-icon" style="color: ${tierInfo.color}">${tierInfo.icon}</span>
+            ${tierInfo.name}
+          </td>
+          <td>
+            <div class="server-name">${row['Name'] || 'Unknown'}</div>
+            ${row['URL'] ? `<a href="${row['URL']}" target="_blank" class="server-url">${row['URL']}</a>` : ''}
+          </td>
+          <td>${row['Region'] || 'Unknown'}</td>
+          <td>
+            <div class="location-info">
+              <div>
+                <span class="country-flag">${geoData.flag || '🏳️'}</span>
+                ${geoData.city || 'Unknown'}, ${geoData.country || 'Unknown'}
+              </div>
+            </div>
+          </td>
+          <td>
+            ${geoData.latitude && geoData.longitude ? 
+              `<div class="coordinates">${geoData.latitude.toFixed(4)}, ${geoData.longitude.toFixed(4)}</div>` : 
+              '<span style="color: #999;">Unknown</span>'
+            }
+          </td>
+          <td>
+            ${row['Version'] || 'Unknown'}<br>
+            <small style="color: #666;">${row['Tool Count'] || 'Unknown'}</small>
+          </td>
+        `;
+        
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Search and filter functionality
+    function performFilter() {
+      const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+      
+      if (searchTerm === '') {
+        filteredData = [...currentData];
+      } else {
+        filteredData = currentData.filter(row => {
+          const geoData = row['GeoLocation'] || {};
+          return (
+            (row['Name'] || '').toLowerCase().includes(searchTerm) ||
+            (row['Region'] || '').toLowerCase().includes(searchTerm) ||
+            (row['URL'] || '').toLowerCase().includes(searchTerm) ||
+            (geoData.country || '').toLowerCase().includes(searchTerm) ||
+            (geoData.city || '').toLowerCase().includes(searchTerm)
+          );
+        });
+      }
+      
+      renderCurrentView();
+      updateSummaryStats();
+    }
+
+    // Export to CSV
+    function exportToCSV() {
+      if (!filteredData || filteredData.length === 0) {
+        alert('No data to export.');
+        return;
+      }
+      
+      const headers = ['Name', 'URL', 'Region', 'Tier', 'Country', 'City', 'Latitude', 'Longitude', 'Version', 'Tool Count'];
+      const csvRows = [headers.join(',')];
+      
+      filteredData.forEach(row => {
+        const geoData = row['GeoLocation'] || {};
+        const csvRow = [
+          `"${(row['Name'] || '').replace(/"/g, '""')}"`,
+          `"${(row['URL'] || '').replace(/"/g, '""')}"`,
+          `"${(row['Region'] || '').replace(/"/g, '""')}"`,
+          `"${(row['Tier'] || '').replace(/"/g, '""')}"`,
+          `"${(geoData.country || '').replace(/"/g, '""')}"`,
+          `"${(geoData.city || '').replace(/"/g, '""')}"`,
+          geoData.latitude || '',
+          geoData.longitude || '',
+          `"${(row['Version'] || '').replace(/"/g, '""')}"`,
+          `"${(row['Tool Count'] || '').replace(/"/g, '""')}"`
+        ];
+        csvRows.push(csvRow.join(','));
+      });
+      
+      const csvContent = csvRows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      
+      const now = new Date();
+      const timestamp = now.getFullYear() + 
+        String(now.getMonth() + 1).padStart(2, '0') + 
+        String(now.getDate()).padStart(2, '0') + '_' +
+        String(now.getHours()).padStart(2, '0') + 
+        String(now.getMinutes()).padStart(2, '0') + 
+        String(now.getSeconds()).padStart(2, '0');
+      
+      a.download = `galaxy_instances_map_${timestamp}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Initialize the application
+    function initializeApp() {
+      // View toggle functionality
+      document.getElementById('map-view').addEventListener('click', () => {
+        currentView = 'map';
+        document.getElementById('map-view').classList.add('active');
+        document.getElementById('table-view').classList.remove('active');
+        renderCurrentView();
+      });
+      
+      document.getElementById('table-view').addEventListener('click', () => {
+        currentView = 'table';
+        document.getElementById('table-view').classList.add('active');
+        document.getElementById('map-view').classList.remove('active');
+        renderCurrentView();
+      });
+      
+      // Search functionality
+      document.getElementById('search-input').addEventListener('input', performFilter);
+      
+      // Button functionality
+      document.getElementById('refresh-button').addEventListener('click', () => {
+        location.reload();
+      });
+      
+      document.getElementById('export-button').addEventListener('click', exportToCSV);
+      
+      document.getElementById('geolocate-button').addEventListener('click', async () => {
+        const button = document.getElementById('geolocate-button');
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+        button.disabled = true;
+        
+        updateStatus('Refreshing location data...', 'loading');
+        clearGeoCache();
+        await geolocateAllServers(true);
+        
+        renderCurrentView();
+        updateSummaryStats();
+        updateStatus('Location data refreshed successfully.', 'success');
+        
+        button.innerHTML = '<i class="fas fa-map-marked-alt"></i> Refresh Locations';
+        button.disabled = false;
+      });
+      
+      // Load initial data
+      loadSpreadsheetData();
+    }
+
+    // Start the application when DOM is loaded
+    document.addEventListener('DOMContentLoaded', initializeApp);
+  </script>
+</body>
+</html>
