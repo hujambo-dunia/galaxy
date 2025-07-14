@@ -226,89 +226,140 @@
       opacity: 0.6;
     }
 
-    .table-container {
-      margin: 2rem;
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    .cluster-details-container {
+      background: #f8f9fa;
+      border-top: 1px solid #e9ecef;
+      max-height: 400px;
+      overflow-y: auto;
     }
 
-    .table-header {
-      background: #2c3e50;
+    .cluster-details-header {
+      background: #343a40;
       color: white;
-      padding: 1rem;
-      font-weight: 600;
+      padding: 1rem 2rem;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      justify-content: space-between;
+      font-weight: 600;
+      font-size: 1.1rem;
     }
 
-    table {
+    .cluster-details-header i {
+      margin-right: 0.5rem;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.25rem;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+
+    .close-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    #cluster-details-content {
+      padding: 0;
+    }
+
+    .cluster-details-table-container {
+      overflow-x: auto;
+      max-height: 350px;
+      overflow-y: auto;
+    }
+
+    .cluster-details-table {
       width: 100%;
       border-collapse: collapse;
       background: white;
+      font-size: 0.875rem;
     }
 
-    th, td {
+    .cluster-details-table th {
+      background: #f8f9fa;
+      color: #495057;
+      font-weight: 600;
       padding: 0.75rem;
       text-align: left;
-      border-bottom: 1px solid #e9ecef;
-    }
-
-    th {
-      background: #f8f9fa;
-      font-weight: 600;
-      color: #2c3e50;
+      border-bottom: 2px solid #dee2e6;
       position: sticky;
       top: 0;
-      z-index: 10;
+      z-index: 1;
     }
 
-    tr:hover {
+    .cluster-details-table td {
+      padding: 0.75rem;
+      border-bottom: 1px solid #dee2e6;
+      vertical-align: middle;
+    }
+
+    .cluster-details-table tbody tr:hover {
       background: #f8f9fa;
     }
 
-    .status-icon {
-      font-size: 1.2rem;
-      margin-right: 0.5rem;
+    .tier-badge {
+      background: #6c757d;
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      white-space: nowrap;
     }
 
-    .tier-icon {
-      font-size: 1rem;
-      margin-right: 0.5rem;
+    .tier-1 { background: #4caf50; }
+    .tier-2 { background: #ff9800; }
+    .tier-3 { background: #2196f3; }
+    .tier-4 { background: #9c27b0; }
+    .tier-5 { background: #607d8b; }
+    .tier-6 { background: #795548; }
+
+    .description-info {
+      line-height: 1.4;
+      max-width: 300px;
+    }
+
+    .description-notes {
+      font-size: 0.9em;
+      color: #666;
+      margin-top: 4px;
+      font-style: italic;
     }
 
     .server-name {
-      font-weight: 500;
-      color: #2c3e50;
+      font-weight: 600;
+      margin-bottom: 4px;
     }
 
     .server-url {
-      font-size: 0.85rem;
-      color: #666;
+      color: #2196f3;
       text-decoration: none;
+      font-size: 0.9em;
     }
 
     .server-url:hover {
-      color: #2196f3;
+      text-decoration: underline;
     }
 
     .location-info {
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
+      gap: 2px;
     }
 
     .country-flag {
-      font-size: 1.2rem;
-      margin-right: 0.5rem;
+      margin-right: 6px;
     }
 
     .coordinates {
-      font-size: 0.8rem;
-      color: #666;
       font-family: monospace;
+      font-size: 0.9em;
+      color: #666;
     }
 
     .loading-indicator {
@@ -618,6 +669,20 @@
       <svg id="world-map"></svg>
     </div>
 
+    <!-- Cluster details container shown beneath the map -->
+    <div id="cluster-details-container" class="cluster-details-container" style="display: none;">
+      <div class="cluster-details-header">
+        <i class="fas fa-layer-group"></i>
+        <span id="cluster-title">Cluster Details</span>
+        <button id="close-cluster-details" class="close-btn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div id="cluster-details-content">
+        <p>Hover over a cluster marker to see instance details</p>
+      </div>
+    </div>
+
     <div id="table-container" class="table-container" style="display: none;">
       <div class="table-header">
         <i class="fas fa-globe"></i>
@@ -630,6 +695,7 @@
               <th>Instance</th>
               <th>Tier</th>
               <th>Region</th>
+              <th>Description</th>
               <th>Location</th>
               <th>Coordinates</th>
             </tr>
@@ -766,7 +832,8 @@
         const geoApis = [
           `https://ipapi.co/${hostname}/json/`,
           `https://api.ipgeolocation.io/ipgeo?apiKey=free&hostname=${hostname}`,
-          `https://freegeoip.app/json/${hostname}`
+          `https://freegeoip.app/json/${hostname}`,
+          `https://ipinfo.io/${hostname}/json`
         ];
         
         for (const apiUrl of geoApis) {
@@ -814,6 +881,17 @@
                   countryCode: geoData.country_code
                 };
               }
+              // ipinfo.io format
+              else if (geoData && geoData.country) {
+                result = {
+                  country: geoData.country,
+                  city: geoData.city || geoData.region || 'Unknown',
+                  latitude: parseFloat(geoData.loc ? geoData.loc.split(',')[0] : null),
+                  longitude: parseFloat(geoData.loc ? geoData.loc.split(',')[1] : null),
+                  flag: getCountryFlag(geoData.country),
+                  countryCode: geoData.country
+                };
+              }
               
               if (result && result.latitude && result.longitude && !isNaN(result.latitude) && !isNaN(result.longitude)) {
                 console.log(`Successfully geolocated ${hostname}:`, result);
@@ -832,7 +910,6 @@
         const locationGuess = guessLocationFromHostname(hostname);
         saveGeoToCache(hostname, locationGuess);
         return locationGuess;
-        return locationGuess;
 
       } catch (error) {
         console.log(`Error processing URL ${url}:`, error);
@@ -848,6 +925,33 @@
 
     // Function to guess location from hostname patterns
     function guessLocationFromHostname(hostname) {
+      // Check for specific university/institution patterns first
+      const institutionPatterns = {
+        'pasteur.fr': { country: 'France', countryCode: 'FR', flag: '🇫🇷', lat: 48.8566, lng: 2.3522, city: 'Paris' },
+        'inrae.fr': { country: 'France', countryCode: 'FR', flag: '🇫🇷', lat: 48.8566, lng: 2.3522, city: 'Paris' },
+        'uni-freiburg.de': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 48.0, lng: 7.8, city: 'Freiburg' },
+        'usegalaxy.org.au': { country: 'Australia', countryCode: 'AU', flag: '🇦🇺', lat: -37.8136, lng: 144.9631, city: 'Melbourne' },
+        'usegalaxy.org': { country: 'United States', countryCode: 'US', flag: '🇺🇸', lat: 30.2672, lng: -97.7431, city: 'Austin, TX' },
+        'usegalaxy.eu': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 48.0, lng: 7.8, city: 'Freiburg' },
+        'galaxyproject.org': { country: 'United States', countryCode: 'US', flag: '🇺🇸', lat: 30.2672, lng: -97.7431, city: 'Austin, TX' },
+        'genome.edu.au': { country: 'Australia', countryCode: 'AU', flag: '🇦🇺', lat: -37.8136, lng: 144.9631, city: 'Melbourne' }
+      };
+
+      // Check for specific institution patterns first
+      for (const [pattern, location] of Object.entries(institutionPatterns)) {
+        if (hostname.includes(pattern)) {
+          return {
+            country: location.country,
+            city: location.city || 'Unknown',
+            latitude: location.lat,
+            longitude: location.lng,
+            flag: location.flag,
+            countryCode: location.countryCode
+          };
+        }
+      }
+
+      // Check TLD patterns
       const patterns = {
         '.au': { country: 'Australia', countryCode: 'AU', flag: '🇦🇺', lat: -25.2744, lng: 133.7751 },
         '.uk': { country: 'United Kingdom', countryCode: 'GB', flag: '🇬🇧', lat: 55.3781, lng: -3.4360 },
@@ -880,33 +984,6 @@
         '.com': { country: 'United States', countryCode: 'US', flag: '🇺🇸', lat: 39.8283, lng: -98.5795 }
       };
 
-      // Check for specific university/institution patterns
-      const institutionPatterns = {
-        'pasteur.fr': { country: 'France', countryCode: 'FR', flag: '🇫🇷', lat: 48.8566, lng: 2.3522, city: 'Paris' },
-        'inrae.fr': { country: 'France', countryCode: 'FR', flag: '🇫🇷', lat: 48.8566, lng: 2.3522, city: 'Paris' },
-        'uni-freiburg.de': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 48.0, lng: 7.8, city: 'Freiburg' },
-        'usegalaxy.org': { country: 'United States', countryCode: 'US', flag: '🇺🇸', lat: 39.9526, lng: -75.1652, city: 'Pennsylvania' },
-        'usegalaxy.eu': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 48.0, lng: 7.8, city: 'Freiburg' },
-        'usegalaxy.org.au': { country: 'Australia', countryCode: 'AU', flag: '🇦🇺', lat: -37.8136, lng: 144.9631, city: 'Melbourne' },
-        'galaxyproject.org': { country: 'United States', countryCode: 'US', flag: '🇺🇸', lat: 39.9526, lng: -75.1652, city: 'Pennsylvania' },
-        'genome.edu.au': { country: 'Australia', countryCode: 'AU', flag: '🇦🇺', lat: -37.8136, lng: 144.9631, city: 'Melbourne' }
-      };
-
-      // Check for specific institution patterns first
-      for (const [pattern, location] of Object.entries(institutionPatterns)) {
-        if (hostname.includes(pattern)) {
-          return {
-            country: location.country,
-            city: location.city || 'Unknown',
-            latitude: location.lat,
-            longitude: location.lng,
-            flag: location.flag,
-            countryCode: location.countryCode
-          };
-        }
-      }
-
-      // Check TLD patterns
       for (const [tld, location] of Object.entries(patterns)) {
         if (hostname.endsWith(tld)) {
           return {
@@ -926,7 +1003,7 @@
         city: 'Unknown',
         latitude: 39.8283,
         longitude: -98.5795,
-        flag: '🇺🇸',
+        flag: '🇺�',
         countryCode: 'US'
       };
     }
@@ -1276,6 +1353,7 @@
     function renderCurrentView() {
       if (currentView === 'map') {
         document.getElementById('map-container').style.display = 'block';
+        document.getElementById('cluster-details-container').style.display = 'none';
         document.getElementById('table-container').style.display = 'none';
         
         // Initialize map if first time showing
@@ -1286,6 +1364,7 @@
         }
       } else {
         document.getElementById('map-container').style.display = 'none';
+        document.getElementById('cluster-details-container').style.display = 'none';
         document.getElementById('table-container').style.display = 'block';
         renderTable();
       }
@@ -1491,11 +1570,31 @@
         const coords = [group.x, group.y];
         
         if (instances.length === 1) {
-          // Single instance - create regular marker
+          // Single instance - create regular marker with hit area
           const row = instances[0];
           const tier = row['Tier'] || '0';
           
-          const singleMarker = mapGroup.append("circle")
+          // Create a group for the single marker to handle events properly
+          const singleMarkerGroup = mapGroup.append("g")
+            .attr("class", "single-marker-group")
+            .style("cursor", "pointer")
+            .style("pointer-events", "all");
+          
+          // Store the fixed coordinates as data to prevent any movement
+          singleMarkerGroup.datum({ fixedX: coords[0], fixedY: coords[1], row: row });
+          
+          // Add an invisible larger hit area to prevent edge cases with mouse events
+          singleMarkerGroup.append("circle")
+            .attr("class", "single-marker-hit-area")
+            .attr("cx", coords[0])
+            .attr("cy", coords[1])
+            .attr("r", 8) // Larger hit area for single markers
+            .attr("fill", "transparent")
+            .attr("stroke", "none")
+            .style("pointer-events", "all");
+          
+          // Create the visual marker (non-interactive)
+          const singleMarker = singleMarkerGroup.append("circle")
             .attr("class", `map-marker tier-${tier}`)
             .attr("cx", coords[0])
             .attr("cy", coords[1])
@@ -1503,50 +1602,135 @@
             .attr("fill", getMarkerColorByTier(tier))
             .attr("stroke", "white")
             .attr("stroke-width", 2)
-            .style("cursor", "pointer");
+            .style("pointer-events", "none"); // Make visual marker non-interactive
           
-          // Store timeout references for debouncing
+          // Store timeout references for debouncing and tooltip state
           let singleEnterTimeout = null;
           let singleLeaveTimeout = null;
+          let singleTooltipShown = false;
           
-          singleMarker
-            .on("mouseenter", function(event) {
+          singleMarkerGroup
+            .on("mouseenter", function(event, d) {
+              const timestamp = Date.now();
+              console.log(`[${timestamp}] === SINGLE MARKER MOUSEENTER START ===`);
+              console.log('Server Name:', d.row.Name || 'Unknown');
+              console.log('Fixed coordinates stored in data:', { fixedX: d.fixedX, fixedY: d.fixedY });
+              console.log('Mouse coordinates:', { mouseX: event.clientX, mouseY: event.clientY });
+              console.log('Current tooltip state:', { singleTooltipShown, singleEnterTimeout: !!singleEnterTimeout, singleLeaveTimeout: !!singleLeaveTimeout });
+              console.log('Event target:', event.target.tagName, event.target.classList.toString());
+              console.log('Hit area working:', event.target.classList.contains('single-marker-hit-area'));
+              
+              // If tooltip is already shown, don't process more enter events
+              if (singleTooltipShown) {
+                console.log('EARLY EXIT: Tooltip already shown');
+                return;
+              }
+              
               // Clear any pending leave timeout
               if (singleLeaveTimeout) {
+                console.log('Clearing existing leave timeout');
                 clearTimeout(singleLeaveTimeout);
                 singleLeaveTimeout = null;
               }
               
               // Clear any pending enter timeout
               if (singleEnterTimeout) {
+                console.log('Clearing existing enter timeout');
                 clearTimeout(singleEnterTimeout);
               }
               
-              // Set new enter timeout with debouncing
+              // Use the stored fixed coordinates
+              const fixedX = d.fixedX;
+              const fixedY = d.fixedY;
+              
+              console.log('Setting new enter timeout with 150ms delay');
+              
+              // Set new enter timeout with increased debouncing
               singleEnterTimeout = setTimeout(() => {
-                d3.select(this).transition().duration(200).attr("r", 6);
-                showTooltip(event, row);
+                console.log(`[${Date.now()}] SINGLE ENTER TIMEOUT EXECUTED - Starting tooltip display`);
+                const markerElement = d3.select(this).select(".map-marker");
+                
+                console.log('Starting D3 transition...');
+                markerElement
+                  .transition().duration(100)
+                  .attr("r", 6)
+                  .attr("stroke-width", 3)
+                  .attr("cx", fixedX)  // Force to exact fixed position
+                  .attr("cy", fixedY); // Force to exact fixed position
+                
+                console.log('After transition - DOM coordinates:', {
+                  cx: markerElement.attr('cx'),
+                  cy: markerElement.attr('cy')
+                });
+                console.log('Calling showTooltip with fixed coordinates:', { fixedX, fixedY });
+                
+                // Mark tooltip as shown to prevent repeated events
+                console.log('Setting singleTooltipShown = true');
+                singleTooltipShown = true;
+                
+                showTooltip(event, d.row, fixedX, fixedY);
                 singleEnterTimeout = null;
-              }, 50);
+                console.log(`[${Date.now()}] SINGLE ENTER TIMEOUT COMPLETED`);
+              }, 150);
+              
+              console.log(`[${timestamp}] === SINGLE MARKER MOUSEENTER END ===`);
             })
-            .on("mouseleave", function() {
+            .on("mouseleave", function(event, d) {
+              const timestamp = Date.now();
+              console.log(`[${timestamp}] === SINGLE MARKER MOUSELEAVE START ===`);
+              console.log('Current tooltip state:', { singleTooltipShown, singleEnterTimeout: !!singleEnterTimeout, singleLeaveTimeout: !!singleLeaveTimeout });
+              console.log('Event target:', event.target.tagName, event.target.classList.toString());
+              console.log('Hit area working:', event.target.classList.contains('single-marker-hit-area'));
+              
               // Clear any pending enter timeout
               if (singleEnterTimeout) {
+                console.log('CANCELLING enter timeout - tooltip will not be shown');
                 clearTimeout(singleEnterTimeout);
                 singleEnterTimeout = null;
               }
               
               // Clear any existing leave timeout
               if (singleLeaveTimeout) {
+                console.log('Clearing existing leave timeout');
                 clearTimeout(singleLeaveTimeout);
               }
               
-              // Set new leave timeout with debouncing
+              // Use the stored fixed coordinates
+              const fixedX = d.fixedX;
+              const fixedY = d.fixedY;
+              
+              console.log('Setting new leave timeout with 200ms delay');
+              
+              // Set new leave timeout with increased debouncing
               singleLeaveTimeout = setTimeout(() => {
-                d3.select(this).transition().duration(200).attr("r", 4);
+                console.log(`[${Date.now()}] SINGLE LEAVE TIMEOUT EXECUTED - Hiding tooltip`);
+                const markerElement = d3.select(this).select(".map-marker");
+                
+                console.log('Starting D3 transition to restore original size...');
+                markerElement
+                  .transition().duration(100)
+                  .attr("r", 4)
+                  .attr("stroke-width", 2)
+                  .attr("cx", fixedX)  // Force to exact fixed position
+                  .attr("cy", fixedY); // Force to exact fixed position
+                
+                // Reset tooltip state
+                console.log('Setting singleTooltipShown = false');
+                singleTooltipShown = false;
+                
+                console.log('Calling hideTooltip()');
                 hideTooltip();
+                
                 singleLeaveTimeout = null;
-              }, 100);
+                console.log(`[${Date.now()}] SINGLE LEAVE TIMEOUT COMPLETED`);
+              }, 200);
+              
+              console.log(`[${timestamp}] === SINGLE MARKER MOUSELEAVE END ===`);
+            })
+            .on("click", function(event, d) {
+              console.log('Single marker clicked - showing cluster details');
+              // Show cluster details on click
+              showClusterDetails([d.row], { fixedX: d.fixedX, fixedY: d.fixedY });
             });
             
           markersAdded++;
@@ -1559,60 +1743,168 @@
           // Create a group for the cluster to handle events properly
           const clusterGroup = mapGroup.append("g")
             .attr("class", "cluster-group")
-            .style("cursor", "pointer");
+            .style("cursor", "pointer")
+            .style("pointer-events", "all");
           
-          // Store a reference for debouncing
+          // Store the fixed coordinates as data to prevent any movement
+          clusterGroup.datum({ fixedX: coords[0], fixedY: coords[1], instances: instances, radius: radius });
+          
+          // Add an invisible larger hit area to prevent edge cases with mouse events
+          clusterGroup.append("circle")
+            .attr("class", "cluster-hit-area")
+            .attr("cx", coords[0])
+            .attr("cy", coords[1])
+            .attr("r", radius + 5) // 5px larger than visual cluster
+            .attr("fill", "transparent")
+            .attr("stroke", "none")
+            .style("pointer-events", "all");
+          
+          // Store a reference for debouncing and tooltip state
           let enterTimeout = null;
           let leaveTimeout = null;
+          let tooltipShown = false;
           
           clusterGroup
-            .on("mouseenter", function(event) {
+            .on("mouseenter", function(event, d) {
+              const timestamp = Date.now();
+              console.log(`[${timestamp}] === CLUSTER MOUSEENTER START ===`);
+              console.log('Cluster instances count:', d.instances.length);
+              console.log('Fixed coordinates stored in data:', { fixedX: d.fixedX, fixedY: d.fixedY });
+              console.log('Mouse coordinates:', { mouseX: event.clientX, mouseY: event.clientY });
+              console.log('Current tooltip state:', { tooltipShown, enterTimeout: !!enterTimeout, leaveTimeout: !!leaveTimeout });
+              console.log('Event target:', event.target.tagName, event.target.classList.toString());
+              console.log('Event currentTarget:', event.currentTarget.tagName, event.currentTarget.classList.toString());
+              console.log('Hit area working:', event.target.classList.contains('cluster-hit-area'));
+              
+              // If tooltip is already shown, don't process more enter events
+              if (tooltipShown) {
+                console.log('EARLY EXIT: Tooltip already shown');
+                return;
+              }
+              
               // Clear any pending leave timeout
               if (leaveTimeout) {
+                console.log('Clearing existing leave timeout');
                 clearTimeout(leaveTimeout);
                 leaveTimeout = null;
               }
               
               // Clear any pending enter timeout
               if (enterTimeout) {
+                console.log('Clearing existing enter timeout');
                 clearTimeout(enterTimeout);
               }
               
-              // Set new enter timeout with debouncing
+              // Use the stored fixed coordinates - never use mouse position
+              const fixedX = d.fixedX;
+              const fixedY = d.fixedY;
+              
+              console.log('Setting new enter timeout with 150ms delay');
+              
+              // Set new enter timeout with increased debouncing to reduce sensitivity
               enterTimeout = setTimeout(() => {
-                d3.select(this).select(".marker-cluster")
-                  .transition().duration(200).attr("r", radius + 2);
+                console.log(`[${Date.now()}] ENTER TIMEOUT EXECUTED - Starting tooltip display`);
+                const clusterElement = d3.select(this).select(".marker-cluster");
                 
-                if (instances.length === 1) {
-                  showTooltip(event, instances[0]);
+                console.log('Cluster element found:', !clusterElement.empty());
+                console.log('Current cluster DOM coordinates:', {
+                  cx: clusterElement.attr('cx'),
+                  cy: clusterElement.attr('cy'),
+                  r: clusterElement.attr('r')
+                });
+                
+                console.log('Starting D3 transition...');
+                clusterElement
+                  .transition().duration(100)
+                  .attr("r", d.radius + 2)
+                  .attr("stroke-width", 4)
+                  .attr("cx", fixedX)  // Force to exact fixed position
+                  .attr("cy", fixedY); // Force to exact fixed position
+                
+                console.log('After transition - cluster DOM coordinates:', {
+                  cx: clusterElement.attr('cx'),
+                  cy: clusterElement.attr('cy'),
+                  r: clusterElement.attr('r')
+                });
+                
+                // Mark tooltip as shown to prevent repeated events
+                console.log('Setting tooltipShown = true');
+                tooltipShown = true;
+                
+                console.log('Calling showClusterTooltip with fixed coordinates:', { fixedX, fixedY });
+                
+                if (d.instances.length === 1) {
+                  showTooltip(event, d.instances[0], fixedX, fixedY);
                 } else {
-                  showClusterTooltip(event, instances);
+                  showClusterTooltip(event, d.instances, fixedX, fixedY);
                 }
                 enterTimeout = null;
-              }, 50);
+                console.log(`[${Date.now()}] ENTER TIMEOUT COMPLETED`);
+              }, 150);
+              
+              console.log(`[${timestamp}] === CLUSTER MOUSEENTER END ===`);
             })
-            .on("mouseleave", function() {
+            .on("mouseleave", function(event, d) {
+              const timestamp = Date.now();
+              console.log(`[${timestamp}] === CLUSTER MOUSELEAVE START ===`);
+              console.log('Current tooltip state:', { tooltipShown, enterTimeout: !!enterTimeout, leaveTimeout: !!leaveTimeout });
+              console.log('Event target:', event.target.tagName, event.target.classList.toString());
+              console.log('Event currentTarget:', event.currentTarget.tagName, event.currentTarget.classList.toString());
+              console.log('Hit area working:', event.target.classList.contains('cluster-hit-area'));
+              console.log('Mouse coordinates:', { mouseX: event.clientX, mouseY: event.clientY });
+              
               // Clear any pending enter timeout
               if (enterTimeout) {
+                console.log('CANCELLING enter timeout - tooltip will not be shown');
                 clearTimeout(enterTimeout);
                 enterTimeout = null;
               }
               
               // Clear any existing leave timeout
               if (leaveTimeout) {
+                console.log('Clearing existing leave timeout');
                 clearTimeout(leaveTimeout);
               }
               
-              // Set new leave timeout with debouncing
+              // Use the stored fixed coordinates - never use mouse position
+              const fixedX = d.fixedX;
+              const fixedY = d.fixedY;
+              
+              console.log('Setting new leave timeout with 200ms delay');
+              
+              // Set new leave timeout with increased debouncing to reduce sensitivity
               leaveTimeout = setTimeout(() => {
-                d3.select(this).select(".marker-cluster")
-                  .transition().duration(200).attr("r", radius);
+                console.log(`[${Date.now()}] LEAVE TIMEOUT EXECUTED - Hiding tooltip`);
+                const clusterElement = d3.select(this).select(".marker-cluster");
+                
+                console.log('Starting D3 transition to restore original size...');
+                clusterElement
+                  .transition().duration(100)
+                  .attr("r", d.radius)
+                  .attr("stroke-width", 3)
+                  .attr("cx", fixedX)  // Force to exact fixed position
+                  .attr("cy", fixedY); // Force to exact fixed position
+                
+                // Reset tooltip state
+                console.log('Setting tooltipShown = false');
+                tooltipShown = false;
+                
+                console.log('Calling hideTooltip()');
                 hideTooltip();
+                
                 leaveTimeout = null;
-              }, 100);
+                console.log(`[${Date.now()}] LEAVE TIMEOUT COMPLETED`);
+              }, 200);
+              
+              console.log(`[${timestamp}] === CLUSTER MOUSELEAVE END ===`);
+            })
+            .on("click", function(event, d) {
+              console.log('Cluster marker clicked - showing cluster details');
+              // Show cluster details on click
+              showClusterDetails(d.instances, { fixedX: d.fixedX, fixedY: d.fixedY });
             });
           
-          // Create cluster background circle
+          // Create cluster background circle (visual only, no mouse events)
           clusterGroup.append("circle")
             .attr("class", `marker-cluster cluster-tier-${dominantTier}`)
             .attr("cx", coords[0])
@@ -1621,9 +1913,10 @@
             .attr("fill", getMarkerColorByTier(dominantTier))
             .attr("stroke", "white")
             .attr("stroke-width", 3)
-            .attr("opacity", 0.8);
+            .attr("opacity", 0.8)
+            .style("pointer-events", "none"); // Make visual circle non-interactive
           
-          // Add count text on cluster - make it non-interactive
+          // Add count text on cluster - make it completely non-interactive
           clusterGroup.append("text")
             .attr("class", "cluster-text")
             .attr("x", coords[0])
@@ -1635,6 +1928,7 @@
             .attr("font-weight", "bold")
             .attr("pointer-events", "none")
             .style("user-select", "none")
+            .style("pointer-events", "none") // Ensure text never captures mouse events
             .text(instances.length);
             
           markersAdded += instances.length;
@@ -1724,157 +2018,428 @@
       mapContainer.appendChild(legend);
     }
 
+    // Show cluster details in the container beneath the map
+    function showClusterDetails(instances, location) {
+      const container = document.getElementById('cluster-details-container');
+      const title = document.getElementById('cluster-title');
+      const content = document.getElementById('cluster-details-content');
+      
+      // Get location info from first instance
+      const geoData = instances[0]['GeoLocation'] || {};
+      const city = geoData.city || 'Unknown City';
+      const country = geoData.country || 'Unknown Country';
+      const flag = geoData.flag || '🏳️';
+      
+      title.textContent = `${flag} ${city}, ${country} (${instances.length} instance${instances.length > 1 ? 's' : ''})`;
+      
+      // Clear existing content
+      content.innerHTML = '';
+      
+      // Sort instances by tier and name
+      const sortedInstances = instances.sort((a, b) => {
+        const tierA = parseInt(a['Tier'] || '99');
+        const tierB = parseInt(b['Tier'] || '99');
+        if (tierA !== tierB) return tierA - tierB;
+        return (a['Name'] || '').localeCompare(b['Name'] || '');
+      });
+      
+      // Create table container
+      const tableContainer = document.createElement('div');
+      tableContainer.className = 'cluster-details-table-container';
+      
+      // Create table
+      const table = document.createElement('table');
+      table.className = 'cluster-details-table';
+      
+      // Create table header
+      const thead = document.createElement('thead');
+      thead.innerHTML = `
+        <tr>
+          <th>Instance Name</th>
+          <th>Tier</th>
+          <th>Region</th>
+          <th>Description</th>
+          <th>Location</th>
+          <th>Coordinates</th>
+          <th>URL</th>
+        </tr>
+      `;
+      table.appendChild(thead);
+      
+      // Create table body
+      const tbody = document.createElement('tbody');
+      
+      sortedInstances.forEach(instance => {
+        const tier = instance['Tier'] || '0';
+        const tierInfo = getTierInfo(tier);
+        const geoData = instance['GeoLocation'] || {};
+        
+        const row = document.createElement('tr');
+        
+        // Format URL for display
+        const url = instance['URL'] || 'No URL';
+        const urlDisplay = url.length > 40 ? url.substring(0, 37) + '...' : url;
+        const urlCell = url === 'No URL' ? 
+          '<span style="color: #6c757d; font-style: italic;">No URL</span>' :
+          `<a href="${url}" target="_blank" class="url-link" title="${url}">${urlDisplay}</a>`;
+        
+        // Parse description and notes
+        const descriptionText = instance['Description'] || '';
+        const notesText = instance['Notes'] || '';
+        
+        let descriptionContent = parseMarkdownLinks(descriptionText);
+        let descriptionHtml = '';
+        
+        if (descriptionContent) {
+          descriptionHtml += `<div>${descriptionContent}</div>`;
+        }
+        
+        if (notesText) {
+          descriptionHtml += `<div class="description-notes" style="font-size: 0.9em; color: #666; margin-top: 4px;">${notesText}</div>`;
+        }
+        
+        row.innerHTML = `
+          <td style="font-weight: 600;">
+            ${instance['Name'] || 'Unknown Instance'}
+          </td>
+          <td>
+            <span class="tier-badge tier-${tier}" title="${tierInfo.name}">
+              ${tierInfo.icon} Tier ${tier}
+            </span>
+          </td>
+          <td>${instance['Region'] || 'Unknown'}</td>
+          <td>
+            <div class="description-info">
+              ${descriptionHtml || '<span style="color: #999; font-style: italic;">No description</span>'}
+            </div>
+          </td>
+          <td>
+            <div class="location-info">
+              <span class="country-flag">${geoData.flag || '🏳️'}</span>
+              ${geoData.city || 'Unknown'}, ${geoData.country || 'Unknown'}
+            </div>
+          </td>
+          <td>
+            ${geoData.latitude && geoData.longitude ? 
+              `<div class="coordinates">${geoData.latitude.toFixed(4)}, ${geoData.longitude.toFixed(4)}</div>` : 
+              '<span style="color: #999;">Unknown</span>'
+            }
+          </td>
+          <td>${urlCell}</td>
+        `;
+        
+        tbody.appendChild(row);
+      });
+      
+      table.appendChild(tbody);
+      tableContainer.appendChild(table);
+      content.appendChild(tableContainer);
+      
+      // Show the container
+      container.style.display = 'block';
+      
+      // Scroll to the cluster details
+      container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // Hide cluster details
+    function hideClusterDetails() {
+      const container = document.getElementById('cluster-details-container');
+      container.style.display = 'none';
+    }
+
     // Show tooltip for clustered markers
-    function showClusterTooltip(event, instances) {
+    function showClusterTooltip(event, instances, markerX = null, markerY = null) {
       // Remove any existing tooltips first
       hideTooltip();
       
-      // Small delay to prevent rapid tooltip creation/destruction
-      setTimeout(() => {
-        const tooltip = document.createElement('div');
-        tooltip.className = 'marker-tooltip cluster-tooltip';
-        tooltip.style.cssText = `
-          position: fixed;
-          left: ${event.clientX + 10}px;
-          top: ${event.clientY - 10}px;
-          background: rgba(0, 0, 0, 0.9);
-          color: white;
-          padding: 0.75rem;
-          border-radius: 6px;
-          font-size: 0.8rem;
-          pointer-events: none;
-          z-index: 10000;
-          max-width: 300px;
-          max-height: 400px;
-          overflow-y: auto;
-          border: 1px solid #444;
+      console.log('=== SHOW CLUSTER TOOLTIP START ===');
+      console.log('Timestamp:', Date.now());
+      console.log('Cluster instances count:', instances.length);
+      console.log('Provided marker coordinates:', { markerX, markerY });
+      console.log('Event client coordinates:', { clientX: event.clientX, clientY: event.clientY });
+      console.log('Existing tooltips in DOM:', document.querySelectorAll('.marker-tooltip').length);
+      
+      const tooltip = document.createElement('div');
+      tooltip.className = 'marker-tooltip cluster-tooltip';
+      
+      let tooltipX, tooltipY;
+      
+      if (markerX !== null && markerY !== null) {
+        // Use fixed marker coordinates if provided - calculate absolute position correctly
+        const svgElement = document.getElementById('world-map');
+        const svgRect = svgElement.getBoundingClientRect();
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+        
+        // Get current zoom transform to account for scaling/translation
+        const mapGroup = d3.select(svgElement).select('.map-group');
+        const transform = d3.zoomTransform(mapGroup.node() || svgElement);
+        
+        // Apply transform to marker coordinates
+        const transformedX = transform.applyX(markerX);
+        const transformedY = transform.applyY(markerY);
+        
+        tooltipX = svgRect.left + scrollX + transformedX;
+        tooltipY = svgRect.top + scrollY + transformedY;
+        
+        console.log('Using FIXED coordinates for cluster tooltip positioning:');
+        console.log('SVG element rect:', { left: svgRect.left, top: svgRect.top, width: svgRect.width, height: svgRect.height });
+        console.log('Zoom transform:', { k: transform.k, x: transform.x, y: transform.y });
+        console.log('Original marker coords:', { markerX, markerY });
+        console.log('Transformed marker coords:', { transformedX, transformedY });
+        console.log('Scroll offsets:', { scrollX, scrollY });
+        console.log('Final calculated tooltip position:', { tooltipX, tooltipY });
+      } else {
+        // Fallback to event coordinates
+        const rect = event.target.getBoundingClientRect();
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+        
+        tooltipX = rect.left + scrollX + rect.width / 2;
+        tooltipY = rect.top + scrollY;
+        
+        console.log('Using EVENT coordinates for cluster tooltip positioning:');
+        console.log('Event target rect:', { left: rect.left, top: rect.top, width: rect.width, height: rect.height });
+        console.log('Scroll offsets:', { scrollX, scrollY });
+        console.log('Calculated tooltip position:', { tooltipX, tooltipY });
+      }
+      
+      tooltip.style.cssText = `
+        position: absolute;
+        left: ${tooltipX + 15}px;
+        top: ${tooltipY - 10}px;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-family: Arial, sans-serif;
+        pointer-events: none;
+        z-index: 10000;
+        max-width: 300px;
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      `;
+      
+      console.log('Final cluster tooltip CSS position:', { left: tooltipX + 15, top: tooltipY - 10 });
+      
+      // Get location info from first instance
+      const geoData = instances[0]['GeoLocation'] || {};
+      
+      // Group instances by tier for summary
+      const tierGroups = {};
+      const statusGroups = { online: 0, issues: 0, offline: 0, unknown: 0 };
+      
+      instances.forEach(instance => {
+        const tier = instance['Tier'] || '0';
+        const tierInfo = getTierInfo(tier);
+        if (!tierGroups[tier]) {
+          tierGroups[tier] = { name: tierInfo.name, icon: tierInfo.icon, instances: [] };
+        }
+        tierGroups[tier].instances.push(instance);
+        
+        // Count status
+        const status = getStatusIcon(instance['Version'] || '', instance['Tool Count'] || '', instance['Tier'] || '');
+        statusGroups[status.class] = (statusGroups[status.class] || 0) + 1;
+      });
+      
+      const city = geoData.city || 'Unknown City';
+      const country = geoData.country || 'Unknown Country';
+      const flag = geoData.flag || '🏳️';
+      
+      let content = `
+        <div style="font-weight: bold; margin-bottom: 8px;">
+          ${flag} ${city}, ${country}
+        </div>
+        <div style="margin-bottom: 8px; color: #ccc;">
+          ${instances.length} Galaxy Instance${instances.length > 1 ? 's' : ''}
+        </div>
+      `;
+      
+      // Add tier breakdown
+      Object.keys(tierGroups).forEach(tier => {
+        const group = tierGroups[tier];
+        content += `
+          <div style="margin: 4px 0; font-size: 11px;">
+            ${group.icon} ${group.name}: ${group.instances.length}
+          </div>
         `;
-        
-        // Get location info from first instance
-        const geoData = instances[0]['GeoLocation'];
-        
-        // Group instances by tier for summary
-        const tierGroups = {};
-        const statusGroups = { online: 0, issues: 0, offline: 0, unknown: 0 };
-        
+      });
+      
+      // Add status summary
+      const statusIcons = { online: '🟢', issues: '🟡', offline: '🔴', unknown: '⏳' };
+      content += '<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #666; font-size: 11px;">';
+      Object.keys(statusGroups).forEach(status => {
+        if (statusGroups[status] > 0) {
+          content += `<span style="margin-right: 8px;">${statusIcons[status]} ${statusGroups[status]}</span>`;
+        }
+      });
+      content += '</div>';
+      
+      // Add individual instances (limit to first 10 to avoid overwhelming)
+      if (instances.length <= 10) {
+        content += '<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #666;">';
         instances.forEach(instance => {
-          const tier = instance['Tier'] || '0';
-          const tierInfo = getTierInfo(tier);
-          if (!tierGroups[tier]) {
-            tierGroups[tier] = { name: tierInfo.name, icon: tierInfo.icon, instances: [] };
-          }
-          tierGroups[tier].instances.push(instance);
-          
-          // Count status
-          const status = getStatusIcon(instance['Version'], instance['Tool Count'], instance['Tier']);
-          statusGroups[status.class] = (statusGroups[status.class] || 0) + 1;
-        });
-        
-        let content = `
-          <div style="font-weight: bold; margin-bottom: 0.5rem;">
-            ${geoData.flag} ${geoData.city}, ${geoData.country}
-          </div>
-          <div style="margin-bottom: 0.5rem; color: #ccc;">
-            ${instances.length} Galaxy Instance${instances.length > 1 ? 's' : ''}
-          </div>
-        `;
-        
-        // Add tier breakdown
-        Object.keys(tierGroups).forEach(tier => {
-          const group = tierGroups[tier];
+          const status = getStatusIcon(instance['Version'] || '', instance['Tool Count'] || '', instance['Tier'] || '');
+          const tierInfo = getTierInfo(instance['Tier'] || '');
+          const instanceName = instance['Name'] || instance['Server Name'] || 'Unknown';
           content += `
-            <div style="margin: 0.25rem 0; font-size: 0.75rem;">
-              ${group.icon} ${group.name}: ${group.instances.length}
+            <div style="margin: 2px 0; font-size: 10px; color: #ddd;">
+              ${status.icon} ${tierInfo.icon} ${instanceName}
             </div>
           `;
         });
-        
-        // Add status summary
-        const statusIcons = { online: '🟢', issues: '🟡', offline: '🔴', unknown: '⏳' };
-        content += '<div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #666; font-size: 0.75rem;">';
-        Object.keys(statusGroups).forEach(status => {
-          if (statusGroups[status] > 0) {
-            content += `<span style="margin-right: 0.5rem;">${statusIcons[status]} ${statusGroups[status]}</span>`;
-          }
-        });
         content += '</div>';
-        
-        // Add individual instances (limit to first 10 to avoid overwhelming)
-        if (instances.length <= 10) {
-          content += '<div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #666;">';
-          instances.forEach(instance => {
-            const status = getStatusIcon(instance['Version'], instance['Tool Count'], instance['Tier']);
-            const tierInfo = getTierInfo(instance['Tier']);
-            content += `
-              <div style="margin: 0.25rem 0; font-size: 0.7rem; color: #ddd;">
-                ${status.icon} ${tierInfo.icon} ${instance['Name'] || 'Unknown'}
-              </div>
-            `;
-          });
-          content += '</div>';
-        } else {
-          content += `<div style="margin-top: 0.5rem; font-size: 0.7rem; color: #aaa; font-style: italic;">
-            Click to view all ${instances.length} instances in table
-          </div>`;
-        }
-        
-        tooltip.innerHTML = content;
-        document.body.appendChild(tooltip);
-        
-        // Store reference for cleanup
-        tooltip.setAttribute('data-tooltip-id', 'cluster-tooltip');
-      }, 50);
+      } else {
+        content += `<div style="margin-top: 8px; font-size: 10px; color: #aaa; font-style: italic;">
+          Click to view all ${instances.length} instances in table
+        </div>`;
+      }
+      
+      tooltip.innerHTML = content;
+      
+      console.log('Appending tooltip to document.body...');
+      console.log('Tooltip element created:', tooltip);
+      console.log('Tooltip innerHTML length:', tooltip.innerHTML.length);
+      
+      document.body.appendChild(tooltip);
+      
+      // Store reference for cleanup
+      tooltip.setAttribute('data-tooltip-id', 'cluster-tooltip');
+      
+      console.log('Cluster tooltip successfully appended to DOM');
+      console.log('DOM now contains tooltips:', document.querySelectorAll('.marker-tooltip').length);
+      console.log('=== SHOW CLUSTER TOOLTIP END ===');
     }
 
     // Show tooltip for map markers
-    function showTooltip(event, row) {
+    function showTooltip(event, row, markerX = null, markerY = null) {
       // Remove any existing tooltips first
       hideTooltip();
       
-      // Small delay to prevent rapid tooltip creation/destruction
-      setTimeout(() => {
-        const tooltip = document.createElement('div');
-        tooltip.className = 'marker-tooltip';
-        tooltip.style.cssText = `
-          position: fixed;
-          left: ${event.clientX + 10}px;
-          top: ${event.clientY - 10}px;
-          background: rgba(0, 0, 0, 0.8);
-          color: white;
-          padding: 0.5rem;
-          border-radius: 4px;
-          font-size: 0.8rem;
-          pointer-events: none;
-          z-index: 10000;
-          max-width: 200px;
-        `;
+      // Validate input data
+      if (!row || !event) {
+        console.log('showTooltip: Missing row or event data');
+        return;
+      }
+      
+      console.log('=== SHOW TOOLTIP DEBUG ===');
+      console.log('Server Name:', row.Name || 'Unknown');
+      console.log('Provided marker coordinates:', { markerX, markerY });
+      console.log('Event client coordinates:', { clientX: event.clientX, clientY: event.clientY });
+      
+      const tooltip = document.createElement('div');
+      tooltip.className = 'marker-tooltip';
+      
+      let tooltipX, tooltipY;
+      
+      if (markerX !== null && markerY !== null) {
+        // Use fixed marker coordinates if provided - calculate absolute position correctly
+        const svgElement = document.getElementById('world-map');
+        const svgRect = svgElement.getBoundingClientRect();
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
         
-        const geoData = row['GeoLocation'];
-        const status = getStatusIcon(row['Version'], row['Tool Count'], row['Tier']);
-        const tierInfo = getTierInfo(row['Tier']);
+        // Get current zoom transform to account for scaling/translation
+        const mapGroup = d3.select(svgElement).select('.map-group');
+        const transform = d3.zoomTransform(mapGroup.node() || svgElement);
         
-        tooltip.innerHTML = `
-          <strong>${row['Name'] || 'Unknown'}</strong><br>
-          ${geoData.flag} ${geoData.city}, ${geoData.country}<br>
-          ${tierInfo.icon} ${tierInfo.name}<br>
-          ${status.icon} ${status.tooltip}
-        `;
+        // Apply transform to marker coordinates
+        const transformedX = transform.applyX(markerX);
+        const transformedY = transform.applyY(markerY);
         
-        document.body.appendChild(tooltip);
+        tooltipX = svgRect.left + scrollX + transformedX;
+        tooltipY = svgRect.top + scrollY + transformedY;
         
-        // Store reference for cleanup
-        tooltip.setAttribute('data-tooltip-id', 'single-tooltip');
-      }, 50);
+        console.log('Using FIXED coordinates for tooltip positioning:');
+        console.log('SVG element rect:', { left: svgRect.left, top: svgRect.top, width: svgRect.width, height: svgRect.height });
+        console.log('Zoom transform:', { k: transform.k, x: transform.x, y: transform.y });
+        console.log('Original marker coords:', { markerX, markerY });
+        console.log('Transformed marker coords:', { transformedX, transformedY });
+        console.log('Scroll offsets:', { scrollX, scrollY });
+        console.log('Final calculated tooltip position:', { tooltipX, tooltipY });
+      } else {
+        // Fallback to event coordinates
+        const rect = event.target.getBoundingClientRect();
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+        
+        tooltipX = rect.left + scrollX + rect.width / 2;
+        tooltipY = rect.top + scrollY;
+        
+        console.log('Using EVENT coordinates for tooltip positioning:');
+        console.log('Event target rect:', { left: rect.left, top: rect.top, width: rect.width, height: rect.height });
+        console.log('Scroll offsets:', { scrollX, scrollY });
+        console.log('Calculated tooltip position:', { tooltipX, tooltipY });
+      }
+      
+      tooltip.style.cssText = `
+        position: absolute;
+        left: ${tooltipX + 15}px;
+        top: ${tooltipY - 10}px;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-family: Arial, sans-serif;
+        pointer-events: none;
+        z-index: 10000;
+        max-width: 250px;
+        white-space: nowrap;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.1);
+      `;
+      
+      console.log('Final tooltip CSS position:', { left: tooltipX + 15, top: tooltipY - 10 });
+      
+      const geoData = row['GeoLocation'] || {};
+      const status = getStatusIcon(row['Version'] || '', row['Tool Count'] || '', row['Tier'] || '');
+      const tierInfo = getTierInfo(row['Tier'] || '');
+      
+      const serverName = row['Name'] || row['Server Name'] || 'Unknown Instance';
+      const city = geoData.city || 'Unknown City';
+      const country = geoData.country || 'Unknown Country';
+      const flag = geoData.flag || '🏳️';
+      
+      tooltip.innerHTML = `
+        <div style="font-weight: bold; margin-bottom: 4px;">${serverName}</div>
+        <div style="margin-bottom: 2px;">${flag} ${city}, ${country}</div>
+        <div style="margin-bottom: 2px;">${tierInfo.icon} ${tierInfo.name}</div>
+        <div>${status.icon} ${status.tooltip}</div>
+      `;
+      
+      document.body.appendChild(tooltip);
+      
+      // Store reference for cleanup
+      tooltip.setAttribute('data-tooltip-id', 'single-tooltip');
+      
+      console.log('Tooltip created and appended to DOM');
+      console.log('=== END SHOW TOOLTIP DEBUG ===');
     }
 
     // Hide tooltip
     function hideTooltip() {
+      console.log('=== HIDE TOOLTIP START ===');
+      console.log('Timestamp:', Date.now());
       const tooltips = document.querySelectorAll('.marker-tooltip');
-      tooltips.forEach(tooltip => {
+      console.log('Found tooltips to remove:', tooltips.length);
+      
+      tooltips.forEach((tooltip, index) => {
+        console.log(`Removing tooltip ${index + 1}:`, tooltip.getAttribute('data-tooltip-id'));
         if (tooltip.parentNode) {
           tooltip.parentNode.removeChild(tooltip);
+          console.log(`Tooltip ${index + 1} removed successfully`);
+        } else {
+          console.log(`Tooltip ${index + 1} has no parent node`);
         }
       });
+      
+      console.log('Remaining tooltips after cleanup:', document.querySelectorAll('.marker-tooltip').length);
+      console.log('=== HIDE TOOLTIP END ===');
     }
 
     // Render the location table
@@ -1894,6 +2459,21 @@
         const status = getStatusIcon(row['Version'], row['Tool Count'], row['Tier']);
         const tierInfo = getTierInfo(row['Tier']);
         
+        // Parse description and notes
+        const descriptionText = row['Description'] || '';
+        const notesText = row['Notes'] || '';
+        
+        let descriptionContent = parseMarkdownLinks(descriptionText);
+        let descriptionHtml = '';
+        
+        if (descriptionContent) {
+          descriptionHtml += `<div>${descriptionContent}</div>`;
+        }
+        
+        if (notesText) {
+          descriptionHtml += `<div class="description-notes" style="font-size: 0.9em; color: #666; margin-top: 4px;">${notesText}</div>`;
+        }
+        
         tr.innerHTML = `
           <td>
             <div class="server-name">${row['Name'] || 'Unknown'}</div>
@@ -1904,6 +2484,11 @@
             ${tierInfo.name}
           </td>
           <td>${row['Region'] || 'Unknown'}</td>
+          <td>
+            <div class="description-info">
+              ${descriptionHtml || '<span style="color: #999; font-style: italic;">No description</span>'}
+            </div>
+          </td>
           <td>
             <div class="location-info">
               <div>
@@ -1954,7 +2539,7 @@
         return;
       }
       
-      const headers = ['Name', 'URL', 'Region', 'Tier', 'Country', 'City', 'Latitude', 'Longitude', 'Version', 'Tool Count'];
+      const headers = ['Name', 'URL', 'Region', 'Tier', 'Country', 'City', 'Latitude', 'Longitude', 'Description', 'Notes'];
       const csvRows = [headers.join(',')];
       
       filteredData.forEach(row => {
@@ -1968,8 +2553,8 @@
           `"${(geoData.city || '').replace(/"/g, '""')}"`,
           geoData.latitude || '',
           geoData.longitude || '',
-          `"${(row['Version'] || '').replace(/"/g, '""')}"`,
-          `"${(row['Tool Count'] || '').replace(/"/g, '""')}"`
+          `"${(row['Description'] || '').replace(/"/g, '""')}"`,
+          `"${(row['Notes'] || '').replace(/"/g, '""')}"`
         ];
         csvRows.push(csvRow.join(','));
       });
@@ -1993,6 +2578,19 @@
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    }
+
+    // Function to refresh geolocation for all servers (clears cache and re-fetches)
+    async function refreshServerLocations() {
+      console.log('Clearing geolocation cache and refreshing all server locations...');
+      clearGeoCache();
+      
+      updateStatus('Refreshing server locations...', 'loading');
+      await geolocateAllServers(true); // Force refresh
+      
+      updateSummaryStats();
+      renderCurrentView();
+      updateStatus(`Server locations refreshed. Updated geolocation data.`, 'success');
     }
 
     // Initialize the application
@@ -2039,12 +2637,38 @@
         button.disabled = false;
       });
       
+      // Close cluster details button
+      document.getElementById('close-cluster-details').addEventListener('click', () => {
+        hideClusterDetails();
+      });
+      
       // Load initial data
       loadSpreadsheetData();
     }
 
     // Start the application when DOM is loaded
     document.addEventListener('DOMContentLoaded', initializeApp);
+
+    // Function to parse markdown links in description text
+    function parseMarkdownLinks(text) {
+      if (!text || typeof text !== 'string') {
+        return text || '';
+      }
+      
+      // Regular expression to match markdown links: [text](url)
+      const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+      
+      // Replace all markdown links with HTML anchor tags
+      return text.replace(markdownLinkRegex, (match, linkText, url) => {
+        // Only add protocol if none is present (preserve existing http:// or https://)
+        let cleanUrl = url.trim();
+        if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+          cleanUrl = 'https://' + cleanUrl;
+        }
+        
+        return `<a href="${cleanUrl}" target="_blank" style="color: #2196f3; text-decoration: none;">${linkText.trim()}</a>`;
+      });
+    }
   </script>
 </body>
 </html>
