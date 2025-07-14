@@ -425,20 +425,79 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
     }
 
-    .map-marker.online {
-      fill: #4caf50;
+    .map-marker.tier-1 {
+      fill: #4caf50; /* Global Instance */
     }
 
-    .map-marker.issues {
-      fill: #ff9800;
+    .map-marker.tier-2 {
+      fill: #ff9800; /* National Instance */
     }
 
-    .map-marker.offline {
-      fill: #f44336;
+    .map-marker.tier-3 {
+      fill: #2196f3; /* Subdomain */
     }
 
-    .map-marker.unknown {
-      fill: #999;
+    .map-marker.tier-4 {
+      fill: #9c27b0; /* Institutional */
+    }
+
+    .map-marker.tier-5 {
+      fill: #607d8b; /* Integrated Platform */
+    }
+
+    .map-marker.tier-6 {
+      fill: #795548; /* Development Instance */
+    }
+
+    .map-marker.tier-0,
+    .map-marker.tier-unknown {
+      fill: #999; /* Unknown tier */
+    }
+
+    .marker-cluster {
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .marker-cluster:hover {
+      transform: scale(1.1);
+      opacity: 1 !important;
+    }
+
+    .cluster-text {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+    }
+
+    .cluster-group {
+      cursor: pointer;
+    }
+
+    .cluster-tooltip {
+      border: 1px solid #444;
+    }
+
+    .cluster-tooltip::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .cluster-tooltip::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+    }
+
+    .cluster-tooltip::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 3px;
+    }
+
+    .cluster-tooltip::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.5);
     }
 
     .country {
@@ -568,13 +627,11 @@
         <table id="location-table">
           <thead>
             <tr>
-              <th>Status</th>
-              <th>Tier</th>
               <th>Instance</th>
+              <th>Tier</th>
               <th>Region</th>
               <th>Location</th>
               <th>Coordinates</th>
-              <th>Server Info</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -890,26 +947,120 @@
       return flagMap[countryCode.toUpperCase()] || '🏳️';
     }
 
-    // Function to get status icon (simplified version from index.html)
-    function getStatusIcon(version, toolCount) {
-      if (!version || version === '' || version === 'Loading...') {
-        return { icon: '⏳', class: 'unknown', tooltip: 'Status unknown' };
+    // Function to get status icon (full version from index.html)
+    function getStatusIcon(version, toolCount, tier = null, serverReachable = null) {
+      // Handle null, undefined, or empty version
+      if (!version || version === '' || version === null || version === undefined) {
+        return { icon: '⏳', class: 'unknown', tooltip: 'Status unknown - loading or no data available' };
       }
       
+      // Convert to string and trim for consistent comparison
       const versionStr = String(version).trim();
+      const toolCountStr = String(toolCount || '').trim();
+      const tierStr = String(tier || '').trim();
       
-      if (versionStr === 'Offline' || versionStr.includes('ERR_NAME_NOT_RESOLVED')) {
-        return { icon: '🔴', class: 'offline', tooltip: 'Instance is offline' };
+      // Special handling for Tier 5 (Integrated Deployment) instances
+      // For Tier 5, if the site is reachable but API doesn't respond, consider it online
+      if (tierStr === '5') {
+        // If the instance is reachable (website responds) even with API errors, it's online
+        if (serverReachable === true) {
+          // Check if we have API errors but the site itself is reachable
+          if (versionStr === 'API Error' || versionStr === 'Unknown' || versionStr === 'Error' ||
+              versionStr === 'CORS Blocked' || toolCountStr === 'API Error') {
+            return { icon: '🟢', class: 'online', tooltip: 'Integrated platform is online (Galaxy API may not be directly accessible)' };
+          }
+        }
+        
+        // If explicitly marked as unreachable or has DNS/network errors, it's offline
+        if (versionStr.includes('ERR_NAME_NOT_RESOLVED') || versionStr.includes('ENOTFOUND') || 
+            versionStr.includes('SERVER_UNREACHABLE') || versionStr === 'DNS Error' || 
+            versionStr === 'Offline') {
+          return { icon: '🔴', class: 'offline', tooltip: 'Integrated platform is offline or unreachable' };
+        }
       }
       
-      if (versionStr === 'Unknown' || versionStr === 'API Error' || versionStr === 'CORS Blocked') {
-        return { icon: '🟡', class: 'issues', tooltip: 'Instance has issues' };
+      // Handle specific status values that indicate the instance is completely offline/unreachable
+      if (versionStr === 'Offline') {
+        return { icon: '🔴', class: 'offline', tooltip: 'Instance is offline or unreachable' };
       }
       
-      if (versionStr && versionStr !== 'Unknown' && versionStr !== 'Error') {
-        return { icon: '🟢', class: 'online', tooltip: 'Instance is online' };
+      // Check if both version and tools indicate offline/unreachable
+      if (toolCountStr === 'Offline' && (versionStr === 'Unknown' || versionStr === 'Error' || versionStr === 'API Error' || versionStr === 'Timeout')) {
+        return { icon: '🔴', class: 'offline', tooltip: 'Instance is offline or unreachable' };
       }
       
+      // Check if both version and tool count show API errors (completely unreachable)
+      if (versionStr === 'API Error' && toolCountStr === 'API Error') {
+        return { icon: '🔴', class: 'offline', tooltip: 'Instance is offline or unreachable (API calls failed)' };
+      }
+      
+      // Check for explicit network/DNS errors that indicate instance is completely offline
+      if (versionStr.includes('ERR_NAME_NOT_RESOLVED') || versionStr.includes('ENOTFOUND') || 
+          versionStr.includes('SERVER_UNREACHABLE') || versionStr === 'DNS Error') {
+        return { icon: '🔴', class: 'offline', tooltip: 'Instance is offline or unreachable (DNS/network error)' };
+      }
+      
+      if (versionStr === 'No URL') {
+        return { icon: '⚫', class: 'unknown', tooltip: 'No URL provided for this instance' };
+      }
+      if (versionStr === 'Local Mode') {
+        return { icon: '🏠', class: 'unknown', tooltip: 'Running in local mode - limited functionality' };
+      }
+      
+      // Handle loading states
+      if (versionStr === 'Loading...' || versionStr === 'N/A') {
+        return { icon: '⏳', class: 'unknown', tooltip: 'Status unknown or loading...' };
+      }
+      
+      // Check if server is providing data (tools/genomes) even if version is problematic
+      const hasToolData = toolCountStr && 
+                         toolCountStr !== 'Loading...' && 
+                         toolCountStr !== 'N/A' && 
+                         toolCountStr !== 'Offline' && 
+                         toolCountStr !== 'Error' && 
+                         toolCountStr !== 'API Error' && 
+                         toolCountStr !== 'Unknown' &&
+                         toolCountStr !== 'No URL' &&
+                         toolCountStr !== 'Local Mode' &&
+                         (toolCountStr.includes('tools') || toolCountStr.includes('genomes') || /^\d+$/.test(toolCountStr));
+      
+      // If we can fetch tools/genomes but version is unknown, instance is online with issues
+      if ((versionStr === 'Unknown' || versionStr === 'API Error' || versionStr === 'Error') && hasToolData) {
+        return { icon: '🟡', class: 'issues', tooltip: 'Instance is online but has API issues (version unknown, but tools/genomes accessible)' };
+      }
+      
+      // CORS blocked but instance appears online
+      if (versionStr === 'CORS Blocked') {
+        return { icon: '🟡', class: 'issues', tooltip: 'Instance appears online but API calls are blocked by browser CORS policy' };
+      }
+      
+      // Instance requires authentication but is online
+      if (versionStr.includes('Auth Required') || versionStr.includes('Authentication')) {
+        return { icon: '🟡', class: 'issues', tooltip: 'Instance is online but requires authentication for API access' };
+      }
+      
+      // Instance has issues but may be partially accessible (only if no tool data)
+      if ((versionStr === 'Unknown' || versionStr === 'API Error' || versionStr === 'Error') && !hasToolData) {
+        return { icon: '🟡', class: 'issues', tooltip: 'Instance status unknown due to API errors' };
+      }
+      
+      // If version contains HTML (like version with start date), check for known patterns
+      if (versionStr.includes('<br>') || versionStr.includes('<small>')) {
+        // Extract the main version number before any HTML formatting
+        const mainVersion = versionStr.split('<br>')[0].split('<small>')[0].trim();
+        if (mainVersion && mainVersion !== '' && mainVersion !== 'Unknown' && mainVersion !== 'Error') {
+          return { icon: '🟢', class: 'online', tooltip: 'Instance is online and responding' };
+        } else {
+          return { icon: '❓', class: 'unknown', tooltip: 'Instance status uncertain' };
+        }
+      }
+      
+      // Default case: if we have a meaningful version string that's not an error, instance is online
+      if (versionStr && versionStr !== '' && versionStr !== 'Unknown' && versionStr !== 'Error') {
+        return { icon: '🟢', class: 'online', tooltip: 'Instance is online and responding' };
+      }
+      
+      // Final fallback for any unhandled cases
       return { icon: '⏳', class: 'unknown', tooltip: 'Status unknown' };
     }
 
@@ -985,13 +1136,35 @@
       updateStatus('Loading Galaxy instance data...', 'loading');
       
       try {
-        const response = await fetch(sheetUrl);
+        console.log('Fetching data from:', sheetUrl);
+        
+        // Add a timeout to the fetch
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+        
+        const response = await fetch(sheetUrl, {
+          method: 'GET',
+          mode: 'cors',
+          headers: {
+            'Accept': 'text/csv'
+          },
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        console.log('Response status:', response.status, response.statusText);
+        
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
         }
         
+        updateStatus('Processing spreadsheet data...', 'loading');
         const csvText = await response.text();
+        console.log('CSV text length:', csvText.length);
+        console.log('First 200 chars:', csvText.substring(0, 200));
+        
         const data = parseCSV(csvText);
+        console.log('Parsed data length:', data.length);
         
         if (data.length === 0) {
           throw new Error('No data found in spreadsheet');
@@ -1021,7 +1194,18 @@
         
       } catch (error) {
         console.error('Error loading spreadsheet:', error);
-        updateStatus(`Error loading data: ${error.message}`, 'error');
+        if (error.name === 'AbortError') {
+          updateStatus(`Error: Request timed out after 30 seconds`, 'error');
+        } else {
+          updateStatus(`Error loading data: ${error.message}`, 'error');
+        }
+        
+        // Try to show some fallback data or continue with empty data
+        console.log('Continuing with empty data for testing...');
+        currentData = [];
+        filteredData = [];
+        updateSummaryStats();
+        renderCurrentView();
       }
     }
 
@@ -1078,7 +1262,7 @@
       const total = currentData.length;
       const countries = new Set(currentData.map(row => row['GeoLocation']?.country).filter(Boolean)).size;
       const online = currentData.filter(row => {
-        const status = getStatusIcon(row['Version']);
+        const status = getStatusIcon(row['Version'], row['Tool Count'], row['Tier']);
         return status.class === 'online';
       }).length;
       
@@ -1124,10 +1308,18 @@
       zoom = d3.zoom()
         .scaleExtent([0.5, 8])
         .on("zoom", (event) => {
-          svg.selectAll("path")
-            .attr("transform", event.transform);
-          svg.selectAll(".map-marker")
-            .attr("transform", event.transform);
+          // Create a group for all map elements if it doesn't exist
+          let mapGroup = svg.select(".map-group");
+          if (mapGroup.empty()) {
+            mapGroup = svg.append("g").attr("class", "map-group");
+            // Move all existing elements to the group
+            svg.selectAll("path, .map-marker, .marker-cluster, .cluster-text").each(function() {
+              mapGroup.node().appendChild(this);
+            });
+          }
+          
+          // Apply transform to the entire group
+          mapGroup.attr("transform", event.transform);
         });
 
       svg.call(zoom);
@@ -1145,14 +1337,20 @@
         const world = await d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
         worldData = world;
         
+        // Create or get the map group
+        let mapGroup = svg.select(".map-group");
+        if (mapGroup.empty()) {
+          mapGroup = svg.append("g").attr("class", "map-group");
+        }
+        
         // Add ocean background first
-        svg.insert("path", ":first-child")
+        mapGroup.insert("path", ":first-child")
           .datum({type: "Sphere"})
           .attr("class", "ocean")
           .attr("d", path);
         
         // Draw countries
-        svg.append("g")
+        mapGroup.append("g")
           .attr("class", "countries")
           .selectAll("path")
           .data(topojson.feature(world, world.objects.countries).features)
@@ -1184,7 +1382,13 @@
 
     // Fallback map if Natural Earth data fails to load
     function renderFallbackMap() {
-      svg.append("rect")
+      // Create or get the map group
+      let mapGroup = svg.select(".map-group");
+      if (mapGroup.empty()) {
+        mapGroup = svg.append("g").attr("class", "map-group");
+      }
+      
+      mapGroup.append("rect")
         .attr("width", width)
         .attr("height", height)
         .attr("fill", "#e3f2fd")
@@ -1206,7 +1410,7 @@
         "M720,300 L800,295 L820,320 L800,340 L740,335 Z"
       ];
       
-      svg.append("g")
+      mapGroup.append("g")
         .attr("class", "continents")
         .selectAll("path")
         .data(continents)
@@ -1215,6 +1419,10 @@
         .attr("fill", "#e8f5e8")
         .attr("stroke", "#b8d8b8")
         .attr("stroke-width", 1);
+        
+      console.log('Fallback map rendered');
+    }
+
     // Render the map with server markers
     function renderMap() {
       // Initialize map if not already done
@@ -1223,12 +1431,22 @@
         return; // Map will be rendered after world data loads
       }
       
+      // Get or create the map group
+      let mapGroup = svg.select(".map-group");
+      if (mapGroup.empty()) {
+        mapGroup = svg.append("g").attr("class", "map-group");
+      }
+      
       // Clear existing markers
-      svg.selectAll(".map-marker").remove();
+      mapGroup.selectAll(".map-marker").remove();
+      mapGroup.selectAll(".marker-cluster").remove();
+      mapGroup.selectAll(".cluster-text").remove();
       
       let markersAdded = 0;
       
-      // Add markers for each server with known coordinates
+      // Group instances by location (lat/lng with some tolerance for clustering)
+      const locationGroups = new Map();
+      
       filteredData.forEach((row, index) => {
         const geoData = row['GeoLocation'];
         
@@ -1241,31 +1459,24 @@
           const coords = projection([parseFloat(geoData.longitude), parseFloat(geoData.latitude)]);
           
           if (coords && coords[0] >= 0 && coords[0] <= width && coords[1] >= 0 && coords[1] <= height) {
-            const status = getStatusIcon(row['Version'], row['Tool Count']);
+            // Round coordinates to cluster nearby instances (within ~20px)
+            const clusterX = Math.round(coords[0] / 20) * 20;
+            const clusterY = Math.round(coords[1] / 20) * 20;
+            const clusterKey = `${clusterX},${clusterY}`;
             
-            // Create marker using D3
-            svg.append("circle")
-              .attr("class", `map-marker ${status.class}`)
-              .attr("cx", coords[0])
-              .attr("cy", coords[1])
-              .attr("r", 4)
-              .attr("fill", getMarkerColor(status.class))
-              .attr("stroke", "white")
-              .attr("stroke-width", 2)
-              .style("cursor", "pointer")
-              .on("mouseenter", function(event) {
-                // Scale up marker on hover
-                d3.select(this).transition().duration(200).attr("r", 6);
-                showTooltip(event, row);
-              })
-              .on("mouseleave", function() {
-                // Scale down marker
-                d3.select(this).transition().duration(200).attr("r", 4);
-                hideTooltip();
+            if (!locationGroups.has(clusterKey)) {
+              locationGroups.set(clusterKey, {
+                x: clusterX,
+                y: clusterY,
+                instances: [],
+                coords: coords // Keep original coords for first instance
               });
+            }
             
-            markersAdded++;
-            console.log(`Added marker for ${row['Name']} at (${coords[0].toFixed(2)}, ${coords[1].toFixed(2)})`);
+            locationGroups.get(clusterKey).instances.push({
+              ...row,
+              originalCoords: coords
+            });
           } else {
             console.log(`Invalid coordinates for ${row['Name']}: `, coords);
           }
@@ -1274,14 +1485,196 @@
         }
       });
       
-      console.log(`Total markers added to map: ${markersAdded} out of ${filteredData.length} servers`);
+      // Create markers for each location group
+      locationGroups.forEach((group, key) => {
+        const instances = group.instances;
+        const coords = [group.x, group.y];
+        
+        if (instances.length === 1) {
+          // Single instance - create regular marker
+          const row = instances[0];
+          const tier = row['Tier'] || '0';
+          
+          const singleMarker = mapGroup.append("circle")
+            .attr("class", `map-marker tier-${tier}`)
+            .attr("cx", coords[0])
+            .attr("cy", coords[1])
+            .attr("r", 4)
+            .attr("fill", getMarkerColorByTier(tier))
+            .attr("stroke", "white")
+            .attr("stroke-width", 2)
+            .style("cursor", "pointer");
+          
+          // Store timeout references for debouncing
+          let singleEnterTimeout = null;
+          let singleLeaveTimeout = null;
+          
+          singleMarker
+            .on("mouseenter", function(event) {
+              // Clear any pending leave timeout
+              if (singleLeaveTimeout) {
+                clearTimeout(singleLeaveTimeout);
+                singleLeaveTimeout = null;
+              }
+              
+              // Clear any pending enter timeout
+              if (singleEnterTimeout) {
+                clearTimeout(singleEnterTimeout);
+              }
+              
+              // Set new enter timeout with debouncing
+              singleEnterTimeout = setTimeout(() => {
+                d3.select(this).transition().duration(200).attr("r", 6);
+                showTooltip(event, row);
+                singleEnterTimeout = null;
+              }, 50);
+            })
+            .on("mouseleave", function() {
+              // Clear any pending enter timeout
+              if (singleEnterTimeout) {
+                clearTimeout(singleEnterTimeout);
+                singleEnterTimeout = null;
+              }
+              
+              // Clear any existing leave timeout
+              if (singleLeaveTimeout) {
+                clearTimeout(singleLeaveTimeout);
+              }
+              
+              // Set new leave timeout with debouncing
+              singleLeaveTimeout = setTimeout(() => {
+                d3.select(this).transition().duration(200).attr("r", 4);
+                hideTooltip();
+                singleLeaveTimeout = null;
+              }, 100);
+            });
+            
+          markersAdded++;
+        } else {
+          // Multiple instances - create clustered marker
+          const dominantTier = getMostCommonTier(instances);
+          const clusterSize = Math.min(instances.length, 10); // Cap visual size
+          const radius = Math.max(6, Math.min(12, 4 + clusterSize));
+          
+          // Create a group for the cluster to handle events properly
+          const clusterGroup = mapGroup.append("g")
+            .attr("class", "cluster-group")
+            .style("cursor", "pointer");
+          
+          // Store a reference for debouncing
+          let enterTimeout = null;
+          let leaveTimeout = null;
+          
+          clusterGroup
+            .on("mouseenter", function(event) {
+              // Clear any pending leave timeout
+              if (leaveTimeout) {
+                clearTimeout(leaveTimeout);
+                leaveTimeout = null;
+              }
+              
+              // Clear any pending enter timeout
+              if (enterTimeout) {
+                clearTimeout(enterTimeout);
+              }
+              
+              // Set new enter timeout with debouncing
+              enterTimeout = setTimeout(() => {
+                d3.select(this).select(".marker-cluster")
+                  .transition().duration(200).attr("r", radius + 2);
+                
+                if (instances.length === 1) {
+                  showTooltip(event, instances[0]);
+                } else {
+                  showClusterTooltip(event, instances);
+                }
+                enterTimeout = null;
+              }, 50);
+            })
+            .on("mouseleave", function() {
+              // Clear any pending enter timeout
+              if (enterTimeout) {
+                clearTimeout(enterTimeout);
+                enterTimeout = null;
+              }
+              
+              // Clear any existing leave timeout
+              if (leaveTimeout) {
+                clearTimeout(leaveTimeout);
+              }
+              
+              // Set new leave timeout with debouncing
+              leaveTimeout = setTimeout(() => {
+                d3.select(this).select(".marker-cluster")
+                  .transition().duration(200).attr("r", radius);
+                hideTooltip();
+                leaveTimeout = null;
+              }, 100);
+            });
+          
+          // Create cluster background circle
+          clusterGroup.append("circle")
+            .attr("class", `marker-cluster cluster-tier-${dominantTier}`)
+            .attr("cx", coords[0])
+            .attr("cy", coords[1])
+            .attr("r", radius)
+            .attr("fill", getMarkerColorByTier(dominantTier))
+            .attr("stroke", "white")
+            .attr("stroke-width", 3)
+            .attr("opacity", 0.8);
+          
+          // Add count text on cluster - make it non-interactive
+          clusterGroup.append("text")
+            .attr("class", "cluster-text")
+            .attr("x", coords[0])
+            .attr("y", coords[1])
+            .attr("dy", "0.35em")
+            .attr("text-anchor", "middle")
+            .attr("fill", "white")
+            .attr("font-size", "10px")
+            .attr("font-weight", "bold")
+            .attr("pointer-events", "none")
+            .style("user-select", "none")
+            .text(instances.length);
+            
+          markersAdded += instances.length;
+        }
+      });
+      
+      console.log(`Total markers added to map: ${markersAdded} out of ${filteredData.length} servers in ${locationGroups.size} location groups`);
       
       // Add a legend
       addMapLegend();
     }
     
-    // Helper function to get marker color
-    function getMarkerColor(statusClass) {
+    // Helper function to find the most common tier in a group
+    function getMostCommonTier(instances) {
+      const tierCounts = {};
+      instances.forEach(instance => {
+        const tier = instance['Tier'] || '0';
+        tierCounts[tier] = (tierCounts[tier] || 0) + 1;
+      });
+      
+      return Object.keys(tierCounts).reduce((a, b) => 
+        tierCounts[a] > tierCounts[b] ? a : b
+      );
+    }
+    
+    // Helper function to get marker color by tier
+    function getMarkerColorByTier(tier) {
+      const tierColors = {
+        '1': '#4caf50',    // Global Instance - Green
+        '2': '#ff9800',    // National Instance - Orange  
+        '3': '#2196f3',    // Subdomain - Blue
+        '4': '#9c27b0',    // Institutional - Purple
+        '5': '#607d8b',    // Integrated Platform - Blue Grey
+        '6': '#795548'     // Development Instance - Brown
+      };
+      return tierColors[tier] || '#999'; // Default grey for unknown tiers
+    }
+
+    // Helper function to get marker color by status (keeping for reference)
+    function getMarkerColorByStatus(statusClass) {
       const colors = {
         'online': '#4caf50',
         'issues': '#ff9800', 
@@ -1316,47 +1709,162 @@
       `;
       
       legend.innerHTML = `
-        <div style="font-weight: bold; margin-bottom: 5px;">Instance Status</div>
-        <div style="margin: 3px 0;"><span style="color: #4caf50;">●</span> Online</div>
-        <div style="margin: 3px 0;"><span style="color: #ff9800;">●</span> Issues</div>
-        <div style="margin: 3px 0;"><span style="color: #f44336;">●</span> Offline</div>
-        <div style="margin: 3px 0;"><span style="color: #999;">●</span> Unknown</div>
+        <div style="font-weight: bold; margin-bottom: 5px;">Instance Tiers</div>
+        <div style="margin: 3px 0;"><span style="color: #4caf50;">●</span> Global Instance</div>
+        <div style="margin: 3px 0;"><span style="color: #ff9800;">●</span> National Instance</div>
+        <div style="margin: 3px 0;"><span style="color: #2196f3;">●</span> Subdomain</div>
+        <div style="margin: 3px 0;"><span style="color: #9c27b0;">●</span> Institutional</div>
+        <div style="margin: 3px 0;"><span style="color: #607d8b;">●</span> Integrated Platform</div>
+        <div style="margin: 3px 0;"><span style="color: #795548;">●</span> Development Instance</div>
+        <div style="margin-top: 8px; font-size: 11px; color: #666; font-style: italic;">
+          Numbers show multiple instances<br>at the same location
+        </div>
       `;
       
       mapContainer.appendChild(legend);
     }
 
-    // Show tooltip for map markers
-    function showTooltip(event, row) {
-      // Remove any existing tooltips
+    // Show tooltip for clustered markers
+    function showClusterTooltip(event, instances) {
+      // Remove any existing tooltips first
       hideTooltip();
       
-      const tooltip = document.createElement('div');
-      tooltip.className = 'marker-tooltip';
-      tooltip.style.position = 'absolute';
-      tooltip.style.left = event.pageX + 10 + 'px';
-      tooltip.style.top = event.pageY - 10 + 'px';
-      tooltip.style.background = 'rgba(0, 0, 0, 0.8)';
-      tooltip.style.color = 'white';
-      tooltip.style.padding = '0.5rem';
-      tooltip.style.borderRadius = '4px';
-      tooltip.style.fontSize = '0.8rem';
-      tooltip.style.pointerEvents = 'none';
-      tooltip.style.zIndex = '1000';
-      tooltip.style.maxWidth = '200px';
+      // Small delay to prevent rapid tooltip creation/destruction
+      setTimeout(() => {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'marker-tooltip cluster-tooltip';
+        tooltip.style.cssText = `
+          position: fixed;
+          left: ${event.clientX + 10}px;
+          top: ${event.clientY - 10}px;
+          background: rgba(0, 0, 0, 0.9);
+          color: white;
+          padding: 0.75rem;
+          border-radius: 6px;
+          font-size: 0.8rem;
+          pointer-events: none;
+          z-index: 10000;
+          max-width: 300px;
+          max-height: 400px;
+          overflow-y: auto;
+          border: 1px solid #444;
+        `;
+        
+        // Get location info from first instance
+        const geoData = instances[0]['GeoLocation'];
+        
+        // Group instances by tier for summary
+        const tierGroups = {};
+        const statusGroups = { online: 0, issues: 0, offline: 0, unknown: 0 };
+        
+        instances.forEach(instance => {
+          const tier = instance['Tier'] || '0';
+          const tierInfo = getTierInfo(tier);
+          if (!tierGroups[tier]) {
+            tierGroups[tier] = { name: tierInfo.name, icon: tierInfo.icon, instances: [] };
+          }
+          tierGroups[tier].instances.push(instance);
+          
+          // Count status
+          const status = getStatusIcon(instance['Version'], instance['Tool Count'], instance['Tier']);
+          statusGroups[status.class] = (statusGroups[status.class] || 0) + 1;
+        });
+        
+        let content = `
+          <div style="font-weight: bold; margin-bottom: 0.5rem;">
+            ${geoData.flag} ${geoData.city}, ${geoData.country}
+          </div>
+          <div style="margin-bottom: 0.5rem; color: #ccc;">
+            ${instances.length} Galaxy Instance${instances.length > 1 ? 's' : ''}
+          </div>
+        `;
+        
+        // Add tier breakdown
+        Object.keys(tierGroups).forEach(tier => {
+          const group = tierGroups[tier];
+          content += `
+            <div style="margin: 0.25rem 0; font-size: 0.75rem;">
+              ${group.icon} ${group.name}: ${group.instances.length}
+            </div>
+          `;
+        });
+        
+        // Add status summary
+        const statusIcons = { online: '🟢', issues: '🟡', offline: '🔴', unknown: '⏳' };
+        content += '<div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #666; font-size: 0.75rem;">';
+        Object.keys(statusGroups).forEach(status => {
+          if (statusGroups[status] > 0) {
+            content += `<span style="margin-right: 0.5rem;">${statusIcons[status]} ${statusGroups[status]}</span>`;
+          }
+        });
+        content += '</div>';
+        
+        // Add individual instances (limit to first 10 to avoid overwhelming)
+        if (instances.length <= 10) {
+          content += '<div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #666;">';
+          instances.forEach(instance => {
+            const status = getStatusIcon(instance['Version'], instance['Tool Count'], instance['Tier']);
+            const tierInfo = getTierInfo(instance['Tier']);
+            content += `
+              <div style="margin: 0.25rem 0; font-size: 0.7rem; color: #ddd;">
+                ${status.icon} ${tierInfo.icon} ${instance['Name'] || 'Unknown'}
+              </div>
+            `;
+          });
+          content += '</div>';
+        } else {
+          content += `<div style="margin-top: 0.5rem; font-size: 0.7rem; color: #aaa; font-style: italic;">
+            Click to view all ${instances.length} instances in table
+          </div>`;
+        }
+        
+        tooltip.innerHTML = content;
+        document.body.appendChild(tooltip);
+        
+        // Store reference for cleanup
+        tooltip.setAttribute('data-tooltip-id', 'cluster-tooltip');
+      }, 50);
+    }
+
+    // Show tooltip for map markers
+    function showTooltip(event, row) {
+      // Remove any existing tooltips first
+      hideTooltip();
       
-      const geoData = row['GeoLocation'];
-      const status = getStatusIcon(row['Version'], row['Tool Count']);
-      const tierInfo = getTierInfo(row['Tier']);
-      
-      tooltip.innerHTML = `
-        <strong>${row['Name'] || 'Unknown'}</strong><br>
-        ${geoData.flag} ${geoData.city}, ${geoData.country}<br>
-        ${status.icon} ${status.tooltip}<br>
-        ${tierInfo.icon} ${tierInfo.name}
-      `;
-      
-      document.body.appendChild(tooltip);
+      // Small delay to prevent rapid tooltip creation/destruction
+      setTimeout(() => {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'marker-tooltip';
+        tooltip.style.cssText = `
+          position: fixed;
+          left: ${event.clientX + 10}px;
+          top: ${event.clientY - 10}px;
+          background: rgba(0, 0, 0, 0.8);
+          color: white;
+          padding: 0.5rem;
+          border-radius: 4px;
+          font-size: 0.8rem;
+          pointer-events: none;
+          z-index: 10000;
+          max-width: 200px;
+        `;
+        
+        const geoData = row['GeoLocation'];
+        const status = getStatusIcon(row['Version'], row['Tool Count'], row['Tier']);
+        const tierInfo = getTierInfo(row['Tier']);
+        
+        tooltip.innerHTML = `
+          <strong>${row['Name'] || 'Unknown'}</strong><br>
+          ${geoData.flag} ${geoData.city}, ${geoData.country}<br>
+          ${tierInfo.icon} ${tierInfo.name}<br>
+          ${status.icon} ${status.tooltip}
+        `;
+        
+        document.body.appendChild(tooltip);
+        
+        // Store reference for cleanup
+        tooltip.setAttribute('data-tooltip-id', 'single-tooltip');
+      }, 50);
     }
 
     // Hide tooltip
@@ -1375,7 +1883,7 @@
       tbody.innerHTML = '';
       
       if (filteredData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="no-results">No instances match your search criteria.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="no-results">No instances match your search criteria.</td></tr>';
         return;
       }
       
@@ -1383,23 +1891,17 @@
         const tr = document.createElement('tr');
         
         const geoData = row['GeoLocation'] || {};
-        const status = getStatusIcon(row['Version'], row['Tool Count']);
+        const status = getStatusIcon(row['Version'], row['Tool Count'], row['Tier']);
         const tierInfo = getTierInfo(row['Tier']);
         
         tr.innerHTML = `
           <td>
-            <div class="status-indicator status-${status.class}">
-              <span class="status-icon">${status.icon}</span>
-              ${status.tooltip}
-            </div>
+            <div class="server-name">${row['Name'] || 'Unknown'}</div>
+            ${row['URL'] ? `<a href="${row['URL']}" target="_blank" class="server-url">${row['URL']}</a>` : ''}
           </td>
           <td>
             <span class="tier-icon" style="color: ${tierInfo.color}">${tierInfo.icon}</span>
             ${tierInfo.name}
-          </td>
-          <td>
-            <div class="server-name">${row['Name'] || 'Unknown'}</div>
-            ${row['URL'] ? `<a href="${row['URL']}" target="_blank" class="server-url">${row['URL']}</a>` : ''}
           </td>
           <td>${row['Region'] || 'Unknown'}</td>
           <td>
@@ -1415,10 +1917,6 @@
               `<div class="coordinates">${geoData.latitude.toFixed(4)}, ${geoData.longitude.toFixed(4)}</div>` : 
               '<span style="color: #999;">Unknown</span>'
             }
-          </td>
-          <td>
-            ${row['Version'] || 'Unknown'}<br>
-            <small style="color: #666;">${row['Tool Count'] || 'Unknown'}</small>
           </td>
         `;
         
