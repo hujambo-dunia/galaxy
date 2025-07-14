@@ -465,6 +465,13 @@
       font-size: 0.9rem;
     }
     
+    .tier-count {
+      margin-left: auto;
+      font-size: 0.8rem;
+      color: #666;
+      font-weight: normal;
+    }
+    
     .tiers-popup-actions {
       margin-top: 0.75rem;
       padding-top: 0.75rem;
@@ -556,6 +563,13 @@
     
     .status-checkbox-item .status-icon {
       font-size: 0.9rem;
+    }
+    
+    .status-count {
+      margin-left: auto;
+      font-size: 0.8rem;
+      color: #666;
+      font-weight: normal;
     }
     
     .status-popup-actions {
@@ -674,21 +688,21 @@
               <input type="checkbox" id="status-online-checkbox" checked>
               <label for="status-online-checkbox">
                 <i class="fas fa-circle status-icon" style="color: #4caf50;"></i>
-                Online Instances
+                Online Instances <span class="status-count" id="status-online-count">(0)</span>
               </label>
             </div>
             <div class="status-checkbox-item">
               <input type="checkbox" id="status-issues-checkbox" checked>
               <label for="status-issues-checkbox">
                 <i class="fas fa-circle status-icon" style="color: #ff9800;"></i>
-                Instances with Issues
+                Instances with Issues <span class="status-count" id="status-issues-count">(0)</span>
               </label>
             </div>
             <div class="status-checkbox-item">
               <input type="checkbox" id="status-offline-checkbox" checked>
               <label for="status-offline-checkbox">
                 <i class="fas fa-circle status-icon" style="color: #f44336;"></i>
-                Offline Instances
+                Offline Instances <span class="status-count" id="status-offline-count">(0)</span>
               </label>
             </div>
             <div class="status-popup-actions">
@@ -707,42 +721,42 @@
               <input type="checkbox" id="tier-1-checkbox" checked>
               <label for="tier-1-checkbox">
                 <i class="fas fa-globe tier-icon" style="color: #4caf50;"></i>
-                Tier 1 - Global Instance
+                Tier 1 - Global Instance <span class="tier-count" id="tier-1-count">(0)</span>
               </label>
             </div>
             <div class="tier-checkbox-item">
               <input type="checkbox" id="tier-2-checkbox" checked>
               <label for="tier-2-checkbox">
                 <i class="fas fa-university tier-icon" style="color: #ff9800;"></i>
-                Tier 2 - National Instance
+                Tier 2 - National Instance <span class="tier-count" id="tier-2-count">(0)</span>
               </label>
             </div>
             <div class="tier-checkbox-item">
               <input type="checkbox" id="tier-3-checkbox" checked>
               <label for="tier-3-checkbox">
                 <i class="fas fa-map-marker-alt tier-icon" style="color: #2196f3;"></i>
-                Tier 3 - Subdomain
+                Tier 3 - Subdomain <span class="tier-count" id="tier-3-count">(0)</span>
               </label>
             </div>
             <div class="tier-checkbox-item">
               <input type="checkbox" id="tier-4-checkbox" checked>
               <label for="tier-4-checkbox">
                 <i class="fas fa-flask tier-icon" style="color: #9c27b0;"></i>
-                Tier 4 - Institutional Deployment
+                Tier 4 - Institutional <span class="tier-count" id="tier-4-count">(0)</span>
               </label>
             </div>
             <div class="tier-checkbox-item">
               <input type="checkbox" id="tier-5-checkbox" checked>
               <label for="tier-5-checkbox">
                 <i class="fas fa-code-branch tier-icon" style="color: #607d8b;"></i>
-                Tier 5 - Integrated Platform
+                Tier 5 - Integrated Platform <span class="tier-count" id="tier-5-count">(0)</span>
               </label>
             </div>
             <div class="tier-checkbox-item">
               <input type="checkbox" id="tier-6-checkbox" checked>
               <label for="tier-6-checkbox">
                 <i class="fas fa-cogs tier-icon" style="color: #795548;"></i>
-                Tier 6 - Development Instance
+                Tier 6 - Development Instance <span class="tier-count" id="tier-6-count">(0)</span>
               </label>
             </div>
             <div class="tiers-popup-actions">
@@ -1168,6 +1182,78 @@
       document.getElementById('summary-stats').style.display = 'flex';
     }
     
+    function updateStatusCounts() {
+      if (!currentData || currentData.length === 0) {
+        document.getElementById('status-online-count').textContent = '(0)';
+        document.getElementById('status-issues-count').textContent = '(0)';
+        document.getElementById('status-offline-count').textContent = '(0)';
+        return;
+      }
+      
+      let onlineCount = 0;
+      let issuesCount = 0;
+      let offlineCount = 0;
+      
+      currentData.forEach(row => {
+        const version = row['Version'] || '';
+        const toolCount = row['Tool Count'] || '';
+        const tier = row['Tier'] || '';
+        const serverReachable = row['ServerReachable'];
+        const statusInfo = getStatusIcon(version, toolCount, tier, serverReachable);
+        
+        // Categorize based on status icon
+        if (statusInfo.icon === '🟢') {
+          onlineCount++;
+        } else if (statusInfo.icon === '🟡' || statusInfo.icon === '❓') {
+          issuesCount++;
+        } else if (statusInfo.icon === '🔴') {
+          offlineCount++;
+        } else {
+          // Other statuses (loading, no URL, etc.) - count as issues for now
+          issuesCount++;
+        }
+      });
+      
+      document.getElementById('status-online-count').textContent = `(${onlineCount})`;
+      document.getElementById('status-issues-count').textContent = `(${issuesCount})`;
+      document.getElementById('status-offline-count').textContent = `(${offlineCount})`;
+    }
+    
+    function updateTierCounts() {
+      if (!currentData || currentData.length === 0) {
+        document.getElementById('tier-1-count').textContent = '(0)';
+        document.getElementById('tier-2-count').textContent = '(0)';
+        document.getElementById('tier-3-count').textContent = '(0)';
+        document.getElementById('tier-4-count').textContent = '(0)';
+        document.getElementById('tier-5-count').textContent = '(0)';
+        document.getElementById('tier-6-count').textContent = '(0)';
+        return;
+      }
+      
+      const tierCounts = {
+        '1': 0,
+        '2': 0,
+        '3': 0,
+        '4': 0,
+        '5': 0,
+        '6': 0
+      };
+      
+      currentData.forEach(row => {
+        const tier = row['Tier'] || '';
+        if (tier && tierCounts.hasOwnProperty(tier)) {
+          tierCounts[tier]++;
+        }
+      });
+      
+      document.getElementById('tier-1-count').textContent = `(${tierCounts['1']})`;
+      document.getElementById('tier-2-count').textContent = `(${tierCounts['2']})`;
+      document.getElementById('tier-3-count').textContent = `(${tierCounts['3']})`;
+      document.getElementById('tier-4-count').textContent = `(${tierCounts['4']})`;
+      document.getElementById('tier-5-count').textContent = `(${tierCounts['5']})`;
+      document.getElementById('tier-6-count').textContent = `(${tierCounts['6']})`;
+    }
+    
     // Tier filter management functions
     const TIER_PREFS_KEY = 'galaxyTierPreferences';
     
@@ -1500,6 +1586,8 @@
         // Re-render table to show loading state
         renderTableRows(filteredData.length > 0 ? filteredData : currentData);
         updateSummaryStats();
+        updateStatusCounts();
+        updateTierCounts();
         
         // Fetch fresh data for all instances
         fetchAllGalaxyInfo(currentData, true).then(() => {
@@ -1511,6 +1599,8 @@
           performFilter();
           updateStatus(`Refreshed ${currentData.length} instance(s). All data updated from Galaxy APIs.`);
           updateSummaryStats();
+          updateStatusCounts();
+          updateTierCounts();
           
           // Log cache stats
           const cacheStats = getCacheStats();
@@ -1568,6 +1658,8 @@
         // Re-render table to show loading state (always use filteredData if active, else currentData)
         renderTableRows(filteredData.length > 0 ? filteredData : currentData);
         updateSummaryStats();
+        updateStatusCounts();
+        updateTierCounts();
 
         // Fetch fresh data for offline servers only
         fetchAllGalaxyInfo(offlineServers, true).then(() => {
@@ -1593,6 +1685,8 @@
           performFilter();
           updateStatus(`Refreshed ${offlineServers.length} offline server(s). Check status for improvements.`);
           updateSummaryStats();
+          updateStatusCounts();
+          updateTierCounts();
 
           // Log results
           const stillOffline = offlineServers.filter(row => {
@@ -2983,6 +3077,8 @@
       // Show initial loading state with status icons
       renderTableRows(currentData);
       updateSummaryStats();
+      updateStatusCounts();
+      updateTierCounts();
       
       // Fetch Galaxy info for all servers ONCE
       fetchAllGalaxyInfo(data, false).then(() => {
@@ -2990,6 +3086,8 @@
         performFilter();
         updateStatus(`Loaded ${data.length} server(s). Galaxy API data fetched successfully.`);
         updateSummaryStats();
+        updateStatusCounts();
+        updateTierCounts();
       });
     }
 
@@ -3010,6 +3108,8 @@
         // Re-render table to show progressive updates
         renderTableRows(filteredData.length > 0 ? filteredData : currentData);
         updateSummaryStats();
+        updateStatusCounts();
+        updateTierCounts();
       };
       
       const promises = data.map(async (row, index) => {
@@ -3131,8 +3231,8 @@
           tierIcon = '<i class="fas fa-map-marker-alt" title="Tier 3 - Subdomain" style="color: #2196f3;"></i>';
           tierTooltip = 'Tier 3 - Subdomain';
         } else if (tierValue === '4') {
-          tierIcon = '<i class="fas fa-flask" title="Tier 4 - Institutional Deployment" style="color: #9c27b0;"></i>';
-          tierTooltip = 'Tier 4 - Institutional Deployment';
+          tierIcon = '<i class="fas fa-flask" title="Tier 4 - Institutional" style="color: #9c27b0;"></i>';
+          tierTooltip = 'Tier 4 - Institutional';
         } else if (tierValue === '5') {
           tierIcon = '<i class="fas fa-code-branch" title="Tier 5 - Integrated Platform" style="color: #607d8b;"></i>';
           tierTooltip = 'Tier 5 - Integrated Platform (Galaxy not directly accessible)';
