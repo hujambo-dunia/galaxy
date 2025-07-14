@@ -929,14 +929,47 @@
 
       // Check for specific university/institution patterns
       const institutionPatterns = {
+        'hku.hk': { country: 'Hong Kong', countryCode: 'HK', flag: '🇭🇰', lat: 22.2830, lng: 114.1371, city: 'Hong Kong' },
         'pasteur.fr': { country: 'France', countryCode: 'FR', flag: '🇫🇷', lat: 48.8566, lng: 2.3522, city: 'Paris' },
         'inrae.fr': { country: 'France', countryCode: 'FR', flag: '🇫🇷', lat: 48.8566, lng: 2.3522, city: 'Paris' },
         'uni-freiburg.de': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 48.0, lng: 7.8, city: 'Freiburg' },
+        'moffitt.org': { country: 'United States', countryCode: 'US', flag: '🇺🇸', lat: 27.9506, lng: -82.4572, city: 'Tampa, FL' },
         'usegalaxy.org.au': { country: 'Australia', countryCode: 'AU', flag: '🇦🇺', lat: -37.8136, lng: 144.9631, city: 'Melbourne' },
         'usegalaxy.org': { country: 'United States', countryCode: 'US', flag: '🇺🇸', lat: 30.2672, lng: -97.7431, city: 'Austin, TX' },
         'usegalaxy.eu': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 48.0, lng: 7.8, city: 'Freiburg' },
         'galaxyproject.org': { country: 'United States', countryCode: 'US', flag: '🇺🇸', lat: 30.2672, lng: -97.7431, city: 'Austin, TX' },
-        'genome.edu.au': { country: 'Australia', countryCode: 'AU', flag: '🇦🇺', lat: -37.8136, lng: 144.9631, city: 'Melbourne' }
+        'genome.edu.au': { country: 'Australia', countryCode: 'AU', flag: '🇦🇺', lat: -37.8136, lng: 144.9631, city: 'Melbourne' },
+        // Additional institutional patterns based on console log
+        'halogen-bonding.org': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 48.5227, lng: 9.0522, city: 'Tübingen' },
+        'uni-tuebingen.de': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 48.5227, lng: 9.0522, city: 'Tübingen' },
+        'oqtans.org': { country: 'Switzerland', countryCode: 'CH', flag: '🇨🇭', lat: 47.3769, lng: 8.5417, city: 'Zürich' },
+        'ethz.ch': { country: 'Switzerland', countryCode: 'CH', flag: '🇨🇭', lat: 47.3769, lng: 8.5417, city: 'Zürich' },
+        'palfinder.ls.manchester.ac.uk': { country: 'United Kingdom', countryCode: 'GB', flag: '🇬🇧', lat: 53.4668, lng: -2.2339, city: 'Manchester' },
+        'manchester.ac.uk': { country: 'United Kingdom', countryCode: 'GB', flag: '🇬🇧', lat: 53.4668, lng: -2.2339, city: 'Manchester' },
+        'climb.ac.uk': { country: 'United Kingdom', countryCode: 'GB', flag: '🇬🇧', lat: 52.6367, lng: 1.2966, city: 'Norwich' },
+        'tsl.ac.uk': { country: 'United Kingdom', countryCode: 'GB', flag: '🇬🇧', lat: 52.6367, lng: 1.2966, city: 'Norwich' },
+        'hyperbrowser.uio.no': { country: 'Norway', countryCode: 'NO', flag: '🇳🇴', lat: 59.9139, lng: 10.7522, city: 'Oslo' },
+        'uio.no': { country: 'Norway', countryCode: 'NO', flag: '🇳🇴', lat: 59.9139, lng: 10.7522, city: 'Oslo' },
+        'coloc-stats.no': { country: 'Norway', countryCode: 'NO', flag: '🇳🇴', lat: 59.9139, lng: 10.7522, city: 'Oslo' },
+        'gaslini.org': { country: 'Italy', countryCode: 'IT', flag: '🇮🇹', lat: 44.4056, lng: 8.9463, city: 'Genoa' },
+        'corgat.cloud.ba.infn.it': { country: 'Italy', countryCode: 'IT', flag: '🇮🇹', lat: 41.1171, lng: 16.8719, city: 'Bari' },
+        'infn.it': { country: 'Italy', countryCode: 'IT', flag: '🇮🇹', lat: 41.9028, lng: 12.4964, city: 'Rome' },
+        'biobix.be': { country: 'Belgium', countryCode: 'BE', flag: '🇧🇪', lat: 51.0259, lng: 3.7078, city: 'Ghent' },
+        'ugent.be': { country: 'Belgium', countryCode: 'BE', flag: '🇧🇪', lat: 51.0259, lng: 3.7078, city: 'Ghent' },
+        'sb-roscoff.fr': { country: 'France', countryCode: 'FR', flag: '🇫🇷', lat: 48.7263, lng: -3.9886, city: 'Roscoff' },
+        'workflow4metabolomics.org': { country: 'France', countryCode: 'FR', flag: '🇫🇷', lat: 48.8566, lng: 2.3522, city: 'Paris' },
+        'migale.inrae.fr': { country: 'France', countryCode: 'FR', flag: '🇫🇷', lat: 48.8008, lng: 2.1342, city: 'Jouy-en-Josas' },
+        'cfbp.inrae.fr': { country: 'France', countryCode: 'FR', flag: '🇫🇷', lat: 49.0875, lng: 0.2308, city: 'Angers' },
+        'ipk-gatersleben.de': { country: 'Germany', countryCode: 'DE', flag: '🇩🇪', lat: 51.8133, lng: 11.2834, city: 'Gatersleben' },
+        'cpgr.apc.univ-paris7.fr': { country: 'France', countryCode: 'FR', flag: '🇫🇷', lat: 48.8566, lng: 2.3522, city: 'Paris' },
+        'sciencespo.fr': { country: 'France', countryCode: 'FR', flag: '🇫🇷', lat: 48.8566, lng: 2.3522, city: 'Paris' },
+        'snic.se': { country: 'Sweden', countryCode: 'SE', flag: '🇸🇪', lat: 59.3344, lng: 18.0632, city: 'Stockholm' },
+        'surf.nl': { country: 'Netherlands', countryCode: 'NL', flag: '🇳🇱', lat: 52.0907, lng: 5.1214, city: 'Utrecht' },
+        'nectar.org.au': { country: 'Australia', countryCode: 'AU', flag: '🇦🇺', lat: -37.8136, lng: 144.9631, city: 'Melbourne' },
+        'laniakea-elixir-it.github.io': { country: 'Italy', countryCode: 'IT', flag: '🇮🇹', lat: 38.1112, lng: 13.3524, city: 'Palermo' },
+        'unipa.it': { country: 'Italy', countryCode: 'IT', flag: '🇮🇹', lat: 38.1112, lng: 13.3524, city: 'Palermo' },
+        'francegrille.eu': { country: 'France', countryCode: 'FR', flag: '🇫🇷', lat: 48.8566, lng: 2.3522, city: 'Paris' },
+        'vm-chemflow-francegrille.eu': { country: 'France', countryCode: 'FR', flag: '🇫🇷', lat: 48.8566, lng: 2.3522, city: 'Paris' }
       };
 
       // Check for specific institution patterns
@@ -980,6 +1013,7 @@
         '.mx': { country: 'Mexico', countryCode: 'MX', flag: '🇲🇽', lat: 23.6345, lng: -102.5528 },
         '.ar': { country: 'Argentina', countryCode: 'AR', flag: '🇦🇷', lat: -38.4161, lng: -63.6167 },
         '.za': { country: 'South Africa', countryCode: 'ZA', flag: '🇿🇦', lat: -30.5595, lng: 22.9375 },
+        '.eu': { country: 'European Union', countryCode: 'EU', flag: '🇪🇺', lat: 50.8503, lng: 4.3517 },
         '.edu': { country: 'United States', countryCode: 'US', flag: '🇺🇸', lat: 39.8283, lng: -98.5795 },
         '.gov': { country: 'United States', countryCode: 'US', flag: '🇺🇸', lat: 39.8283, lng: -98.5795 },
         '.org': { country: 'United States', countryCode: 'US', flag: '🇺🇸', lat: 39.8283, lng: -98.5795 },
@@ -1380,7 +1414,7 @@
 
       // Set up projection (Natural Earth projection for better world view)
       projection = d3.geoNaturalEarth1()
-        .scale(150)
+        .scale(200)
         .translate([width / 2, height / 2]);
 
       path = d3.geoPath().projection(projection);
@@ -1731,33 +1765,40 @@
               // Set new enter timeout with increased debouncing
               singleEnterTimeout = setTimeout(() => {
                 console.log(`[${Date.now()}] SINGLE ENTER TIMEOUT EXECUTED - Starting tooltip display`);
-                const markerElement = d3.select(this).select(".map-marker");
                 
-                console.log('Starting D3 transition...');
+                // Double-check that we should still show tooltip (no recent leave events)
+                if (!singleTooltipShown) {
+                  const markerElement = d3.select(this).select(".map-marker");
+                  
+                  console.log('Starting D3 transition...');
+                  
+                  // Get current zoom scale for proper hover sizing
+                  const currentTransform = d3.zoomTransform(this);
+                  const zoomScale = currentTransform.k;
+                  const markerScale = Math.max(0.3, 1 / (zoomScale * 0.8));
+                  
+                  markerElement
+                    .transition().duration(100)
+                    .attr("r", 6 * markerScale) // Scale hover size with zoom
+                    .attr("stroke-width", Math.max(0.3, 3 * markerScale)) // Scale stroke with zoom
+                    .attr("cx", fixedX)  // Force to exact fixed position
+                    .attr("cy", fixedY); // Force to exact fixed position
+                  
+                  console.log('After transition - DOM coordinates:', {
+                    cx: markerElement.attr('cx'),
+                    cy: markerElement.attr('cy')
+                  });
+                  console.log('Calling showTooltip with fixed coordinates:', { fixedX, fixedY });
+                  
+                  // Mark tooltip as shown to prevent repeated events
+                  console.log('Setting singleTooltipShown = true');
+                  singleTooltipShown = true;
+                  
+                  showTooltip(event, d.row, fixedX, fixedY);
+                } else {
+                  console.log('SKIPPING tooltip display - singleTooltipShown is already true');
+                }
                 
-                // Get current zoom scale for proper hover sizing
-                const currentTransform = d3.zoomTransform(this);
-                const zoomScale = currentTransform.k;
-                const markerScale = Math.max(0.3, 1 / (zoomScale * 0.8));
-                
-                markerElement
-                  .transition().duration(100)
-                  .attr("r", 6 * markerScale) // Scale hover size with zoom
-                  .attr("stroke-width", Math.max(0.3, 3 * markerScale)) // Scale stroke with zoom
-                  .attr("cx", fixedX)  // Force to exact fixed position
-                  .attr("cy", fixedY); // Force to exact fixed position
-                
-                console.log('After transition - DOM coordinates:', {
-                  cx: markerElement.attr('cx'),
-                  cy: markerElement.attr('cy')
-                });
-                console.log('Calling showTooltip with fixed coordinates:', { fixedX, fixedY });
-                
-                // Mark tooltip as shown to prevent repeated events
-                console.log('Setting singleTooltipShown = true');
-                singleTooltipShown = true;
-                
-                showTooltip(event, d.row, fixedX, fixedY);
                 singleEnterTimeout = null;
                 console.log(`[${Date.now()}] SINGLE ENTER TIMEOUT COMPLETED`);
               }, 150);
@@ -1793,28 +1834,34 @@
               // Set new leave timeout with increased debouncing
               singleLeaveTimeout = setTimeout(() => {
                 console.log(`[${Date.now()}] SINGLE LEAVE TIMEOUT EXECUTED - Hiding tooltip`);
-                const markerElement = d3.select(this).select(".map-marker");
                 
-                console.log('Starting D3 transition to restore original size...');
-                
-                // Get current zoom scale for proper restoration
-                const currentTransform = d3.zoomTransform(this);
-                const zoomScale = currentTransform.k;
-                const markerScale = Math.max(0.3, 1 / (zoomScale * 0.8));
-                
-                markerElement
-                  .transition().duration(100)
-                  .attr("r", 4 * markerScale) // Restore zoom-scaled size
-                  .attr("stroke-width", Math.max(0.3, 1 * markerScale)) // Restore zoom-scaled stroke
-                  .attr("cx", fixedX)  // Force to exact fixed position
-                  .attr("cy", fixedY); // Force to exact fixed position
-                
-                // Reset tooltip state
-                console.log('Setting singleTooltipShown = false');
-                singleTooltipShown = false;
-                
-                console.log('Calling hideTooltip()');
-                hideTooltip();
+                // Only hide if tooltip is actually shown
+                if (singleTooltipShown) {
+                  const markerElement = d3.select(this).select(".map-marker");
+                  
+                  console.log('Starting D3 transition to restore original size...');
+                  
+                  // Get current zoom scale for proper restoration
+                  const currentTransform = d3.zoomTransform(this);
+                  const zoomScale = currentTransform.k;
+                  const markerScale = Math.max(0.3, 1 / (zoomScale * 0.8));
+                  
+                  markerElement
+                    .transition().duration(100)
+                    .attr("r", 4 * markerScale) // Restore zoom-scaled size
+                    .attr("stroke-width", Math.max(0.3, 1 * markerScale)) // Restore zoom-scaled stroke
+                    .attr("cx", fixedX)  // Force to exact fixed position
+                    .attr("cy", fixedY); // Force to exact fixed position
+                  
+                  // Reset tooltip state
+                  console.log('Setting singleTooltipShown = false');
+                  singleTooltipShown = false;
+                  
+                  console.log('Calling hideTooltip()');
+                  hideTooltip();
+                } else {
+                  console.log('SKIPPING tooltip hide - singleTooltipShown is already false');
+                }
                 
                 singleLeaveTimeout = null;
                 console.log(`[${Date.now()}] SINGLE LEAVE TIMEOUT COMPLETED`);
@@ -1899,46 +1946,53 @@
               // Set new enter timeout with increased debouncing to reduce sensitivity
               enterTimeout = setTimeout(() => {
                 console.log(`[${Date.now()}] ENTER TIMEOUT EXECUTED - Starting tooltip display`);
-                const clusterElement = d3.select(this).select(".marker-cluster");
                 
-                console.log('Cluster element found:', !clusterElement.empty());
-                console.log('Current cluster DOM coordinates:', {
-                  cx: clusterElement.attr('cx'),
-                  cy: clusterElement.attr('cy'),
-                  r: clusterElement.attr('r')
-                });
-                
-                console.log('Starting D3 transition...');
-                
-                // Get current zoom scale for proper hover sizing
-                const currentTransform = d3.zoomTransform(this);
-                const zoomScale = currentTransform.k;
-                const markerScale = Math.max(0.3, 1 / (zoomScale * 0.8));
-                
-                clusterElement
-                  .transition().duration(100)
-                  .attr("r", (d.radius + 2) * markerScale) // Scale hover size with zoom
-                  .attr("stroke-width", Math.max(0.3, 4 * markerScale)) // Scale stroke with zoom
-                  .attr("cx", fixedX)  // Force to exact fixed position
-                  .attr("cy", fixedY); // Force to exact fixed position
-                
-                console.log('After transition - cluster DOM coordinates:', {
-                  cx: clusterElement.attr('cx'),
-                  cy: clusterElement.attr('cy'),
-                  r: clusterElement.attr('r')
-                });
-                
-                // Mark tooltip as shown to prevent repeated events
-                console.log('Setting tooltipShown = true');
-                tooltipShown = true;
-                
-                console.log('Calling showClusterTooltip with fixed coordinates:', { fixedX, fixedY });
-                
-                if (d.instances.length === 1) {
-                  showTooltip(event, d.instances[0], fixedX, fixedY);
+                // Double-check that we should still show tooltip (no recent leave events)
+                if (!tooltipShown) {
+                  const clusterElement = d3.select(this).select(".marker-cluster");
+                  
+                  console.log('Cluster element found:', !clusterElement.empty());
+                  console.log('Current cluster DOM coordinates:', {
+                    cx: clusterElement.attr('cx'),
+                    cy: clusterElement.attr('cy'),
+                    r: clusterElement.attr('r')
+                  });
+                  
+                  console.log('Starting D3 transition...');
+                  
+                  // Get current zoom scale for proper hover sizing
+                  const currentTransform = d3.zoomTransform(this);
+                  const zoomScale = currentTransform.k;
+                  const markerScale = Math.max(0.3, 1 / (zoomScale * 0.8));
+                  
+                  clusterElement
+                    .transition().duration(100)
+                    .attr("r", (d.radius + 2) * markerScale) // Scale hover size with zoom
+                    .attr("stroke-width", Math.max(0.3, 4 * markerScale)) // Scale stroke with zoom
+                    .attr("cx", fixedX)  // Force to exact fixed position
+                    .attr("cy", fixedY); // Force to exact fixed position
+                  
+                  console.log('After transition - cluster DOM coordinates:', {
+                    cx: clusterElement.attr('cx'),
+                    cy: clusterElement.attr('cy'),
+                    r: clusterElement.attr('r')
+                  });
+                  
+                  // Mark tooltip as shown to prevent repeated events
+                  console.log('Setting tooltipShown = true');
+                  tooltipShown = true;
+                  
+                  console.log('Calling showClusterTooltip with fixed coordinates:', { fixedX, fixedY });
+                  
+                  if (d.instances.length === 1) {
+                    showTooltip(event, d.instances[0], fixedX, fixedY);
+                  } else {
+                    showClusterTooltip(event, d.instances, fixedX, fixedY);
+                  }
                 } else {
-                  showClusterTooltip(event, d.instances, fixedX, fixedY);
+                  console.log('SKIPPING tooltip display - tooltipShown is already true');
                 }
+                
                 enterTimeout = null;
                 console.log(`[${Date.now()}] ENTER TIMEOUT COMPLETED`);
               }, 150);
@@ -1976,28 +2030,34 @@
               // Set new leave timeout with increased debouncing to reduce sensitivity
               leaveTimeout = setTimeout(() => {
                 console.log(`[${Date.now()}] LEAVE TIMEOUT EXECUTED - Hiding tooltip`);
-                const clusterElement = d3.select(this).select(".marker-cluster");
                 
-                console.log('Starting D3 transition to restore original size...');
-                
-                // Get current zoom scale for proper restoration  
-                const currentTransform = d3.zoomTransform(this);
-                const zoomScale = currentTransform.k;
-                const markerScale = Math.max(0.3, 1 / (zoomScale * 0.8));
-                
-                clusterElement
-                  .transition().duration(100)
-                  .attr("r", d.radius * markerScale) // Restore zoom-scaled size
-                  .attr("stroke-width", Math.max(0.3, 2 * markerScale)) // Restore zoom-scaled stroke
-                  .attr("cx", fixedX)  // Force to exact fixed position
-                  .attr("cy", fixedY); // Force to exact fixed position
-                
-                // Reset tooltip state
-                console.log('Setting tooltipShown = false');
-                tooltipShown = false;
-                
-                console.log('Calling hideTooltip()');
-                hideTooltip();
+                // Only hide if tooltip is actually shown
+                if (tooltipShown) {
+                  const clusterElement = d3.select(this).select(".marker-cluster");
+                  
+                  console.log('Starting D3 transition to restore original size...');
+                  
+                  // Get current zoom scale for proper restoration  
+                  const currentTransform = d3.zoomTransform(this);
+                  const zoomScale = currentTransform.k;
+                  const markerScale = Math.max(0.3, 1 / (zoomScale * 0.8));
+                  
+                  clusterElement
+                    .transition().duration(100)
+                    .attr("r", d.radius * markerScale) // Restore zoom-scaled size
+                    .attr("stroke-width", Math.max(0.3, 2 * markerScale)) // Restore zoom-scaled stroke
+                    .attr("cx", fixedX)  // Force to exact fixed position
+                    .attr("cy", fixedY); // Force to exact fixed position
+                  
+                  // Reset tooltip state
+                  console.log('Setting tooltipShown = false');
+                  tooltipShown = false;
+                  
+                  console.log('Calling hideTooltip()');
+                  hideTooltip();
+                } else {
+                  console.log('SKIPPING tooltip hide - tooltipShown is already false');
+                }
                 
                 leaveTimeout = null;
                 console.log(`[${Date.now()}] LEAVE TIMEOUT COMPLETED`);
@@ -2074,7 +2134,7 @@
       
       // Ensure we have a valid tier string
       const tierStr = String(tier || '1').trim();
-      console.log(`Getting color for tier: "${tierStr}"`);
+      // console.log(`Getting color for tier: "${tierStr}"`);
       
       return tierColors[tierStr] || '#4caf50'; // Default to green (tier 1) for unknown tiers
     }
@@ -2100,6 +2160,23 @@
         existingLegend.remove();
       }
       
+      // Count servers by tier from the current filtered data
+      const tierCounts = {
+        '1': 0, // Global Instance
+        '2': 0, // National Instance
+        '3': 0, // Subdomain
+        '4': 0, // Institutional
+        '5': 0, // Integrated Platform
+        '6': 0  // Development Instance
+      };
+      
+      filteredData.forEach(row => {
+        const tier = row['Tier'] || '1'; // Default to tier 1 if not specified
+        if (tierCounts.hasOwnProperty(tier)) {
+          tierCounts[tier]++;
+        }
+      });
+      
       const legend = document.createElement('div');
       legend.className = 'map-legend';
       legend.style.cssText = `
@@ -2116,12 +2193,12 @@
       
       legend.innerHTML = `
         <div style="font-weight: bold; margin-bottom: 5px;">Instance Tiers</div>
-        <div style="margin: 3px 0;"><span style="color: #4caf50;">●</span> Global Instance</div>
-        <div style="margin: 3px 0;"><span style="color: #ff9800;">●</span> National Instance</div>
-        <div style="margin: 3px 0;"><span style="color: #2196f3;">●</span> Subdomain</div>
-        <div style="margin: 3px 0;"><span style="color: #9c27b0;">●</span> Institutional</div>
-        <div style="margin: 3px 0;"><span style="color: #607d8b;">●</span> Integrated Platform</div>
-        <div style="margin: 3px 0;"><span style="color: #795548;">●</span> Development Instance</div>
+        <div style="margin: 3px 0;"><span style="color: #4caf50;">●</span> Global Instance (${tierCounts['1']})</div>
+        <div style="margin: 3px 0;"><span style="color: #ff9800;">●</span> National Instance (${tierCounts['2']})</div>
+        <div style="margin: 3px 0;"><span style="color: #2196f3;">●</span> Subdomain (${tierCounts['3']})</div>
+        <div style="margin: 3px 0;"><span style="color: #9c27b0;">●</span> Institutional (${tierCounts['4']})</div>
+        <div style="margin: 3px 0;"><span style="color: #607d8b;">●</span> Integrated Platform (${tierCounts['5']})</div>
+        <div style="margin: 3px 0;"><span style="color: #795548;">●</span> Development Instance (${tierCounts['6']})</div>
         <div style="margin-top: 8px; font-size: 11px; color: #666; font-style: italic;">
           Numbers show multiple instances<br>at the same location
         </div>
@@ -2614,8 +2691,17 @@
         const descriptionText = row['Description'] || '';
         const notesText = row['Notes'] || '';
         
-        // Strip protocol for display
-        const displayUrl = row['URL'] ? row['URL'].replace(/^https?:\/\//, '') : '';
+        // Ensure URL has protocol for linking, handle localhost proxy URLs, and strip protocol for display
+        let url = row['URL'] || '';
+        let displayUrl = url.replace(/^https?:\/\//, '');
+        // If URL is a localhost proxy (e.g., http://localhost:8001/dintor.eurac.edu), extract the domain
+        const localhostMatch = url.match(/localhost:\d+\/(\S+\.[a-z]{2,})/i);
+        if (localhostMatch) {
+          url = 'https://' + localhostMatch[1];
+          displayUrl = localhostMatch[1];
+        } else if (url && !/^https?:\/\//i.test(url)) {
+          url = 'https://' + url;
+        }
         
         let descriptionContent = parseMarkdownLinks(descriptionText);
         let descriptionHtml = '';
@@ -2631,7 +2717,7 @@
         tr.innerHTML = `
           <td>
             ${row['URL'] ? 
-              `<a href="${row['URL']}" target="_blank" class="server-url" style="font-weight: 600; color: #007bff; text-decoration: none;">${row['Name'] || 'Unknown'}</a>
+              `<a href="${url}" target="_blank" class="server-url" style="font-weight: 600; color: #007bff; text-decoration: none;">${row['Name'] || 'Unknown'}</a>
                <div style="font-size: 0.85em; color: #6c757d; margin-top: 2px;">${displayUrl}</div>` :
               `<div style="font-weight: 600;">${row['Name'] || 'Unknown'}</div>
                <div style="font-size: 0.85em; color: #6c757d; margin-top: 2px; font-style: italic;">No URL</div>`
