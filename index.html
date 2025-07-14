@@ -489,6 +489,99 @@
       color: #333;
     }
     
+    /* Status filter popup styling */
+    .status-filter-container {
+      position: relative;
+      display: inline-block;
+    }
+    
+    #status-button {
+      transition: background-color 0.2s ease;
+    }
+    
+    #status-button.active {
+      background: #ad1457 !important;
+    }
+    
+    .status-popup {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      padding: 1rem;
+      min-width: 250px;
+      z-index: 1000;
+      margin-top: 0.25rem;
+    }
+    
+    .status-popup.show {
+      display: block;
+    }
+    
+    .status-popup h4 {
+      margin: 0 0 0.75rem 0;
+      font-size: 0.95rem;
+      color: #333;
+      font-weight: 600;
+    }
+    
+    .status-checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      padding: 0.25rem 0;
+    }
+    
+    .status-checkbox-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .status-checkbox-item input[type="checkbox"] {
+      margin: 0;
+    }
+    
+    .status-checkbox-item label {
+      font-size: 0.85rem;
+      cursor: pointer;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    
+    .status-checkbox-item .status-icon {
+      font-size: 0.9rem;
+    }
+    
+    .status-popup-actions {
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #eee;
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+    }
+    
+    .status-popup-actions button {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 3px;
+      cursor: pointer;
+      color: #666;
+    }
+    
+    .status-popup-actions button:hover {
+      background: #f5f5f5;
+      color: #333;
+    }
+    
     #tiers-button {
       position: relative;
     }
@@ -571,9 +664,38 @@
     <div class="search-container">
       <input type="text" id="search-input" class="search-input" placeholder="🔍 Search instances by name, URL, region, or any other field...">
       <div style="margin-top: 0.75rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <input type="checkbox" id="hide-offline-checkbox">
-          <label for="hide-offline-checkbox" style="font-size: 0.9rem; cursor: pointer;">Hide offline instances</label>
+        <div class="status-filter-container">
+          <button id="status-button" style="padding: 0.3rem 0.75rem; background: #e91e63; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
+            <i class="fas fa-signal"></i> Status
+          </button>
+          <div id="status-popup" class="status-popup">
+            <h4>Filter by Instance Status</h4>
+            <div class="status-checkbox-item">
+              <input type="checkbox" id="status-online-checkbox" checked>
+              <label for="status-online-checkbox">
+                <i class="fas fa-circle status-icon" style="color: #4caf50;"></i>
+                Online Instances
+              </label>
+            </div>
+            <div class="status-checkbox-item">
+              <input type="checkbox" id="status-issues-checkbox" checked>
+              <label for="status-issues-checkbox">
+                <i class="fas fa-circle status-icon" style="color: #ff9800;"></i>
+                Instances with Issues
+              </label>
+            </div>
+            <div class="status-checkbox-item">
+              <input type="checkbox" id="status-offline-checkbox" checked>
+              <label for="status-offline-checkbox">
+                <i class="fas fa-circle status-icon" style="color: #f44336;"></i>
+                Offline Instances
+              </label>
+            </div>
+            <div class="status-popup-actions">
+              <button id="status-select-all">Select All</button>
+              <button id="status-select-none">Select None</button>
+            </div>
+          </div>
         </div>
         <div class="tiers-filter-container">
           <button id="tiers-button" style="padding: 0.3rem 0.75rem; background: #673ab7; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
@@ -1089,33 +1211,41 @@
       document.getElementById('tier-6-checkbox').checked = prefs['6'];
     }
     
-    // Offline filter management functions
-    const OFFLINE_PREFS_KEY = 'galaxyOfflinePreferences';
+    // Status filter management functions
+    const STATUS_PREFS_KEY = 'galaxyStatusPreferences';
     
-    function getOfflinePreference() {
+    function getStatusPreferences() {
       try {
-        const pref = localStorage.getItem(OFFLINE_PREFS_KEY);
-        if (pref !== null) {
-          return JSON.parse(pref);
+        const prefs = localStorage.getItem(STATUS_PREFS_KEY);
+        if (prefs) {
+          const parsed = JSON.parse(prefs);
+          // Ensure all status types are represented (default to true if not present)
+          return {
+            'online': parsed['online'] !== false,
+            'issues': parsed['issues'] !== false,
+            'offline': parsed['offline'] !== false
+          };
         }
       } catch (error) {
-        console.log('Error reading offline preference:', error);
+        console.log('Error reading status preferences:', error);
       }
-      // Default: show offline instances (checkbox unchecked)
-      return false;
+      // Default: all status types enabled
+      return { 'online': true, 'issues': true, 'offline': true };
     }
     
-    function saveOfflinePreference(hideOffline) {
+    function saveStatusPreferences(prefs) {
       try {
-        localStorage.setItem(OFFLINE_PREFS_KEY, JSON.stringify(hideOffline));
+        localStorage.setItem(STATUS_PREFS_KEY, JSON.stringify(prefs));
       } catch (error) {
-        console.log('Error saving offline preference:', error);
+        console.log('Error saving status preferences:', error);
       }
     }
     
-    function applyOfflinePreference() {
-      const hideOffline = getOfflinePreference();
-      document.getElementById('hide-offline-checkbox').checked = hideOffline;
+    function applyStatusPreferences() {
+      const prefs = getStatusPreferences();
+      document.getElementById('status-online-checkbox').checked = prefs['online'];
+      document.getElementById('status-issues-checkbox').checked = prefs['issues'];
+      document.getElementById('status-offline-checkbox').checked = prefs['offline'];
     }
     
     // Function to extract hostname from URL for display purposes
@@ -1246,15 +1376,13 @@
     // Global filtering function
     function performFilter() {
       const searchInput = document.getElementById('search-input');
-      const hideOfflineCheckbox = document.getElementById('hide-offline-checkbox');
       
-      if (!searchInput || !hideOfflineCheckbox) {
+      if (!searchInput) {
         // Elements not ready yet, skip filtering
         return;
       }
       
       const searchTerm = searchInput.value.toLowerCase().trim();
-      const hideOffline = hideOfflineCheckbox.checked;
       
       // Get current tier preferences
       const tierPrefs = {
@@ -1264,6 +1392,13 @@
         '4': document.getElementById('tier-4-checkbox')?.checked ?? true,
         '5': document.getElementById('tier-5-checkbox')?.checked ?? true,
         '6': document.getElementById('tier-6-checkbox')?.checked ?? true
+      };
+      
+      // Get current status preferences
+      const statusPrefs = {
+        'online': document.getElementById('status-online-checkbox')?.checked ?? true,
+        'issues': document.getElementById('status-issues-checkbox')?.checked ?? true,
+        'offline': document.getElementById('status-offline-checkbox')?.checked ?? true
       };
       
       let filtered = [...currentData];
@@ -1288,18 +1423,29 @@
         return tierPrefs[tier] === true;
       });
       
-      // Apply offline filter
-      if (hideOffline) {
-        filtered = filtered.filter(row => {
-          const version = row['Version'] || '';
-          const toolCount = row['Tool Count'] || '';
-          const tier = row['Tier'] || '';
-          const serverReachable = row['ServerReachable'];
-          const statusInfo = getStatusIcon(version, toolCount, tier, serverReachable);
-          // Hide instances that are marked as offline (red icon)
-          return statusInfo.icon !== '🔴';
-        });
-      }
+      // Apply status filter
+      filtered = filtered.filter(row => {
+        const version = row['Version'] || '';
+        const toolCount = row['Tool Count'] || '';
+        const tier = row['Tier'] || '';
+        const serverReachable = row['ServerReachable'];
+        const statusInfo = getStatusIcon(version, toolCount, tier, serverReachable);
+        
+        // Determine which status category this instance belongs to
+        if (statusInfo.icon === '🟢') {
+          // Online instances
+          return statusPrefs['online'];
+        } else if (statusInfo.icon === '🟡' || statusInfo.icon === '❓') {
+          // Instances with issues
+          return statusPrefs['issues'];
+        } else if (statusInfo.icon === '🔴') {
+          // Offline instances
+          return statusPrefs['offline'];
+        } else {
+          // Other statuses (loading, no URL, etc.) - show if any category is enabled
+          return statusPrefs['online'] || statusPrefs['issues'] || statusPrefs['offline'];
+        }
+      });
       
       filteredData = filtered;
       
@@ -1311,8 +1457,9 @@
       }
       
       // Show "no results" message if needed
-      const hasActiveFilters = searchTerm !== '' || hideOffline || 
-                              !Object.values(tierPrefs).every(v => v);
+      const hasActiveFilters = searchTerm !== '' || 
+                              !Object.values(tierPrefs).every(v => v) ||
+                              !Object.values(statusPrefs).every(v => v);
       if (filteredData.length === 0 && hasActiveFilters) {
         showNoResults();
       }
@@ -1320,18 +1467,19 @@
 
     function setupSearchFilter() {
       const searchInput = document.getElementById('search-input');
-      const hideOfflineCheckbox = document.getElementById('hide-offline-checkbox');
       const refreshButton = document.getElementById('refresh-button');
       const refreshOfflineButton = document.getElementById('refresh-offline-button');
       const exportCsvButton = document.getElementById('export-csv-button');
       const tiersButton = document.getElementById('tiers-button');
       const tiersPopup = document.getElementById('tiers-popup');
+      const statusButton = document.getElementById('status-button');
+      const statusPopup = document.getElementById('status-popup');
       
       // Apply saved tier preferences
       applyTierPreferences();
       
-      // Apply saved offline filter preference
-      applyOfflinePreference();
+      // Apply saved status filter preferences
+      applyStatusPreferences();
       
       const performRefresh = () => {
         // Clear cache and reload data
@@ -1382,6 +1530,8 @@
           // Consider servers with red (offline) status as needing refresh
           return statusInfo.icon === '🔴';
         });
+
+        const offlineServers = offlineInstances;
 
         if (offlineServers.length === 0) {
           updateStatus('No offline servers found to refresh.');
@@ -1462,14 +1612,16 @@
       performFilter();
       
       searchInput.addEventListener('input', performFilter);
-      hideOfflineCheckbox.addEventListener('change', () => {
-        // Save preference and apply filter
-        saveOfflinePreference(hideOfflineCheckbox.checked);
-        performFilter();
-      });
       refreshButton.addEventListener('click', performRefresh);
       refreshOfflineButton.addEventListener('click', performRefreshOffline);
       exportCsvButton.addEventListener('click', exportDisplayedDataToCSV);
+      
+      // Status filter popup functionality
+      statusButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        statusPopup.classList.toggle('show');
+        statusButton.classList.toggle('active');
+      });
       
       // Tiers filter popup functionality
       tiersButton.addEventListener('click', (e) => {
@@ -1478,12 +1630,50 @@
         tiersButton.classList.toggle('active');
       });
       
-      // Close popup when clicking outside
+      // Close popups when clicking outside
       document.addEventListener('click', (e) => {
         if (!tiersButton.contains(e.target) && !tiersPopup.contains(e.target)) {
           tiersPopup.classList.remove('show');
           tiersButton.classList.remove('active');
         }
+        if (!statusButton.contains(e.target) && !statusPopup.contains(e.target)) {
+          statusPopup.classList.remove('show');
+          statusButton.classList.remove('active');
+        }
+      });
+      
+      // Status checkbox event listeners
+      const statusCheckboxes = ['status-online-checkbox', 'status-issues-checkbox', 'status-offline-checkbox'];
+      statusCheckboxes.forEach(checkboxId => {
+        document.getElementById(checkboxId).addEventListener('change', () => {
+          // Save preferences and apply filter
+          const statusPrefs = {
+            'online': document.getElementById('status-online-checkbox').checked,
+            'issues': document.getElementById('status-issues-checkbox').checked,
+            'offline': document.getElementById('status-offline-checkbox').checked
+          };
+          saveStatusPreferences(statusPrefs);
+          performFilter();
+        });
+      });
+      
+      // Status select all/none buttons
+      document.getElementById('status-select-all').addEventListener('click', () => {
+        statusCheckboxes.forEach(checkboxId => {
+          document.getElementById(checkboxId).checked = true;
+        });
+        const statusPrefs = { 'online': true, 'issues': true, 'offline': true };
+        saveStatusPreferences(statusPrefs);
+        performFilter();
+      });
+      
+      document.getElementById('status-select-none').addEventListener('click', () => {
+        statusCheckboxes.forEach(checkboxId => {
+          document.getElementById(checkboxId).checked = false;
+        });
+        const statusPrefs = { 'online': false, 'issues': false, 'offline': false };
+        saveStatusPreferences(statusPrefs);
+        performFilter();
       });
       
       // Tier checkbox event listeners
