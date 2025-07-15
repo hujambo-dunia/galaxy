@@ -774,6 +774,9 @@
         <button id="export-csv-button" style="padding: 0.3rem 0.75rem; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
           <i class="fas fa-file-csv"></i> Export to CSV
         </button>
+        <button id="show-map-button" style="padding: 0.3rem 0.75rem; background: #009688; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
+          <i class="fas fa-map-marked-alt"></i> Show Map
+        </button>
       </div>
     </div>
   </div>
@@ -1555,6 +1558,7 @@
       const searchInput = document.getElementById('search-input');
       const refreshButton = document.getElementById('refresh-button');
       const refreshOfflineButton = document.getElementById('refresh-offline-button');
+      const showMapButton = document.getElementById('show-map-button');
       const exportCsvButton = document.getElementById('export-csv-button');
       const tiersButton = document.getElementById('tiers-button');
       const tiersPopup = document.getElementById('tiers-popup');
@@ -1709,6 +1713,7 @@
       refreshButton.addEventListener('click', performRefresh);
       refreshOfflineButton.addEventListener('click', performRefreshOffline);
       exportCsvButton.addEventListener('click', exportDisplayedDataToCSV);
+      showMapButton.addEventListener('click', () => {window.location.href = 'map.html';s});
       
       // Status filter popup functionality
       statusButton.addEventListener('click', (e) => {
