@@ -1731,7 +1731,64 @@
           .attr("d", path)
           .attr("fill", "#e8f5e8")
           .attr("stroke", "#b8d8b8")
-          .attr("stroke-width", 0.5);
+          .attr("stroke-width", 0.5)
+          .style("cursor", "pointer")
+          .on("click", function(event, d) {
+            // Get country name from feature properties
+            const countryName = d.properties.name || d.properties.NAME || d.id || '';
+            if (!countryName) return;
+            filterByCountry(countryName);
+          });
+    
+        // Filter and display all instances in a given country in the table below the map
+        function filterByCountry(countryName) {
+          // Filter instances by country, matching common aliases and region
+  const normalized = countryName.trim().toLowerCase();
+  const countryAliases = {
+    'united states': ['united states', 'usa', 'us', 'united states of america'],
+    'united kingdom': ['united kingdom', 'uk', 'gb', 'great britain', 'england'],
+    'germany': ['germany', 'de', 'deutschland'],
+    'france': ['france', 'fr'],
+    'canada': ['canada', 'ca'],
+    'australia': ['australia', 'au'],
+    'japan': ['japan', 'jp'],
+    'china': ['china', 'cn'],
+    'brazil': ['brazil', 'br'],
+    'mexico': ['mexico', 'mx'],
+    'argentina': ['argentina', 'ar'],
+    'south africa': ['south africa', 'za'],
+    'european union': ['european union', 'eu'],
+  };
+  // Find the alias key whose alias list contains the normalized name
+  let aliases = [normalized];
+  for (const [key, aliasList] of Object.entries(countryAliases)) {
+    if (aliasList.includes(normalized)) {
+      aliases = aliasList;
+      break;
+    }
+  }
+          // Debug: log aliases used
+          console.log(`[Country Filter] Filtering for: ${countryName} | Aliases:`, aliases);
+          const countryInstances = currentData.filter((row, idx) => {
+            const geo = row['GeoLocation'] || {};
+            const countryVal = (geo.country || '').trim().toLowerCase();
+            const codeVal = (geo.countryCode || '').trim().toLowerCase();
+            const regionVal = (row['Region'] || '').trim().toLowerCase();
+            const match = aliases.some(alias => countryVal.includes(alias) || codeVal.includes(alias) || regionVal.includes(alias));
+            // Debug: log only matched rows
+            if (match) {
+              console.log(`[Country Filter][Match] Row ${idx}: ${row['Name']} | country: ${countryVal} | code: ${codeVal} | region: ${regionVal}`);
+            }
+            return match;
+          });
+          console.log(`[Country Filter] Total matches: ${countryInstances.length}`);
+          if (countryInstances.length > 0) {
+            showClusterDetails(countryInstances, null);
+          } else {
+            hideClusterDetails();
+            updateStatus(`No instances found for ${countryName}.`, 'error');
+          }
+        }
 
         console.log('World map loaded successfully');
         
