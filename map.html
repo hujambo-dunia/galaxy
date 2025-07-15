@@ -791,6 +791,103 @@
       }
     }
 
+    // City GPS coordinates mapping
+    const cityCoordinates = {
+      "Austin, TX, USA": { lat: 30.2672, lng: -97.7431 },
+      "Freiburg, Germany": { lat: 47.9990, lng: 7.8421 },
+      "Melbourne, Australia": { lat: -37.8136, lng: 144.9631 },
+      "Lyon, France": { lat: 45.7640, lng: 4.8357 },
+      "Leuven, Belgium": { lat: 50.8798, lng: 4.7005 },
+      "Toronto, Canada": { lat: 43.6510, lng: -79.3470 },
+      "Brno, Czechia": { lat: 49.1951, lng: 16.6068 },
+      "Bologna, Italy": { lat: 44.4949, lng: 11.3426 },
+      "Bangalore, India": { lat: 12.9716, lng: 77.5946 },
+      "Oslo, Norway": { lat: 59.9139, lng: 10.7522 },
+      "Barcelona, Spain": { lat: 41.3851, lng: 2.1734 },
+      "Cape Town, South Africa": { lat: -33.9249, lng: 18.4241 },
+      "Rotterdam, Netherlands": { lat: 51.9225, lng: 4.47917 },
+      "Minneapolis, MN, USA": { lat: 44.9778, lng: -93.2650 },
+      "Tampa, FL, USA": { lat: 27.9506, lng: -82.4572 },
+      "Hong Kong, China": { lat: 22.3193, lng: 114.1694 },
+      "Clermont-Ferrand, France": { lat: 45.7772, lng: 3.0870 },
+      "Ghent, Belgium": { lat: 51.0543, lng: 3.7174 },
+      "Paris, France": { lat: 48.8566, lng: 2.3522 },
+      "Angers, France": { lat: 47.4784, lng: -0.5632 },
+      "Bari, Italy": { lat: 41.1171, lng: 16.8719 },
+      "Montpellier, France": { lat: 43.6108, lng: 3.8767 },
+      "Bolzano, Italy": { lat: 46.4983, lng: 11.3548 },
+      "Jouy-en-Josas, France": { lat: 48.7630, lng: 2.1699 },
+      "Laurel, MD, USA": { lat: 39.0993, lng: -76.8483 },
+      "Knoxville, TN, USA": { lat: 35.9606, lng: -83.9207 },
+      "Würzburg, Germany": { lat: 49.7913, lng: 9.9534 },
+      "Bethesda, MD, USA": { lat: 38.9847, lng: -77.0947 },
+      "Madrid, Spain": { lat: 40.4168, lng: -3.7038 },
+      "Gatersleben, Germany": { lat: 51.8214, lng: 11.2866 },
+      "Beirut, Lebanon": { lat: 33.8938, lng: 35.5018 },
+      "Zurich, Switzerland": { lat: 47.3769, lng: 8.5417 },
+      "Manchester, United Kingdom": { lat: 53.4808, lng: -2.2426 },
+      "Athena, Greece": { lat: 37.9838, lng: 23.7275 },
+      "Braga, Portugal": { lat: 41.5454, lng: -8.4265 },
+      "Bielefeld, Germany": { lat: 52.0302, lng: 8.5325 },
+      "Farmington, CT, USA": { lat: 41.7198, lng: -72.8320 },
+      "Los Baños, Philippines": { lat: 14.1789, lng: 121.2258 },
+      "Penn State, PA, USA": { lat: 40.7982, lng: -77.8599 },
+      "Toulouse, France": { lat: 43.6047, lng: 1.4442 },
+      "Boston, MA, USA": { lat: 42.3601, lng: -71.0589 },
+      "Birmingham, United Kingdom": { lat: 52.4862, lng: -1.8904 },
+      "Uppsala, Sweden": { lat: 59.8586, lng: 17.6389 },
+      "Utrecht, Netherlands": { lat: 52.0907, lng: 5.1214 },
+      "Philadelphia, PA, USA": { lat: 39.9526, lng: -75.1652 }
+    };
+
+    // Mapping countries to their flag emojis
+    const countryToFlag = {
+      "USA": "🇺🇸",
+      "Germany": "🇩🇪",
+      "Australia": "🇦🇺",
+      "France": "🇫🇷",
+      "Belgium": "🇧🇪",
+      "Canada": "🇨🇦",
+      "Czechia": "🇨🇿",
+      "Italy": "🇮🇹",
+      "India": "🇮🇳",
+      "Norway": "🇳🇴",
+      "Spain": "🇪🇸",
+      "South Africa": "🇿🇦",
+      "Netherlands": "🇳🇱",
+      "China": "🇨🇳",
+      "Lebanon": "🇱🇧",
+      "Switzerland": "🇨🇭",
+      "United Kingdom": "🇬🇧",
+      "Greece": "🇬🇷",
+      "Portugal": "🇵🇹",
+      "Philippines": "🇵🇭",
+      "Sweden": "🇸🇪"
+    };
+
+    // Function to get coordinates by city name
+    function getCoordinatesByCityName(cityName) {
+      cityName = cityName.toLowerCase().trim();
+
+      console.log(`Searching for coordinates for city: ${cityName}`);
+
+      for (const cityKey in cityCoordinates) {
+        const cityLower = cityKey.toLowerCase();
+        if (cityLower === cityName || cityLower.startsWith(cityName + ',')) {
+          console.log(`Found coordinates for city: ${cityName}`);
+          return cityCoordinates[cityKey];
+        }
+      }
+
+      console.log(`No coordinates found for city: ${cityName}`);
+      return null; // Return null if not found
+    }
+
+    // Function to get country flag emoji by country name
+    function getCountryFlag(countryName) {
+      return countryToFlag[countryName] || '🏳️';
+    }
+
     // Function to get geolocation data for a server URL
     async function getServerGeolocation(url, forceRefresh = false) {
       if (!url || url.trim() === '') {
@@ -811,13 +908,17 @@
 
       try {
         const urlObj = new URL(cleanUrl);
-        const hostname = urlObj.hostname;
+        const hostname = urlObj.hostname.toLowerCase();
+        const cacheKey = `host|${hostname}`;
 
         // Check cache first
         if (!forceRefresh) {
-          const cachedData = getGeoFromCache(hostname);
+          const cachedData = getGeoFromCache(cacheKey);
           if (cachedData) {
+            console.log(`[GeoCache] HIT for ${cacheKey}`);
             return cachedData;
+          } else {
+            console.log(`[GeoCache] MISS for ${cacheKey}`);
           }
         }
 
@@ -888,7 +989,7 @@
               
               if (result && result.latitude && result.longitude && !isNaN(result.latitude) && !isNaN(result.longitude)) {
                 console.log(`Successfully geolocated ${hostname}:`, result);
-                saveGeoToCache(hostname, result);
+                saveGeoToCache(cacheKey, result);
                 return result;
               }
             }
@@ -915,6 +1016,7 @@
         };
       }
     }
+    
 
     // Function to guess location from hostname patterns
     function guessLocationFromHostname(hostname) {
@@ -1089,12 +1191,15 @@
         };
       }
 
-      const key = `${city}|${region}`.toLowerCase();
+      const cacheKey = `city|${city}|${region}`.toLowerCase();
 
       if (!forceRefresh) {
-        const cached = getGeoFromCache(key);
+        const cached = getGeoFromCache(cacheKey);
         if (cached) {
+          console.log(`[GeoCache] HIT for ${cacheKey}`);
           return cached;
+        } else {
+          console.log(`[GeoCache] MISS for ${cacheKey}`);
         }
       }
 
@@ -1125,7 +1230,7 @@
               countryCode: (address.country_code || '').toUpperCase()
             };
 
-            saveGeoToCache(key, result);
+            saveGeoToCache(cacheKey, result);
             return result;
           }
         }
@@ -1428,10 +1533,24 @@
         try {
           let geoData = null;
 
+          // 1. Try static city coordinates first
           if (city && city.trim()) {
-            geoData = await geocodeCityName(city.trim(), region, forceRefresh);
+            const staticCoords = getCoordinatesByCityName(city.trim());
+            if (staticCoords && staticCoords.lat != null && staticCoords.lng != null) {
+              geoData = {
+                country: region || 'Unknown',
+                city: city,
+                latitude: staticCoords.lat,
+                longitude: staticCoords.lng,
+                flag: getCountryFlag(region || 'Unknown')
+              };
+            } else {
+              // 2. Fallback to geocodeCityName
+              geoData = await geocodeCityName(city.trim(), region, forceRefresh);
+            }
           }
 
+          // 3. Fallback to server geolocation if city lookup/geocode failed
           if (!geoData || geoData.latitude === null || geoData.longitude === null) {
             if (url && url.trim()) {
               geoData = await getServerGeolocation(url.trim(), forceRefresh);
