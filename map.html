@@ -843,6 +843,7 @@
     // Mapping countries to their flag emojis
     const countryToFlag = {
       "USA": "🇺🇸",
+      "EU": "🇪🇺",
       "Germany": "🇩🇪",
       "Australia": "🇦🇺",
       "France": "🇫🇷",
@@ -868,23 +869,20 @@
     // Function to get coordinates by city name
     function getCoordinatesByCityName(cityName) {
       cityName = cityName.toLowerCase().trim();
-
-      console.log(`Searching for coordinates for city: ${cityName}`);
-
       for (const cityKey in cityCoordinates) {
         const cityLower = cityKey.toLowerCase();
         if (cityLower === cityName || cityLower.startsWith(cityName + ',')) {
-          console.log(`Found coordinates for city: ${cityName}`);
+          console.log(`Found coordinatesByCityName for city: ${cityName}`);
           return cityCoordinates[cityKey];
         }
       }
 
-      console.log(`No coordinates found for city: ${cityName}`);
+      console.log(`No coordinatesByCityName found for city: ${cityName}`);
       return null; // Return null if not found
     }
 
     // Function to get country flag emoji by country name
-    function getCountryFlag(countryName) {
+    function getCountryFlagByRegionName(countryName) {
       return countryToFlag[countryName] || '🏳️';
     }
 
@@ -1542,7 +1540,7 @@
                 city: city,
                 latitude: staticCoords.lat,
                 longitude: staticCoords.lng,
-                flag: getCountryFlag(region || 'Unknown')
+                flag: getCountryFlagByRegionName(region || 'Unknown')
               };
             } else {
               // 2. Fallback to geocodeCityName
