@@ -693,6 +693,36 @@
     const sheetId = '1HSpJ7vOxfnYSjfFm1vs528eydh1gVU40rKR6-1TCeCo';
     const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`;
 
+    // Same set of CORS proxies used in index.html
+    const corsProxies = [
+      'https://corsproxy.io/?url=',
+      'https://api.codetabs.com/v1/proxy?quest=',
+      'https://cors.bridged.cc/',
+      'https://api.allorigins.win/raw?url='
+    ];
+
+    // Helper to fetch a URL through the proxies with a timeout
+    async function fetchWithProxies(url, options = {}, timeout = 15000, maxRetries = 1) {
+      for (let proxyIndex = 0; proxyIndex < corsProxies.length; proxyIndex++) {
+        const proxy = corsProxies[proxyIndex];
+        const proxiedUrl = `${proxy}${encodeURIComponent(url)}`;
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), timeout);
+          try {
+            const response = await fetch(proxiedUrl, { ...options, signal: controller.signal });
+            clearTimeout(timer);
+            if (response.ok) {
+              return response;
+            }
+          } catch (err) {
+            clearTimeout(timer);
+          }
+        }
+      }
+      throw new Error('All proxies failed for ' + url);
+    }
+
     // Global variables
     let currentData = [];
     let filteredData = [];
@@ -802,7 +832,7 @@
         for (const apiUrl of geoApis) {
           try {
             console.log(`Trying geolocation API for ${hostname}: ${apiUrl}`);
-            const response = await fetch(apiUrl);
+            const response = await fetchWithProxies(apiUrl);
             
             if (response.ok) {
               const geoData = await response.json();
@@ -1080,7 +1110,7 @@
       const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(query)}&limit=1`;
 
       try {
-        const response = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+        const response = await fetchWithProxies(url, { headers: { 'Accept-Language': 'en' } });
         if (response.ok) {
           const results = await response.json();
           if (results && results.length > 0) {
@@ -1320,19 +1350,14 @@
         console.log('Fetching data from:', sheetUrl);
         
         // Add a timeout to the fetch
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-        
-        const response = await fetch(sheetUrl, {
-          method: 'GET',
-          mode: 'cors',
-          headers: {
-            'Accept': 'text/csv'
+        const response = await fetchWithProxies(
+          sheetUrl,
+          {
+            method: 'GET',
+            headers: { 'Accept': 'text/csv' }
           },
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
+          30000
+        );
         console.log('Response status:', response.status, response.statusText);
         
         if (!response.ok) {
@@ -1560,8 +1585,9 @@
       try {
         updateStatus('Loading world map data...', 'loading');
         
-        // Use Natural Earth data via CDN
-        const world = await d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+        // Use Natural Earth data via CDN (through CORS proxy)
+        const worldResponse = await fetchWithProxies('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+        const world = await worldResponse.json();
         worldData = world;
         
         // Create or get the map group
