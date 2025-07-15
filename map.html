@@ -831,7 +831,7 @@
       "Bielefeld, Germany": { lat: 52.0302, lng: 8.5325 },
       "Farmington, CT, USA": { lat: 41.7198, lng: -72.8320 },
       "Los Baños, Philippines": { lat: 14.1789, lng: 121.2258 },
-      "Penn State, PA, USA": { lat: 40.7982, lng: -77.8599 },
+      "State College, PA, USA": { lat: 40.7982, lng: -77.8599 },
       "Toulouse, France": { lat: 43.6047, lng: 1.4442 },
       "Boston, MA, USA": { lat: 42.3601, lng: -71.0589 },
       "Birmingham, United Kingdom": { lat: 52.4862, lng: -1.8904 },
@@ -844,6 +844,7 @@
     const countryToFlag = {
       "USA": "🇺🇸",
       "EU": "🇪🇺",
+      "Africa": "🦒",
       "Germany": "🇩🇪",
       "Australia": "🇦🇺",
       "France": "🇫🇷",
@@ -852,6 +853,7 @@
       "Czechia": "🇨🇿",
       "Italy": "🇮🇹",
       "India": "🇮🇳",
+      "Hong Kong": "🇭🇰",
       "Norway": "🇳🇴",
       "Spain": "🇪🇸",
       "South Africa": "🇿🇦",
@@ -2437,8 +2439,7 @@
       const flag = geoData.flag || '🏳️';
       
       const locationDisplay = city && city !== 'Unknown' && city !== 'Unknown City' ? 
-        `${city}, ${country}` : 
-        country;
+        city : country;
       
       title.textContent = `${flag} ${locationDisplay} (${instances.length} instance${instances.length > 1 ? 's' : ''})`;
       
@@ -2520,7 +2521,7 @@
               ${tierInfo.icon} ${tierInfo.name}
             </span>
           </td>
-          <td>${instance['Region'] || 'Unknown'}</td>
+          <td><span class="country-flag">${geoData.flag || '🏳️'}</span> ${instance['Region'] || 'Unknown'}</td>
           <td>
             <div class="description-info">
               ${descriptionHtml || '<span style="color: #999; font-style: italic;">No description</span>'}
@@ -2528,11 +2529,7 @@
           </td>
           <td>
             <div class="location-info">
-              <span class="country-flag">${geoData.flag || '🏳️'}</span>
-              ${geoData.city && geoData.city !== 'Unknown' && geoData.city !== 'Unknown City' ? 
-                `${geoData.city}, ${geoData.country || 'Unknown'}` : 
-                `${geoData.country || 'Unknown'}`
-              }
+              ${geoData.city || 'Unknown City'}
             </div>
           </td>
           <td>
@@ -2666,8 +2663,7 @@
       const flag = geoData.flag || '🏳️';
       
       const locationDisplay = city && city !== 'Unknown' && city !== 'Unknown City' ? 
-        `${city}, ${country}` : 
-        country;
+        city : country;
       
       let content = `
         <div style="font-weight: bold; margin-bottom: 8px;">
@@ -2825,8 +2821,7 @@
       const flag = geoData.flag || '🏳️';
       
       const locationDisplay = city && city !== 'Unknown' && city !== 'Unknown City' ? 
-        `${city}, ${country}` : 
-        country;
+        city : country;
       
       // Get URL, description, and notes
       const url = row['URL'] || 'No URL';
@@ -2944,7 +2939,7 @@
             <span class="tier-icon" style="color: ${tierInfo.color}">${tierInfo.icon}</span>
             ${tierInfo.name}
           </td>
-          <td>${row['Region'] || 'Unknown'}</td>
+          <td><span class="country-flag">${geoData.flag || '🏳️'}</span> ${row['Region'] || 'Unknown'}</td>
           <td>
             <div class="description-info">
               ${descriptionHtml || '<span style="color: #999; font-style: italic;">No description</span>'}
@@ -2953,11 +2948,7 @@
           <td>
             <div class="location-info">
               <div>
-                <span class="country-flag">${geoData.flag || '🏳️'}</span>
-                ${geoData.city && geoData.city !== 'Unknown' && geoData.city !== 'Unknown City' ? 
-                  `${geoData.city}, ${geoData.country || 'Unknown'}` : 
-                  `${geoData.country || 'Unknown'}`
-                }
+                ${geoData.city || 'Unknown City'}
               </div>
             </div>
           </td>
