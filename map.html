@@ -1774,7 +1774,11 @@
             const countryVal = (geo.country || '').trim().toLowerCase();
             const codeVal = (geo.countryCode || '').trim().toLowerCase();
             const regionVal = (row['Region'] || '').trim().toLowerCase();
-            const match = aliases.some(alias => countryVal.includes(alias) || codeVal.includes(alias) || regionVal.includes(alias));
+          const match = aliases.some(alias =>
+            countryVal === alias ||
+            codeVal === alias ||
+            regionVal === alias
+          );
             // Debug: log only matched rows
             if (match) {
               console.log(`[Country Filter][Match] Row ${idx}: ${row['Name']} | country: ${countryVal} | code: ${codeVal} | region: ${regionVal}`);
@@ -2485,6 +2489,8 @@
 
     // Show cluster details in the container beneath the map
     function showClusterDetails(instances, location) {
+      // Clear any previous error message
+      updateStatus('', '');
       const container = document.getElementById('cluster-details-container');
       const title = document.getElementById('cluster-title');
       const content = document.getElementById('cluster-details-content');
@@ -2494,10 +2500,15 @@
       const city = geoData.city || 'Unknown City';
       const country = geoData.country || 'Unknown Country';
       const flag = geoData.flag || '🏳️';
-      
-      const locationDisplay = city && city !== 'Unknown' && city !== 'Unknown City' ? 
-        city : country;
-      
+
+      let locationDisplay;
+      if (location && location.city) {
+        // If location object is provided (city click), use city name
+        locationDisplay = location.city;
+      } else {
+        // If no location object (country click), use country name
+        locationDisplay = country;
+      }
       title.textContent = `${flag} ${locationDisplay} (${instances.length} instance${instances.length > 1 ? 's' : ''})`;
       
       // Clear existing content
