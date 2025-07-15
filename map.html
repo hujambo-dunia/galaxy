@@ -593,10 +593,6 @@
             <div class="stat-number" id="countries-count">0</div>
             <div>Countries</div>
           </div>
-          <div class="stat-box">
-            <div class="stat-number" id="online-servers">0</div>
-            <div>Online</div>
-          </div>
         </div>
       </div>
       
@@ -1377,14 +1373,9 @@
     function updateSummaryStats() {
       const total = currentData.length;
       const countries = new Set(currentData.map(row => row['GeoLocation']?.country).filter(Boolean)).size;
-      const online = currentData.filter(row => {
-        const status = getStatusIcon(row['Version'], row['Tool Count'], row['Tier']);
-        return status.class === 'online';
-      }).length;
       
       document.getElementById('total-servers').textContent = total;
       document.getElementById('countries-count').textContent = countries;
-      document.getElementById('online-servers').textContent = online;
       document.getElementById('summary-stats').style.display = 'flex';
     }
 
