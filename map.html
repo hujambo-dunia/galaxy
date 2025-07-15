@@ -1774,11 +1774,20 @@
             const countryVal = (geo.country || '').trim().toLowerCase();
             const codeVal = (geo.countryCode || '').trim().toLowerCase();
             const regionVal = (row['Region'] || '').trim().toLowerCase();
-          const match = aliases.some(alias =>
+          let match = aliases.some(alias =>
             countryVal === alias ||
             codeVal === alias ||
             regionVal === alias
           );
+          // If not matched, try extracting country from city (after last comma)
+          if (!match) {
+            const cityVal = (geo.city || '').trim().toLowerCase();
+            if (cityVal.includes(',')) {
+              const cityParts = cityVal.split(',');
+              const cityCountry = cityParts[cityParts.length - 1].trim();
+              match = aliases.some(alias => cityCountry === alias);
+            }
+          }
             // Debug: log only matched rows
             if (match) {
               console.log(`[Country Filter][Match] Row ${idx}: ${row['Name']} | country: ${countryVal} | code: ${codeVal} | region: ${regionVal}`);
@@ -2501,13 +2510,41 @@
       const country = geoData.country || 'Unknown Country';
       const flag = geoData.flag || '🏳️';
 
+
       let locationDisplay;
       if (location && location.city) {
         // If location object is provided (city click), use city name
         locationDisplay = location.city;
       } else {
-        // If no location object (country click), use country name
-        locationDisplay = country;
+        // If no location object (country click), use country name, but also show region if it's a supranational region
+        // Collect all unique regions and countries in the instances
+        const allRegions = Array.from(new Set(instances.map(inst => (inst.Region || '').trim()).filter(Boolean)));
+        const allCountries = Array.from(new Set(instances.map(inst => ((inst.GeoLocation && inst.GeoLocation.country) || '').trim()).filter(Boolean)));
+        // If region is supranational (EU, Africa, etc) and country is specific, show both
+        const supranationalRegions = ['eu', 'european union', 'africa', 'asia', 'latin america', 'south america', 'north america', 'oceania'];
+        const regionLower = allRegions.map(r => r.toLowerCase());
+        const countryLower = allCountries.map(c => c.toLowerCase());
+        // Find if any region is supranational and any country is not supranational
+        const hasSupra = regionLower.some(r => supranationalRegions.includes(r));
+        const hasSpecificCountry = countryLower.some(c => !supranationalRegions.includes(c) && c);
+        if (hasSupra && hasSpecificCountry) {
+          // Show both, e.g. "EU & Germany" (unique values only)
+          // Remove supranational regions from country list and vice versa
+          // Remove any country that is already present in the region list
+          const uniqueRegions = allRegions.filter((r, i, arr) => arr.indexOf(r) === i && r);
+          let uniqueCountries = allCountries.filter((c, i, arr) => arr.indexOf(c) === i && c && !supranationalRegions.includes(c.toLowerCase()));
+          // Remove countries that are already present in uniqueRegions (case-insensitive)
+          uniqueCountries = uniqueCountries.filter(c => !uniqueRegions.some(r => r.toLowerCase() === c.toLowerCase()));
+          const regionDisplay = uniqueRegions.join(', ');
+          const countryDisplay = uniqueCountries.join(', ');
+          locationDisplay = countryDisplay ? `${regionDisplay} & ${countryDisplay}` : regionDisplay;
+        } else if (allCountries.length === 1) {
+          locationDisplay = allCountries[0];
+        } else if (allRegions.length === 1) {
+          locationDisplay = allRegions[0];
+        } else {
+          locationDisplay = country;
+        }
       }
       title.textContent = `${flag} ${locationDisplay} (${instances.length} instance${instances.length > 1 ? 's' : ''})`;
       
