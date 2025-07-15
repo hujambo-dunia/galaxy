@@ -703,7 +703,7 @@
     const width = 1000;
     const height = 600;
 
-    // Geolocation cache for servers
+    // Geolocation cache for servers or city lookups
     const GEO_CACHE_KEY = 'galaxyServerGeoCache';
     const GEO_CACHE_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 days
 
@@ -1042,8 +1042,73 @@
         city: 'Unknown',
         latitude: 39.8283,
         longitude: -98.5795,
-        flag: '🇺�',
+        flag: '🇺🇸',
         countryCode: 'US'
+      };
+    }
+
+    // Geocode a city name (optionally using region for disambiguation)
+    async function geocodeCityName(city, region = '', forceRefresh = false) {
+      if (!city || city.trim() === '') {
+        return {
+          country: 'Unknown',
+          city: 'Unknown',
+          latitude: null,
+          longitude: null,
+          flag: '🏳️'
+        };
+      }
+
+      const key = `${city}|${region}`.toLowerCase();
+
+      if (!forceRefresh) {
+        const cached = getGeoFromCache(key);
+        if (cached) {
+          return cached;
+        }
+      }
+
+      let query = city;
+      if (region) {
+        if (/united states|usa|us/i.test(region)) {
+          query += ', USA';
+        } else {
+          query += `, ${region}`;
+        }
+      }
+
+      const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(query)}&limit=1`;
+
+      try {
+        const response = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+        if (response.ok) {
+          const results = await response.json();
+          if (results && results.length > 0) {
+            const r = results[0];
+            const address = r.address || {};
+            const result = {
+              country: address.country || 'Unknown',
+              city: address.city || address.town || address.village || city,
+              latitude: parseFloat(r.lat),
+              longitude: parseFloat(r.lon),
+              flag: getCountryFlag((address.country_code || '').toUpperCase()),
+              countryCode: (address.country_code || '').toUpperCase()
+            };
+
+            saveGeoToCache(key, result);
+            return result;
+          }
+        }
+      } catch (error) {
+        console.log('Error geocoding city:', city, error);
+      }
+
+      return {
+        country: 'Unknown',
+        city: 'Unknown',
+        latitude: null,
+        longitude: null,
+        flag: '🏳️'
       };
     }
 
@@ -1332,28 +1397,39 @@
       
       const promises = currentData.map(async (row, index) => {
         const url = row['URL'] || row['url'] || '';
-        
-        if (url && url.trim()) {
-          try {
-            const geoData = await getServerGeolocation(url.trim(), forceRefresh);
-            row['GeoLocation'] = geoData;
-          } catch (error) {
-            console.error(`Error geolocating ${url}:`, error);
-            row['GeoLocation'] = { 
-              country: 'Unknown', 
-              city: 'Unknown', 
-              latitude: null, 
-              longitude: null, 
-              flag: '🏳️' 
-            };
+        const city = row['city'] || row['City'] || '';
+        const region = row['Region'] || row['region'] || '';
+
+        try {
+          let geoData = null;
+
+          if (city && city.trim()) {
+            geoData = await geocodeCityName(city.trim(), region, forceRefresh);
           }
-        } else {
-          row['GeoLocation'] = { 
-            country: 'Unknown', 
-            city: 'Unknown', 
-            latitude: null, 
-            longitude: null, 
-            flag: '🏳️' 
+
+          if (!geoData || geoData.latitude === null || geoData.longitude === null) {
+            if (url && url.trim()) {
+              geoData = await getServerGeolocation(url.trim(), forceRefresh);
+            } else {
+              geoData = {
+                country: 'Unknown',
+                city: 'Unknown',
+                latitude: null,
+                longitude: null,
+                flag: '🏳️'
+              };
+            }
+          }
+
+          row['GeoLocation'] = geoData;
+        } catch (error) {
+          console.error(`Error geolocating ${url || city}:`, error);
+          row['GeoLocation'] = {
+            country: 'Unknown',
+            city: 'Unknown',
+            latitude: null,
+            longitude: null,
+            flag: '🏳️'
           };
         }
         
