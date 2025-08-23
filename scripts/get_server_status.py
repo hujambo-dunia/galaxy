@@ -1,22 +1,12 @@
 import requests
 import jmespath
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///galaxy_instances.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+LOG_FILE = "galaxy_instances.log"
 
-class Instance(db.Model):
-    __tablename__ = 'instance'
-    id = db.Column(db.Integer, primary_key=True)
-    url = db.Column(db.Unicode, unique=True, nullable=False)
-    name = db.Column(db.Unicode())
-    creation_date = db.Column(db.DateTime, nullable=False, default=datetime.now)
+platform_urls = []
 
-def fetch_and_print_instances():
+def fetch_instances():
     route = "https://galaxyproject.org/assets/data/use/index.json"
     payload_reference = "data.platforms.edges[].node.platforms[]"
     try:
@@ -25,11 +15,37 @@ def fetch_and_print_instances():
         data = response.json()
         platforms = jmespath.search(payload_reference, data)
         for platform in platforms:
-            print(f"{platform.get('name', '')}: {platform.get('platform_url', '')}")
+            url = platform.get('platform_url', '')
+            name = platform.get('name', '')
+            msg = f"{name}: {url}"
+            log_clf(url, '-', '-', '-', 200, len(msg), 'GET', '-', name)
+            if url:
+                platform_urls.append(url)
     except Exception as e:
         print(f"Error: {e}")
+        log_clf('-', '-', '-', '-', 500, 0, 'GET', '-', f"Error: {e}")
+
+def log_clf(host, ident, authuser, request, status, bytes_sent, method, referer, extra):
+    now = datetime.now()
+    now_clf = now.strftime('%d/%b/%Y:%H:%M:%S %z')
+    now_iso = now.isoformat(timespec='milliseconds')
+    log_line = f'{host} {ident} {authuser} [{now_clf}] "{method} {request} HTTP/1.1" {status} {bytes_sent} "{referer}" "{extra}" "{now_iso}"'
+    with open(LOG_FILE, 'a') as f:
+        f.write(log_line + '\n')
+
+def get_server_response(platform_url):
+    try:
+        response = requests.get(platform_url, timeout=10)
+        status = response.status_code
+        reason = response.reason
+        content_length = len(response.content)
+        log_clf(platform_url, '-', '-', platform_url, status, content_length, 'GET', '-', reason)
+        print(f"{platform_url} - {status} {reason}")
+    except Exception as e:
+        log_clf(platform_url, '-', '-', platform_url, 500, 0, 'GET', '-', f"ERROR: {e}")
+        print(f"{platform_url} - ERROR: {e}")
 
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
-        fetch_and_print_instances()
+    fetch_instances()
+    for url in platform_urls:
+        get_server_response(url)
