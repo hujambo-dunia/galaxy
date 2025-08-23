@@ -1,0 +1,16 @@
+name: gxyinstances_env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10       # Or 3.9, 3.11. Use a supported Python version.
+  - click             # Lets Conda find a version compatible with Flask.
+  - Flask>=2.0        # Pinned to a modern, secure major version.
+  - flask-sqlalchemy  # Will be compatible with the chosen Flask.
+  - pyparsing
+  - requests
+  - pip
+  - jmespath
+  - pyyaml            # required for getting server toolset information
+  - pip:
+    - bioblend          # No version specifier, gets the latest stable.
